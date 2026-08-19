@@ -6,7 +6,7 @@ const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
 });
 
-export default [
+const config = [
   js.configs.recommended,
   ...compat.extends("next/core-web-vitals"),
   {
@@ -31,3 +31,5 @@ export default [
     ignores: [".next/**", "node_modules/**"],
   },
 ];
+
+export default config;
