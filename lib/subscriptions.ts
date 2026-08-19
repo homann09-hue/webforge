@@ -65,3 +65,14 @@ export async function generateDueRecurringInvoices(password: string, asOf?: stri
   const response = await rpc("admin_generate_due_recurring_invoices", { p_password: password, p_as_of: asOf || null });
   return (await response.json()) as { subscription_id: number; invoice_id: number; invoice_number: string }[];
 }
+
+export async function setBillingSubscriptionStripe(password: string, subscriptionId: number, input: { customerId?: string; stripeSubscriptionId?: string; priceId?: string; checkoutUrl?: string }) {
+  await rpc("admin_set_billing_subscription_stripe", {
+    p_password: password,
+    p_subscription_id: subscriptionId,
+    p_customer_id: input.customerId || "",
+    p_subscription_stripe_id: input.stripeSubscriptionId || "",
+    p_price_id: input.priceId || "",
+    p_checkout_url: input.checkoutUrl || "",
+  });
+}
