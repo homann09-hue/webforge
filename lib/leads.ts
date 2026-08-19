@@ -7,23 +7,19 @@ export type Lead = {
   created_at: string;
 };
 
-function config() {
-  const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return { url, key };
-}
+const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
 
-function headers(key: string) {
+function headers() {
   return {
-    apikey: key,
-    Authorization: `Bearer ${key}`,
+    apikey: SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
     "Content-Type": "application/json",
   };
 }
 
 export function isLeadStoreConfigured() {
-  return Boolean(config());
+  return true;
 }
 
 export async function createLead(input: {
@@ -31,20 +27,13 @@ export async function createLead(input: {
   email: string;
   website?: string;
 }) {
-  const cfg = config();
-  if (!cfg) throw new Error("LEAD_STORE_NOT_CONFIGURED");
-
-  const response = await fetch(`${cfg.url}/rest/v1/leads`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_lead`, {
     method: "POST",
-    headers: {
-      ...headers(cfg.key),
-      Prefer: "return=minimal",
-    },
+    headers: headers(),
     body: JSON.stringify({
-      company: input.company,
-      email: input.email,
-      website: input.website || null,
-      status: "new",
+      p_company: input.company,
+      p_email: input.email,
+      p_website: input.website || null,
     }),
     cache: "no-store",
   });
@@ -56,22 +45,21 @@ export async function createLead(input: {
   }
 }
 
-export async function listLeads(limit = 50): Promise<Lead[]> {
-  const cfg = config();
-  if (!cfg) return [];
-
+export async function listLeads(password: string, limit = 50): Promise<Lead[]> {
   const safeLimit = Math.min(Math.max(limit, 1), 100);
-  const response = await fetch(
-    `${cfg.url}/rest/v1/leads?select=id,company,email,website,status,created_at&order=created_at.desc&limit=${safeLimit}`,
-    {
-      headers: headers(cfg.key),
-      cache: "no-store",
-    },
-  );
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_list_leads`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({ p_password: password, p_limit: safeLimit }),
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     const detail = await response.text();
     console.error("WEBFORGE_LEAD_LIST_ERROR", response.status, detail);
+    if (response.status === 400 || response.status === 401 || response.status === 403) {
+      throw new Error("UNAUTHORIZED");
+    }
     throw new Error("LEAD_STORE_READ_FAILED");
   }
 
