@@ -24,23 +24,21 @@ export type Lead = {
 
 const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-
-function headers() {
-  return { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" };
-}
-
-async function publicRpc(name: string, body: Record<string, unknown>) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, { method: "POST", headers: headers(), body: JSON.stringify(body), cache: "no-store" });
-  if (!response.ok) {
-    const detail = await response.text();
-    console.error(`WEBFORGE_RPC_${name}`, response.status, detail);
-    throw new Error("RPC_FAILED");
-  }
-  return response;
-}
+const publicHeaders = { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" };
 
 export function isLeadStoreConfigured() { return true; }
-export async function createLead(input: { company: string; email: string; website?: string }) { await publicRpc("submit_lead", { p_company: input.company, p_email: input.email, p_website: input.website || null }); }
+export async function createLead(input: { company: string; email: string; website?: string }) {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/lead-submit`, {
+    method: "POST",
+    headers: publicHeaders,
+    body: JSON.stringify({ company: input.company, email: input.email, website: input.website || null }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(String(data?.error || "LEAD_SUBMIT_FAILED"));
+  }
+}
 export async function listLeads(password: string, limit = 100): Promise<Lead[]> { const response = await adminRpc("admin_list_leads", { p_password: password, p_limit: Math.min(Math.max(limit, 1), 200) }); return (await response.json()) as Lead[]; }
 export async function updateLeadStatus(password: string, leadId: number, status: LeadStatus) { await adminRpc("admin_update_lead_status", { p_password: password, p_lead_id: leadId, p_status: status }); }
 export async function updateLeadNotes(password: string, leadId: number, notes: string) { await adminRpc("admin_update_lead_notes", { p_password: password, p_lead_id: leadId, p_notes: notes }); }
