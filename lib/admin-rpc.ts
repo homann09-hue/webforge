@@ -10,10 +10,10 @@ const headers = {
 export async function adminRpc(name: string, body: Record<string, unknown>) {
   const password = String(body.p_password || "");
   const args = Object.fromEntries(Object.entries(body).filter(([key]) => key !== "p_password"));
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_gateway`, {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-gateway`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ p_password: password, p_function: name, p_args: args }),
+    body: JSON.stringify({ password, function: name, args }),
     cache: "no-store",
   });
   if (!response.ok) {
