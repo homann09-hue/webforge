@@ -2,9 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { sites } from "@/lib/site-config";
-import type { Lead, LeadStatus } from "@/lib/leads";
+import type { Lead, LeadStatus, ProposalStatus } from "@/lib/leads";
 
 const statusLabels: Record<LeadStatus, string> = { new: "Neu", contacted: "Kontaktiert", qualified: "Qualifiziert", won: "Gewonnen", lost: "Verloren" };
+const proposalLabels: Record<ProposalStatus, string> = { none: "Kein Angebot", draft: "Entwurf", sent: "Gesendet", accepted: "Angenommen", rejected: "Abgelehnt" };
+type CommercialDraft = { contactName: string; phone: string; packageName: string; setupPrice: string; monthlyPrice: string; proposalStatus: ProposalStatus };
+
+function money(cents: number) { return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100); }
+function draftFromLead(lead: Lead): CommercialDraft { return { contactName: lead.contact_name || "", phone: lead.phone || "", packageName: lead.package_name || "", setupPrice: (lead.setup_price_cents / 100).toFixed(2), monthlyPrice: (lead.monthly_price_cents / 100).toFixed(2), proposalStatus: lead.proposal_status }; }
 
 export default function Admin() {
   const [password, setPassword] = useState("");
@@ -17,17 +22,21 @@ export default function Admin() {
   const [statusFilter, setStatusFilter] = useState<"all" | LeadStatus>("all");
   const [showArchived, setShowArchived] = useState(false);
   const [draftNotes, setDraftNotes] = useState<Record<number, string>>({});
+  const [commercial, setCommercial] = useState<Record<number, CommercialDraft>>({});
 
   const filteredLeads = useMemo(() => leads.filter((lead) => {
     const term = search.trim().toLowerCase();
-    const matchesSearch = !term || [lead.company, lead.email, lead.website || "", lead.notes || ""].some((value) => value.toLowerCase().includes(term));
+    const matchesSearch = !term || [lead.company, lead.email, lead.website || "", lead.notes || "", lead.contact_name || "", lead.phone || "", lead.package_name || ""].some((value) => value.toLowerCase().includes(term));
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     const matchesArchive = showArchived ? Boolean(lead.archived_at) : !lead.archived_at;
     return matchesSearch && matchesStatus && matchesArchive;
   }), [leads, search, statusFilter, showArchived]);
 
-  const newLeads = leads.filter((lead) => lead.status === "new" && !lead.archived_at).length;
-  const wonLeads = leads.filter((lead) => lead.status === "won" && !lead.archived_at).length;
+  const active = leads.filter((lead) => !lead.archived_at);
+  const newLeads = active.filter((lead) => lead.status === "new").length;
+  const customers = active.filter((lead) => lead.status === "won");
+  const mrr = customers.reduce((sum, lead) => sum + lead.monthly_price_cents, 0);
+  const setupRevenue = customers.reduce((sum, lead) => sum + lead.setup_price_cents, 0);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("webforge_admin_password");
@@ -40,8 +49,10 @@ export default function Admin() {
       const response = await fetch("/api/admin/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: candidate }) });
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || "Anmeldung fehlgeschlagen.");
-      setLeads(data.leads as Lead[]);
-      setDraftNotes(Object.fromEntries((data.leads as Lead[]).map((lead) => [lead.id, lead.notes || ""])));
+      const loaded = data.leads as Lead[];
+      setLeads(loaded);
+      setDraftNotes(Object.fromEntries(loaded.map((lead) => [lead.id, lead.notes || ""])));
+      setCommercial(Object.fromEntries(loaded.map((lead) => [lead.id, draftFromLead(lead)])));
       setAuthenticated(true);
       sessionStorage.setItem("webforge_admin_password", candidate);
     } catch (err) {
@@ -58,8 +69,10 @@ export default function Admin() {
 
   async function changeStatus(leadId: number, status: LeadStatus) {
     setSavingId(leadId); setError("");
-    try { await post("/api/admin/leads/status", { leadId, status }); setLeads((items) => items.map((lead) => lead.id === leadId ? { ...lead, status } : lead)); }
-    catch (err) { setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden."); }
+    try {
+      await post("/api/admin/leads/status", { leadId, status });
+      setLeads((items) => items.map((lead) => lead.id === leadId ? { ...lead, status, customer_since: status === "won" ? (lead.customer_since || new Date().toISOString()) : lead.customer_since } : lead));
+    } catch (err) { setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden."); }
     finally { setSavingId(null); }
   }
 
@@ -67,6 +80,18 @@ export default function Admin() {
     setSavingId(leadId); setError("");
     try { const notes = draftNotes[leadId] || ""; await post("/api/admin/leads/manage", { action: "notes", leadId, notes }); setLeads((items) => items.map((lead) => lead.id === leadId ? { ...lead, notes: notes.trim() || null } : lead)); }
     catch (err) { setError(err instanceof Error ? err.message : "Notiz konnte nicht gespeichert werden."); }
+    finally { setSavingId(null); }
+  }
+
+  async function saveCommercial(leadId: number) {
+    const draft = commercial[leadId]; if (!draft) return;
+    setSavingId(leadId); setError("");
+    try {
+      const setupPriceCents = Math.round(Math.max(0, Number(draft.setupPrice.replace(",", ".")) || 0) * 100);
+      const monthlyPriceCents = Math.round(Math.max(0, Number(draft.monthlyPrice.replace(",", ".")) || 0) * 100);
+      await post("/api/admin/leads/commercial", { leadId, contactName: draft.contactName, phone: draft.phone, packageName: draft.packageName, setupPriceCents, monthlyPriceCents, proposalStatus: draft.proposalStatus });
+      setLeads((items) => items.map((lead) => lead.id === leadId ? { ...lead, contact_name: draft.contactName.trim() || null, phone: draft.phone.trim() || null, package_name: draft.packageName.trim() || null, setup_price_cents: setupPriceCents, monthly_price_cents: monthlyPriceCents, proposal_status: draft.proposalStatus } : lead));
+    } catch (err) { setError(err instanceof Error ? err.message : "Kundendaten konnten nicht gespeichert werden."); }
     finally { setSavingId(null); }
   }
 
@@ -92,14 +117,22 @@ export default function Admin() {
     finally { setSavingId(null); }
   }
 
+  function updateDraft(leadId: number, patch: Partial<CommercialDraft>) { setCommercial((items) => ({ ...items, [leadId]: { ...items[leadId], ...patch } })); }
   function logout() { sessionStorage.removeItem("webforge_admin_password"); setPassword(""); setLeads([]); setAuthenticated(false); setError(""); }
 
-  if (!authenticated) return <main className="admin"><aside><a className="brand" href="/"><span>W</span> WebForge</a><nav><b>Admin</b></nav></aside><section><div className="adminhead"><div><small>WEBFORGE CONTROL</small><h1>Admin Login</h1></div><a className="button" href="/">Website öffnen ↗</a></div><div className="adminpanel"><small>SICHERER ZUGANG</small><h2>Leads & Websites verwalten</h2><form onSubmit={(event) => { event.preventDefault(); void loadLeads(); }} style={{ display: "grid", gap: 12, maxWidth: 440 }}><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Adminpasswort" required/><button className="button" type="submit" disabled={loading}>{loading ? "Prüfe …" : "Einloggen"}</button>{error && <p>{error}</p>}</form></div></section></main>;
+  if (!authenticated) return <main className="admin"><aside><a className="brand" href="/"><span>W</span> WebForge</a><nav><b>Admin</b></nav></aside><section><div className="adminhead"><div><small>WEBFORGE CONTROL</small><h1>Admin Login</h1></div><a className="button" href="/">Website öffnen ↗</a></div><div className="adminpanel"><small>SICHERER ZUGANG</small><h2>Leads & Kunden verwalten</h2><form onSubmit={(event) => { event.preventDefault(); void loadLeads(); }} style={{ display: "grid", gap: 12, maxWidth: 440 }}><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Adminpasswort" required/><button className="button" type="submit" disabled={loading}>{loading ? "Prüfe …" : "Einloggen"}</button>{error && <p>{error}</p>}</form></div></section></main>;
 
   return <main className="admin"><aside><a className="brand" href="/"><span>W</span> WebForge</a><nav><b>Übersicht</b><span>Leads</span><span>Kunden</span><span>Websites</span></nav></aside><section>
-    <div className="adminhead"><div><small>WEBFORGE CONTROL</small><h1>Mini-CRM</h1></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="button" onClick={() => void loadLeads()}>{loading ? "Lädt …" : "Aktualisieren"}</button><button className="button" onClick={logout}>Abmelden</button></div></div>
-    <div className="stats"><article><small>NEUE LEADS</small><strong>{newLeads}</strong><span>offen</span></article><article><small>GEWONNEN</small><strong>{wonLeads}</strong><span>Kunden</span></article><article><small>DEMO-SITES</small><strong>{Object.keys(sites).length}</strong><span>bereit</span></article></div>
-    <div className="adminpanel"><div><small>FILTER</small><h2>Leads finden</h2></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Firma, E-Mail, Website, Notiz suchen" style={{minWidth:280}}/><select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value as "all"|LeadStatus)}><option value="all">Alle Status</option>{Object.entries(statusLabels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><label style={{display:"flex",alignItems:"center",gap:6}}><input type="checkbox" checked={showArchived} onChange={(e)=>setShowArchived(e.target.checked)}/> Archiv anzeigen</label></div></div>
-    <div className="adminpanel"><div><small>LEADS</small><h2>{filteredLeads.length} Treffer</h2></div>{error && <p>{error}</p>}{filteredLeads.map((lead)=><div key={lead.id} style={{padding:"18px 0",borderBottom:"1px solid rgba(255,255,255,.08)",display:"grid",gap:10}}><div className="adminrow"><span className="dot"/><div><strong>{lead.company}</strong><small><a href={`mailto:${lead.email}`}>{lead.email}</a>{lead.website ? <> · <a href={/^https?:\/\//i.test(lead.website)?lead.website:`https://${lead.website}`} target="_blank" rel="noreferrer">{lead.website}</a></>:null}</small></div><select value={lead.status} disabled={savingId===lead.id} onChange={(e)=>void changeStatus(lead.id,e.target.value as LeadStatus)}>{Object.entries(statusLabels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><small>{new Date(lead.created_at).toLocaleString("de-DE")}</small></div><textarea value={draftNotes[lead.id] || ""} onChange={(e)=>setDraftNotes((n)=>({...n,[lead.id]:e.target.value}))} placeholder="Interne Notiz …" rows={3}/><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button className="button" disabled={savingId===lead.id} onClick={()=>void saveNotes(lead.id)}>Notiz speichern</button><button className="button" disabled={savingId===lead.id} onClick={()=>void markContacted(lead.id)}>Kontakt jetzt</button><button className="button" disabled={savingId===lead.id} onClick={()=>void toggleArchive(lead)}>{lead.archived_at?"Wiederherstellen":"Archivieren"}</button><button className="button" disabled={savingId===lead.id} onClick={()=>void removeLead(lead)}>Löschen</button>{lead.last_contacted_at && <small>Letzter Kontakt: {new Date(lead.last_contacted_at).toLocaleString("de-DE")}</small>}</div></div>)}</div>
+    <div className="adminhead"><div><small>WEBFORGE CONTROL</small><h1>Sales CRM</h1></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="button" onClick={() => void loadLeads()}>{loading ? "Lädt …" : "Aktualisieren"}</button><button className="button" onClick={logout}>Abmelden</button></div></div>
+    <div className="stats"><article><small>NEUE LEADS</small><strong>{newLeads}</strong><span>offen</span></article><article><small>KUNDEN</small><strong>{customers.length}</strong><span>{money(setupRevenue)} Setup</span></article><article><small>MRR</small><strong>{money(mrr)}</strong><span>monatlich</span></article></div>
+    <div className="adminpanel"><div><small>FILTER</small><h2>Leads & Kunden finden</h2></div><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Firma, Kontakt, Paket, E-Mail …" style={{minWidth:280}}/><select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value as "all"|LeadStatus)}><option value="all">Alle Status</option>{Object.entries(statusLabels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><label style={{display:"flex",alignItems:"center",gap:6}}><input type="checkbox" checked={showArchived} onChange={(e)=>setShowArchived(e.target.checked)}/> Archiv anzeigen</label></div></div>
+    <div className="adminpanel"><div><small>PIPELINE</small><h2>{filteredLeads.length} Treffer</h2></div>{error && <p>{error}</p>}{filteredLeads.map((lead)=>{const draft=commercial[lead.id] || draftFromLead(lead); return <div key={lead.id} style={{padding:"20px 0",borderBottom:"1px solid rgba(255,255,255,.08)",display:"grid",gap:12}}>
+      <div className="adminrow"><span className="dot"/><div><strong>{lead.company}</strong><small><a href={`mailto:${lead.email}`}>{lead.email}</a>{lead.website ? <> · <a href={/^https?:\/\//i.test(lead.website)?lead.website:`https://${lead.website}`} target="_blank" rel="noreferrer">{lead.website}</a></>:null}</small></div><select value={lead.status} disabled={savingId===lead.id} onChange={(e)=>void changeStatus(lead.id,e.target.value as LeadStatus)}>{Object.entries(statusLabels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><small>{new Date(lead.created_at).toLocaleString("de-DE")}</small></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:8}}><input value={draft.contactName} onChange={(e)=>updateDraft(lead.id,{contactName:e.target.value})} placeholder="Ansprechpartner"/><input value={draft.phone} onChange={(e)=>updateDraft(lead.id,{phone:e.target.value})} placeholder="Telefon"/><input value={draft.packageName} onChange={(e)=>updateDraft(lead.id,{packageName:e.target.value})} placeholder="Paket, z. B. Business"/><input value={draft.setupPrice} onChange={(e)=>updateDraft(lead.id,{setupPrice:e.target.value})} inputMode="decimal" placeholder="Setup €"/><input value={draft.monthlyPrice} onChange={(e)=>updateDraft(lead.id,{monthlyPrice:e.target.value})} inputMode="decimal" placeholder="Monatlich €"/><select value={draft.proposalStatus} onChange={(e)=>updateDraft(lead.id,{proposalStatus:e.target.value as ProposalStatus})}>{Object.entries(proposalLabels).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></div>
+      <textarea value={draftNotes[lead.id] || ""} onChange={(e)=>setDraftNotes((n)=>({...n,[lead.id]:e.target.value}))} placeholder="Interne Notiz …" rows={3}/>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><button className="button" disabled={savingId===lead.id} onClick={()=>void saveCommercial(lead.id)}>Kundenakte speichern</button><button className="button" disabled={savingId===lead.id} onClick={()=>void saveNotes(lead.id)}>Notiz speichern</button><button className="button" disabled={savingId===lead.id} onClick={()=>void markContacted(lead.id)}>Kontakt jetzt</button><button className="button" disabled={savingId===lead.id} onClick={()=>void toggleArchive(lead)}>{lead.archived_at?"Wiederherstellen":"Archivieren"}</button><button className="button" disabled={savingId===lead.id} onClick={()=>void removeLead(lead)}>Löschen</button></div>
+      <div style={{display:"flex",gap:16,flexWrap:"wrap"}}><small>Angebot: {proposalLabels[lead.proposal_status]}</small><small>Setup: {money(lead.setup_price_cents)}</small><small>MRR: {money(lead.monthly_price_cents)}</small>{lead.customer_since&&<small>Kunde seit: {new Date(lead.customer_since).toLocaleDateString("de-DE")}</small>}{lead.last_contacted_at&&<small>Letzter Kontakt: {new Date(lead.last_contacted_at).toLocaleString("de-DE")}</small>}</div>
+    </div>})}</div>
+    <div className="adminpanel"><div><small>WEBSITES</small><h2>Vorlagen & Demos</h2></div>{Object.values(sites).map((site)=><div className="adminrow" key={site.slug}><span className="dot"/><div><strong>{site.business}</strong><small>{site.category}</small></div><b>Demo</b><a href={`/demo/${site.slug}`}>Öffnen ↗</a></div>)}</div>
   </section></main>;
 }
