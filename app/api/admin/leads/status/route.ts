@@ -7,10 +7,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const password = String(body.password || "");
-    const leadId = String(body.leadId || "");
+    const leadId = Number(body.leadId);
     const status = String(body.status || "") as LeadStatus;
 
-    if (!password || !leadId || !allowedStatuses.includes(status)) {
+    if (!password || !Number.isSafeInteger(leadId) || leadId <= 0 || !allowedStatuses.includes(status)) {
       return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
     }
 
