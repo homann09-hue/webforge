@@ -1,7 +1,7 @@
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
 
 export type Lead = {
-  id: string;
+  id: number;
   company: string;
   email: string;
   website: string | null;
@@ -68,7 +68,7 @@ export async function listLeads(password: string, limit = 50): Promise<Lead[]> {
   return (await response.json()) as Lead[];
 }
 
-export async function updateLeadStatus(password: string, leadId: string, status: LeadStatus) {
+export async function updateLeadStatus(password: string, leadId: number, status: LeadStatus) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_lead_status`, {
     method: "POST",
     headers: headers(),
