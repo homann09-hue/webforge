@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createOffer, deleteOffer, listOffers, updateOfferStatus, type OfferStatus } from "@/lib/offers";
 
 const allowedStatuses: OfferStatus[] = ["draft", "sent", "accepted", "rejected"];
+type OfferItemInput = { description: string; quantity: number; unit: string; unitPriceCents: number };
 
 export async function POST(req: Request) {
   try {
@@ -26,13 +27,16 @@ export async function POST(req: Request) {
       const taxPercent = Number(body.taxPercent ?? 19);
       const validUntil = String(body.validUntil || "").trim();
       const notes = String(body.notes || "").trim();
-      const rawItems = Array.isArray(body.items) ? body.items : [];
-      const items = rawItems.map((item: Record<string, unknown>) => ({
-        description: String(item.description || "").trim(),
-        quantity: Number(item.quantity ?? 1),
-        unit: String(item.unit || "Stk.").trim() || "Stk.",
-        unitPriceCents: Number(item.unitPriceCents ?? 0),
-      }));
+      const rawItems: unknown[] = Array.isArray(body.items) ? body.items : [];
+      const items: OfferItemInput[] = rawItems.map((raw) => {
+        const item = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+        return {
+          description: String(item.description || "").trim(),
+          quantity: Number(item.quantity ?? 1),
+          unit: String(item.unit || "Stk.").trim() || "Stk.",
+          unitPriceCents: Number(item.unitPriceCents ?? 0),
+        };
+      });
 
       if (!Number.isSafeInteger(leadId) || leadId <= 0 || title.length < 2 || title.length > 160 || !Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100 || !Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100 || items.length < 1 || items.length > 50 || items.some((item) => !item.description || !Number.isFinite(item.quantity) || item.quantity <= 0 || !Number.isSafeInteger(item.unitPriceCents) || item.unitPriceCents < 0)) {
         return NextResponse.json({ ok: false, error: "Angebotsdaten sind ungültig." }, { status: 400 });
