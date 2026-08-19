@@ -1,0 +1,10 @@
+import { notFound } from "next/navigation";
+import CustomerSite from "@/components/customer-site";
+import { getSite, sites } from "@/lib/site-config";
+
+export function generateStaticParams(){ return Object.keys(sites).map(slug=>({slug})); }
+
+export default async function DemoPage({params}:{params:Promise<{slug:string}>}){
+  const {slug}=await params; const site=getSite(slug); if(!site) notFound();
+  return <CustomerSite site={site}/>;
+}
