@@ -1,3 +1,4 @@
+"use client";
 export default function DemoHandwerk(){
   const services=[
     {n:"01",title:"Dachsanierung",text:"Energetisch, langlebig und sauber geplant – von der Bestandsaufnahme bis zur letzten Ziegelreihe."},
