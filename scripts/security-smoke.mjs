@@ -20,10 +20,10 @@ async function walk(dir) {
     if (!TEXT_EXT.has(extname(entry.name)) && !entry.name.startsWith(".env")) continue;
     const text = await readFile(path, "utf8").catch(() => "");
     for (const rule of RULES) {
-      for (const match of text.matchAll(rule.re)) {
-        if (entry.name === ".env.example" && rule.name === "Supabase service role assignment") continue;
-        findings.push(`${relative(ROOT, path)}: ${rule.name}`);
-      }
+      const hasMatch = [...text.matchAll(rule.re)].length > 0;
+      if (!hasMatch) continue;
+      if (entry.name === ".env.example" && rule.name === "Supabase service role assignment") continue;
+      findings.push(`${relative(ROOT, path)}: ${rule.name}`);
     }
   }
 }
