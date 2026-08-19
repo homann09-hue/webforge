@@ -1,8 +1,11 @@
-import nextConfig from "eslint-config-next";
+import js from "@eslint/js";
 
 export default [
-  ...nextConfig,
+  js.configs.recommended,
   {
     ignores: [".next/**", "node_modules/**"],
+    rules: {
+      "no-unused-vars": "warn",
+    },
   },
 ];
