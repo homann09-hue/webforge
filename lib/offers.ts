@@ -1,3 +1,5 @@
+import { adminRpc } from "@/lib/admin-rpc";
+
 export type OfferStatus = "draft" | "sent" | "accepted" | "rejected";
 
 export type OfferItem = {
@@ -33,35 +35,8 @@ export type Offer = {
   gross_cents: number;
 };
 
-const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-
-function headers() {
-  return {
-    apikey: SUPABASE_PUBLISHABLE_KEY,
-    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-    "Content-Type": "application/json",
-  };
-}
-
-async function rpc(name: string, body: Record<string, unknown>) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    console.error(`WEBFORGE_OFFER_RPC_${name}`, response.status, detail);
-    if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error("UNAUTHORIZED");
-    throw new Error("OFFER_RPC_FAILED");
-  }
-  return response;
-}
-
 export async function listOffers(password: string, leadId?: number): Promise<Offer[]> {
-  const response = await rpc("admin_list_offers", { p_password: password, p_lead_id: leadId ?? null });
+  const response = await adminRpc("admin_list_offers", { p_password: password, p_lead_id: leadId ?? null });
   return (await response.json()) as Offer[];
 }
 
@@ -74,7 +49,7 @@ export async function createOffer(password: string, input: {
   notes?: string;
   items: Array<{ description: string; quantity: number; unit: string; unitPriceCents: number }>;
 }): Promise<number> {
-  const response = await rpc("admin_create_offer", {
+  const response = await adminRpc("admin_create_offer", {
     p_password: password,
     p_lead_id: input.leadId,
     p_title: input.title,
@@ -93,9 +68,9 @@ export async function createOffer(password: string, input: {
 }
 
 export async function updateOfferStatus(password: string, offerId: number, status: OfferStatus) {
-  await rpc("admin_update_offer_status", { p_password: password, p_offer_id: offerId, p_status: status });
+  await adminRpc("admin_update_offer_status", { p_password: password, p_offer_id: offerId, p_status: status });
 }
 
 export async function deleteOffer(password: string, offerId: number) {
-  await rpc("admin_delete_offer", { p_password: password, p_offer_id: offerId });
+  await adminRpc("admin_delete_offer", { p_password: password, p_offer_id: offerId });
 }
