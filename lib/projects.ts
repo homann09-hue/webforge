@@ -1,3 +1,5 @@
+import { adminRpc } from "@/lib/admin-rpc";
+
 export type ProjectStatus = "planning" | "waiting_content" | "design" | "development" | "review" | "live" | "paused" | "cancelled";
 export type OnboardingStatus = "not_started" | "waiting_customer" | "ready" | "completed";
 export type ProjectTaskCategory = "general" | "content" | "branding" | "domain" | "legal" | "technical";
@@ -43,37 +45,19 @@ export type ProjectTask = {
   sort_order: number;
 };
 
-const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-
-function headers() {
-  return { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" };
-}
-
-async function rpc(name: string, body: Record<string, unknown>) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, { method: "POST", headers: headers(), body: JSON.stringify(body), cache: "no-store" });
-  if (!response.ok) {
-    const detail = await response.text();
-    console.error(`WEBFORGE_PROJECT_RPC_${name}`, response.status, detail);
-    if (response.status === 400 || response.status === 401 || response.status === 403) throw new Error("UNAUTHORIZED");
-    throw new Error("PROJECT_RPC_FAILED");
-  }
-  return response;
-}
-
 export async function listProjects(password: string): Promise<CustomerProject[]> {
-  const response = await rpc("admin_list_projects", { p_password: password });
+  const response = await adminRpc("admin_list_projects", { p_password: password });
   return (await response.json()) as CustomerProject[];
 }
 
 export async function updateProject(password: string, projectId: number, input: { status: ProjectStatus; progress: number; domain: string; liveUrl: string; targetLaunchDate: string; notes: string }) {
-  await rpc("admin_update_project", { p_password: password, p_project_id: projectId, p_status: input.status, p_progress: input.progress, p_domain: input.domain || null, p_live_url: input.liveUrl || null, p_target_launch_date: input.targetLaunchDate || null, p_notes: input.notes || null });
+  await adminRpc("admin_update_project", { p_password: password, p_project_id: projectId, p_status: input.status, p_progress: input.progress, p_domain: input.domain || null, p_live_url: input.liveUrl || null, p_target_launch_date: input.targetLaunchDate || null, p_notes: input.notes || null });
 }
 
 export async function saveProjectOnboarding(password: string, projectId: number, input: {
   onboardingStatus: OnboardingStatus; contentDeadline: string; logoReceived: boolean; imagesReceived: boolean; textsReceived: boolean; domainAccessReceived: boolean; legalDataReceived: boolean;
 }) {
-  await rpc("admin_save_project_onboarding", {
+  await adminRpc("admin_save_project_onboarding", {
     p_password: password, p_project_id: projectId, p_onboarding_status: input.onboardingStatus, p_content_deadline: input.contentDeadline || null,
     p_logo_received: input.logoReceived, p_images_received: input.imagesReceived, p_texts_received: input.textsReceived,
     p_domain_access_received: input.domainAccessReceived, p_legal_data_received: input.legalDataReceived,
@@ -81,12 +65,12 @@ export async function saveProjectOnboarding(password: string, projectId: number,
 }
 
 export async function listProjectTasks(password: string, projectId: number): Promise<ProjectTask[]> {
-  const response = await rpc("admin_project_tasks", { p_password: password, p_project_id: projectId });
+  const response = await adminRpc("admin_project_tasks", { p_password: password, p_project_id: projectId });
   return (await response.json()) as ProjectTask[];
 }
 
 export async function saveProjectTask(password: string, projectId: number, task: Partial<ProjectTask> & Pick<ProjectTask, "title" | "category" | "required" | "completed" | "sort_order">) {
-  const response = await rpc("admin_upsert_project_task", {
+  const response = await adminRpc("admin_upsert_project_task", {
     p_password: password, p_project_id: projectId, p_task_id: task.id || null, p_title: task.title, p_category: task.category,
     p_required: task.required, p_completed: task.completed, p_due_date: task.due_date || null, p_notes: task.notes || null, p_sort_order: task.sort_order,
   });
@@ -94,5 +78,5 @@ export async function saveProjectTask(password: string, projectId: number, task:
 }
 
 export async function deleteProjectTask(password: string, projectId: number, taskId: number) {
-  await rpc("admin_delete_project_task", { p_password: password, p_project_id: projectId, p_task_id: taskId });
+  await adminRpc("admin_delete_project_task", { p_password: password, p_project_id: projectId, p_task_id: taskId });
 }
