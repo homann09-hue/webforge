@@ -2,16 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { sites } from "@/lib/site-config";
-import type { Lead } from "@/lib/leads";
+import type { Lead, LeadStatus } from "@/lib/leads";
+
+const statusLabels: Record<LeadStatus, string> = {
+  new: "Neu",
+  contacted: "Kontaktiert",
+  qualified: "Qualifiziert",
+  won: "Gewonnen",
+  lost: "Verloren",
+};
 
 export default function Admin() {
   const [password, setPassword] = useState("");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
 
   const newLeads = useMemo(() => leads.filter((lead) => lead.status === "new").length, [leads]);
+  const wonLeads = useMemo(() => leads.filter((lead) => lead.status === "won").length, [leads]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("webforge_admin_password");
@@ -41,6 +51,25 @@ export default function Admin() {
       setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function changeStatus(leadId: string, status: LeadStatus) {
+    setSavingId(leadId);
+    setError("");
+    try {
+      const response = await fetch("/api/admin/leads/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, leadId, status }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "Status konnte nicht gespeichert werden.");
+      setLeads((current) => current.map((lead) => lead.id === leadId ? { ...lead, status } : lead));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden.");
+    } finally {
+      setSavingId(null);
     }
   }
 
@@ -95,16 +124,16 @@ export default function Admin() {
       <section>
         <div className="adminhead">
           <div><small>WEBFORGE CONTROL</small><h1>Übersicht</h1></div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="button" onClick={() => void loadLeads()} disabled={loading}>{loading ? "Lädt …" : "Aktualisieren"}</button>
             <button className="button" onClick={logout}>Abmelden</button>
           </div>
         </div>
 
         <div className="stats">
-          <article><small>NEUE LEADS</small><strong>{newLeads}</strong><span>{leads.length} gesamt geladen</span></article>
+          <article><small>NEUE LEADS</small><strong>{newLeads}</strong><span>{leads.length} gesamt</span></article>
+          <article><small>GEWONNEN</small><strong>{wonLeads}</strong><span>als Kunde markiert</span></article>
           <article><small>DEMO-SITES</small><strong>{Object.keys(sites).length}</strong><span>bereit zur Präsentation</span></article>
-          <article><small>MRR</small><strong>0 €</strong><span>Startphase</span></article>
         </div>
 
         <div className="adminpanel">
@@ -114,8 +143,21 @@ export default function Admin() {
           {leads.map((lead) => (
             <div className="adminrow" key={lead.id}>
               <span className="dot" />
-              <div><strong>{lead.company}</strong><small>{lead.email}{lead.website ? ` · ${lead.website}` : ""}</small></div>
-              <b>{lead.status}</b>
+              <div>
+                <strong>{lead.company}</strong>
+                <small>
+                  <a href={`mailto:${lead.email}`}>{lead.email}</a>
+                  {lead.website ? <> · <a href={/^https?:\/\//i.test(lead.website) ? lead.website : `https://${lead.website}`} target="_blank" rel="noreferrer">{lead.website}</a></> : null}
+                </small>
+              </div>
+              <select
+                value={lead.status}
+                disabled={savingId === lead.id}
+                onChange={(event) => void changeStatus(lead.id, event.target.value as LeadStatus)}
+                aria-label={`Status für ${lead.company}`}
+              >
+                {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
               <small>{new Date(lead.created_at).toLocaleString("de-DE")}</small>
             </div>
           ))}
