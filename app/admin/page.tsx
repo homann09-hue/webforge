@@ -8,13 +8,14 @@ import type { Offer, OfferStatus } from "@/lib/offers";
 const statusLabels: Record<LeadStatus, string> = { new: "Neu", contacted: "Kontaktiert", qualified: "Qualifiziert", won: "Gewonnen", lost: "Verloren" };
 const proposalLabels: Record<ProposalStatus, string> = { none: "Kein Angebot", draft: "Entwurf", sent: "Gesendet", accepted: "Angenommen", rejected: "Abgelehnt" };
 const offerStatusLabels: Record<OfferStatus, string> = { draft: "Entwurf", sent: "Gesendet", accepted: "Angenommen", rejected: "Abgelehnt" };
+const htmlEntities: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
 type CommercialDraft = { contactName: string; phone: string; packageName: string; setupPrice: string; monthlyPrice: string; proposalStatus: ProposalStatus };
 type OfferItemDraft = { description: string; quantity: string; unit: string; unitPrice: string };
 
 function money(cents: number) { return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100); }
 function draftFromLead(lead: Lead): CommercialDraft { return { contactName: lead.contact_name || "", phone: lead.phone || "", packageName: lead.package_name || "", setupPrice: (lead.setup_price_cents / 100).toFixed(2), monthlyPrice: (lead.monthly_price_cents / 100).toFixed(2), proposalStatus: lead.proposal_status }; }
-function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char] || char)); }
+function escapeHtml(value: string) { return value.replace(/[&<>"']/g, (char) => htmlEntities[char] ?? char); }
 
 export default function Admin() {
   const [password, setPassword] = useState("");
