@@ -16,7 +16,7 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(false);
-  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
 
@@ -54,7 +54,7 @@ export default function Admin() {
     }
   }
 
-  async function changeStatus(leadId: string, status: LeadStatus) {
+  async function changeStatus(leadId: number, status: LeadStatus) {
     setSavingId(leadId);
     setError("");
     try {
