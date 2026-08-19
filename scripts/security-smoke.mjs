@@ -8,7 +8,7 @@ const RULES = [
   { name: "Stripe live secret", re: /sk_live_[A-Za-z0-9]{16,}/g },
   { name: "Stripe test secret", re: /sk_test_[A-Za-z0-9]{16,}/g },
   { name: "Stripe webhook secret", re: /whsec_[A-Za-z0-9]{16,}/g },
-  { name: "Supabase service role assignment", re: /SUPABASE_SERVICE_ROLE_KEY\s*=\s*[^\s#]+/g },
+  { name: "Supabase service role assignment", re: /SUPABASE_SERVICE_ROLE_KEY\s*=\s*(?!\s*$)(?!your-|changeme|placeholder|<)[^\s#]+/gm },
 ];
 
 const findings = [];
@@ -21,7 +21,6 @@ async function walk(dir) {
     const text = await readFile(path, "utf8").catch(() => "");
     for (const rule of RULES) {
       for (const match of text.matchAll(rule.re)) {
-        if (entry.name === ".env.example" && /=$/.test(match[0])) continue;
         findings.push(`${relative(ROOT, path)}: ${rule.name}`);
       }
     }
