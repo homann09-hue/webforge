@@ -1,9 +1,11 @@
+export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
+
 export type Lead = {
   id: string;
   company: string;
   email: string;
   website: string | null;
-  status: "new" | "contacted" | "qualified" | "won" | "lost";
+  status: LeadStatus;
   created_at: string;
 };
 
@@ -64,4 +66,26 @@ export async function listLeads(password: string, limit = 50): Promise<Lead[]> {
   }
 
   return (await response.json()) as Lead[];
+}
+
+export async function updateLeadStatus(password: string, leadId: string, status: LeadStatus) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_update_lead_status`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      p_password: password,
+      p_lead_id: leadId,
+      p_status: status,
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    console.error("WEBFORGE_LEAD_STATUS_ERROR", response.status, detail);
+    if (response.status === 400 || response.status === 401 || response.status === 403) {
+      throw new Error("UNAUTHORIZED");
+    }
+    throw new Error("LEAD_STATUS_UPDATE_FAILED");
+  }
 }
