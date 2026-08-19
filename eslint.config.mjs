@@ -1,5 +1,6 @@
-import js from "@eslint/js";
 import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import globals from "globals";
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -12,8 +13,7 @@ export default [
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       globals: {
-        process: "readonly",
-        console: "readonly",
+        ...globals.node,
       },
     },
     rules: {
