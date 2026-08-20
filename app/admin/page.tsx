@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch, adminLogin, adminLogout, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminLogout, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import { offerPrintHtml, openPrintWindow } from "@/lib/print-template";
 import { sites } from "@/lib/site-config";
@@ -123,7 +123,7 @@ export default function Admin() {
       await loadWorkspace();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
 
@@ -144,7 +144,7 @@ export default function Admin() {
       setAuthenticated(true);
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export default function Admin() {
       await request("/api/admin/leads/status", { leadId, status });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Status konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -171,7 +171,7 @@ export default function Admin() {
       await request("/api/admin/leads/manage", { action: "notes", leadId, notes });
       setLeads((items) => items.map((lead) => (lead.id === leadId ? { ...lead, notes: notes.trim() || null } : lead)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Notiz konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Notiz konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -199,7 +199,7 @@ export default function Admin() {
       });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kundendaten konnten nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Kundendaten konnten nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -212,7 +212,7 @@ export default function Admin() {
       await request("/api/admin/leads/manage", { action: "contacted", leadId });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kontakt konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Kontakt konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -225,7 +225,7 @@ export default function Admin() {
       await request("/api/admin/leads/manage", { action: "archive", leadId: lead.id, archived: !lead.archived_at });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Archivierung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Archivierung fehlgeschlagen.");
     } finally {
       setSavingId(null);
     }
@@ -239,7 +239,7 @@ export default function Admin() {
       await request("/api/admin/leads/manage", { action: "delete", leadId: lead.id });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Lead konnte nicht gelöscht werden.");
+      handleAdminError(err, setError, setAuthenticated, "Lead konnte nicht gelöscht werden.");
     } finally {
       setSavingId(null);
     }
@@ -291,7 +291,7 @@ export default function Admin() {
       setOfferItems([{ description: "Webdesign & Umsetzung", quantity: "1", unit: "Pauschal", unitPrice: "699" }]);
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Angebot konnte nicht erstellt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Angebot konnte nicht erstellt werden.");
     } finally {
       setLoading(false);
     }
@@ -304,7 +304,7 @@ export default function Admin() {
       await request("/api/admin/offers", { action: "status", offerId, status });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Angebotsstatus konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Angebotsstatus konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -318,7 +318,7 @@ export default function Admin() {
       await request("/api/admin/offers", { action: "delete", offerId: offer.id });
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Angebot konnte nicht gelöscht werden.");
+      handleAdminError(err, setError, setAuthenticated, "Angebot konnte nicht gelöscht werden.");
     } finally {
       setSavingId(null);
     }

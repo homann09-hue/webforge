@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { company, field, isLegalComplete } from "@/lib/company";
 
 export const metadata: Metadata = {
-  title: "Impressum — WebForge",
+  title: "Impressum",
+  description: "Anbieterkennzeichnung nach § 5 DDG.",
+  alternates: { canonical: "/impressum" },
   robots: { index: true, follow: true },
 };
 

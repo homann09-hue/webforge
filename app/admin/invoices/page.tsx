@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import { invoicePrintHtml, openPrintWindow } from "@/lib/print-template";
 import type { Invoice, InvoiceStatus, InvoiceType, PaymentMethod } from "@/lib/billing";
@@ -106,7 +106,7 @@ export default function InvoicesAdmin() {
       await loadAll();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
 
@@ -125,7 +125,7 @@ export default function InvoicesAdmin() {
       setAuthenticated(true);
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -171,7 +171,7 @@ export default function InvoicesAdmin() {
       setNotes("");
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Rechnung konnte nicht erstellt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Rechnung konnte nicht erstellt werden.");
     } finally {
       setLoading(false);
     }
@@ -183,7 +183,7 @@ export default function InvoicesAdmin() {
       await post("/api/admin/invoices", { action: "status", invoiceId, status });
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Status konnte nicht gespeichert werden.");
     }
   }
 
@@ -211,7 +211,7 @@ export default function InvoicesAdmin() {
       });
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Zahlung konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Zahlung konnte nicht gespeichert werden.");
     }
   }
 
@@ -222,7 +222,7 @@ export default function InvoicesAdmin() {
       await post("/api/admin/invoices", { action: "delete", invoiceId: invoice.id });
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Rechnung konnte nicht gelöscht werden.");
+      handleAdminError(err, setError, setAuthenticated, "Rechnung konnte nicht gelöscht werden.");
     }
   }
 

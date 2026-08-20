@@ -28,6 +28,14 @@ const config = [
     },
   },
   {
+    // The base no-unused-vars rule does not understand TypeScript type
+    // positions: it flags the parameter names inside a function *type*
+    // annotation, e.g. `(message: string) => void`. TypeScript itself already
+    // reports genuinely unused values, so turn the base rule off for TS.
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: { "no-unused-vars": "off" },
+  },
+  {
     // supabase/functions is Deno source vendored verbatim from the live
     // project; linting it with the Next config only produces noise.
     ignores: [".next/**", "node_modules/**", "supabase/functions/**"],

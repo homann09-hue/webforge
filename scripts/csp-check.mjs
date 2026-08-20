@@ -13,6 +13,8 @@
  * the page's own event system and are subject to its CSP, which makes them the
  * one honest probe available from here. They are also a realistic XSS vector.
  */
+import { get as httpGet } from "node:http";
+
 const BASE = process.env.CSP_BASE_URL || "http://localhost:3000";
 
 /**
@@ -41,12 +43,29 @@ function check(name, ok, detail = "") {
   if (!ok) failures += 1;
 }
 
-// Exactly one CSP header per response. Two would be enforced as an
-// intersection and would block the nonced scripts.
+/**
+ * Exactly one CSP header per response. Two would be enforced as an
+ * intersection and would block the nonced scripts.
+ *
+ * fetch() cannot see this: Headers.get() joins duplicate values with ", ", so
+ * two policies look like one long string and the check passes. node:http keeps
+ * them separate in rawHeaders, which is the only way to actually count them.
+ */
+function rawHeaderCount(url, header) {
+  return new Promise((resolve, reject) => {
+    const request = httpGet(url, (response) => {
+      const names = [];
+      for (let i = 0; i < response.rawHeaders.length; i += 2) names.push(response.rawHeaders[i].toLowerCase());
+      response.resume();
+      resolve(names.filter((name) => name === header).length);
+    });
+    request.on("error", reject);
+  });
+}
+
 for (const path of ["/", "/impressum", "/admin", "/portal/x"]) {
-  const response = await fetch(`${BASE}${path}`, { redirect: "manual" });
-  const raw = response.headers.getSetCookie ? response.headers.get("content-security-policy") : null;
-  check(`${path}: genau ein CSP-Header`, typeof raw === "string" && raw.length > 0);
+  const count = await rawHeaderCount(`${BASE}${path}`, "content-security-policy");
+  check(`${path}: genau ein CSP-Header`, count === 1, `${count} gefunden`);
 }
 
 // Next.js must stamp its nonce onto every script it emits on the guarded

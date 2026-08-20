@@ -2,11 +2,11 @@
 
 ## Was hier liegt
 
-| Pfad          | Inhalt                                                                            |
-| ------------- | --------------------------------------------------------------------------------- |
-| `functions/`  | Alle 7 Edge Functions, verbatim aus dem Live-Projekt                              |
-| `migrations/` | 001 (überholt, siehe Kopfkommentar), 002 und 003 (neu, noch **nicht** angewendet) |
-| `SCHEMA.md`   | Tabellen, Constraints und alle 42 Funktionen als Referenz                         |
+| Pfad          | Inhalt                                                                          |
+| ------------- | ------------------------------------------------------------------------------- |
+| `functions/`  | Alle 7 Edge Functions, verbatim aus dem Live-Projekt                            |
+| `migrations/` | 001 (überholt, siehe Kopfkommentar), 002–006 — **alle angewendet**, siehe unten |
+| `SCHEMA.md`   | Tabellen, Constraints und alle 42 Funktionen als Referenz                       |
 
 Projekt: `jplqdaxtnrqimlgzwuaw` (WebForge, eu-central-1)
 
@@ -47,12 +47,23 @@ supabase db push
 
 ## Bereits angewendet (20.08.2026)
 
-- `admin-portal-file-url` v3 deployt. Die vorherige Version prüfte nur
-  `internal_admin_validate_password`, bekam von der Anwendung aber ein
-  Session-Token — „Datei öffnen" im Adminbereich antwortete immer mit 401.
-  Die neue Version akzeptiert beides, genau wie `admin-gateway`.
-- Migration 002: Unique-Index auf `payments.external_payment_id`.
-- Migration 003: `submit_lead` entfernt.
+| Migration / Deploy         | Inhalt                                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `admin-portal-file-url` v3 | Akzeptiert jetzt auch Session-Tokens. Vorher antwortete „Datei öffnen" im Admin **immer** mit 401. |
+| `admin-logout` v1          | Neu. Der Logout widerrief die Session vorher nie serverseitig.                                     |
+| 002                        | Unique-Index auf `payments.external_payment_id` — **fehlerhaft, siehe 006**                        |
+| 003                        | `submit_lead` entfernt (Insert ohne Ratenbegrenzung)                                               |
+| 004                        | Adminpasswort auf bcrypt, mit Lazy-Upgrade beim nächsten Login                                     |
+| 005                        | Brute-Force-Zähler repariert — hatte nie funktioniert                                              |
+| 006                        | Korrigiert 002: der Index war partiell und damit für `ON CONFLICT` unbrauchbar                     |
+
+**Zu 002 und 006:** Der Index aus 002 trug ein `where external_payment_id is
+not null`. Postgres kann einen partiellen Index für `ON CONFLICT` nicht
+auflösen, wenn das Statement das Prädikat nicht wiederholt — PostgREST sendet
+es nicht. Jeder Zahlungs-Insert wäre mit `42P10` gescheitert, der Webhook hätte
+500 geliefert und Stripe hätte endlos wiederholt, ohne dass je eine Zahlung
+verbucht worden wäre. 002 wurde angewendet und als erledigt gemeldet — das war
+falsch. 006 behebt es, gegen die Live-Datenbank verifiziert.
 
 Die Dateien unter `functions/` und `migrations/` entsprechen damit dem
 Live-Stand.

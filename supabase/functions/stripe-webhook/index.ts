@@ -179,7 +179,8 @@ async function processEvent(event: { id: string; type: string; data: { object: R
             body: JSON.stringify({ stripe_invoice_id: stripeInvoiceId, stripe_payment_intent_id: paymentIntent, updated_at: new Date().toISOString() }),
           });
           const externalPaymentId = paymentIntent || stripeInvoiceId || event.id;
-          // Requires the unique constraint added in migration 003. Without it
+          // Requires the unique index added in migration 002 and corrected in 006.
+          // Without it
           // PostgREST cannot resolve on_conflict and the insert fails.
           const payment = await sb("payments?on_conflict=external_payment_id", {
             method: "POST",

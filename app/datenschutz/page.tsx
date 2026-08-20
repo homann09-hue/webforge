@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { company, field, isLegalComplete } from "@/lib/company";
 
 export const metadata: Metadata = {
-  title: "Datenschutzerklärung — WebForge",
+  title: "Datenschutzerklärung",
+  description:
+    "Wie WebForge personenbezogene Daten verarbeitet: Kontaktformular, Kundenportal, Zahlungen und eingesetzte Dienstleister.",
+  alternates: { canonical: "/datenschutz" },
   robots: { index: true, follow: true },
 };
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  AdminRateLimited,
   AdminUnauthorized,
   ADMIN_COOKIE,
   clearAdminCookie,
@@ -22,6 +23,12 @@ export async function POST(req: Request) {
     const token = await exchangePasswordForToken(password);
     return setAdminCookie(NextResponse.json({ ok: true }), token);
   } catch (error) {
+    if (error instanceof AdminRateLimited) {
+      return NextResponse.json(
+        { ok: false, error: "Zu viele Anmeldeversuche. Bitte eine Minute warten." },
+        { status: 429 },
+      );
+    }
     if (error instanceof AdminUnauthorized) {
       return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     }
@@ -44,6 +51,16 @@ export async function GET() {
 export async function DELETE() {
   const store = await cookies();
   const token = store.get(ADMIN_COOKIE)?.value ?? "";
-  await revokeAdminSession(token);
-  return clearAdminCookie(NextResponse.json({ ok: true }));
+  const revoked = await revokeAdminSession(token);
+
+  // The cookie goes either way — the user asked to leave. But saying "logged
+  // out" when the token is still valid server side for eight hours would be a
+  // lie, and this is the one place that can tell.
+  return clearAdminCookie(
+    NextResponse.json(
+      revoked
+        ? { ok: true, revoked: true }
+        : { ok: true, revoked: false, warning: "Sitzung konnte serverseitig nicht widerrufen werden." },
+    ),
+  );
 }

@@ -52,7 +52,9 @@ function issuerBlock(): string {
     field(company.street),
     `${field(company.postalCode)} ${field(company.city)}`,
     field(company.email),
-    company.vatId ? `USt-IdNr.: ${escapeHtml(company.vatId)}` : "",
+    // Not escaped here: the whole array goes through escapeHtml below, and
+    // escaping twice renders "&" as "&amp;".
+    company.vatId ? `USt-IdNr.: ${company.vatId}` : "",
     company.smallBusiness ? "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet." : "",
   ].filter(Boolean);
   return `<div class="issuer">${lines.map(escapeHtml).join("<br>")}</div>`;

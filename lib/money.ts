@@ -10,6 +10,39 @@
 /** Amounts above this are refused rather than silently overflowing. */
 const MAX_CENTS = 100_000_000_00; // 100 million euro
 
+/** Quantities above this are refused. An invoice line is not a warehouse. */
+const MAX_QUANTITY = 1_000_000;
+
+/** Longer than this is not a number a person typed. */
+const MAX_INPUT_LENGTH = 32;
+
+/**
+ * Accepted spellings. Anything not matching exactly one of these is rejected.
+ *
+ * An earlier version guessed: it stripped separators it did not understand and
+ * returned a number anyway. That turned "1.234.56" into 123456 — a hundred
+ * times too large, and far more dangerous than the NaN-to-zero bug it replaced,
+ * because a wrong-looking zero gets noticed and a wrong-looking 123.456 does
+ * not. Guessing is now a rejection.
+ */
+const GRAMMARS: Array<{ pattern: RegExp; normalise: (value: string) => string }> = [
+  // 1249
+  { pattern: /^-?\d+$/, normalise: (v) => v },
+  // 1.234.567 — dots as thousands separators (groups of exactly three)
+  { pattern: /^-?\d{1,3}(\.\d{3})+$/, normalise: (v) => v.split(".").join("") },
+  // 1.234.567,89 — German full form
+  { pattern: /^-?\d{1,3}(\.\d{3})+,\d+$/, normalise: (v) => v.split(".").join("").replace(",", ".") },
+  // 699,50 — decimal comma. Must be tried BEFORE the English thousands form:
+  // "0,005" matches both, and in a German UI it means five thousandths, not
+  // five. Getting this order wrong turned 0,005 into 5.
+  { pattern: /^-?\d+,\d+$/, normalise: (v) => v.replace(",", ".") },
+  // 1,234,567.89 — English full form. Needs at least two comma groups or a
+  // decimal point to be distinguishable from the rule above.
+  { pattern: /^-?\d{1,3}(,\d{3})+(\.\d+)?$/, normalise: (v) => v.split(",").join("") },
+  // 1249.00 — decimal point
+  { pattern: /^-?\d+\.\d+$/, normalise: (v) => v },
+];
+
 /**
  * Parses a decimal a German-speaking user is likely to type.
  *
@@ -18,41 +51,25 @@ const MAX_CENTS = 100_000_000_00; // 100 million euro
  *   "1.249,00"   -> 1249
  *   "1249.00"    -> 1249
  *   "1.234.567"  -> 1234567   (dots read as thousands separators)
+ *   "1.234.56"   -> null      (not a spelling anyone means)
  *   ""  / "abc"  -> null
  *
- * Returns null for anything it cannot read, so callers must decide what to do
- * rather than inheriting a silent zero.
+ * Returns null for anything it cannot read unambiguously, so callers must
+ * decide what to do rather than inheriting a silent wrong number.
  */
 export function parseDecimalInput(raw: string): number | null {
   const value = String(raw ?? "")
     .trim()
-    .replace(/\s|€/g, "");
-  if (!value) return null;
-  if (!/^-?[\d.,]+$/.test(value)) return null;
+    .replace(/[\s\u00a0\u202f€]/g, "");
+  if (!value || value.length > MAX_INPUT_LENGTH) return null;
 
-  const lastComma = value.lastIndexOf(",");
-  const lastDot = value.lastIndexOf(".");
-
-  let normalised: string;
-  if (lastComma >= 0 && lastDot >= 0) {
-    // Both present: whichever comes last is the decimal separator.
-    const decimalSeparator = lastComma > lastDot ? "," : ".";
-    const thousandsSeparator = decimalSeparator === "," ? "." : ",";
-    normalised = value.split(thousandsSeparator).join("").replace(decimalSeparator, ".");
-  } else if (lastComma >= 0) {
-    // Only commas: a single one is decimal, several are thousands separators.
-    normalised = value.split(",").length === 2 ? value.replace(",", ".") : value.split(",").join("");
-  } else if (lastDot >= 0) {
-    // Only dots. "1.234" is ambiguous; treat groups of exactly three digits
-    // as thousands separators, which is how a German user means it.
-    normalised = /^-?\d{1,3}(\.\d{3})+$/.test(value) ? value.split(".").join("") : value;
-    if (normalised.split(".").length > 2) normalised = normalised.split(".").join("");
-  } else {
-    normalised = value;
+  for (const { pattern, normalise } of GRAMMARS) {
+    if (pattern.test(value)) {
+      const parsed = Number(normalise(value));
+      return Number.isFinite(parsed) ? parsed : null;
+    }
   }
-
-  const parsed = Number(normalised);
-  return Number.isFinite(parsed) ? parsed : null;
+  return null;
 }
 
 /**
@@ -71,13 +88,22 @@ export function parseAmountToCents(raw: string): number | null {
 export function parseQuantity(raw: string): number | null {
   const parsed = parseDecimalInput(raw);
   if (parsed === null || !Number.isFinite(parsed) || parsed <= 0) return null;
+  if (parsed > MAX_QUANTITY) return null;
   return parsed;
 }
 
-/** Parses a percentage between 0 and 100. */
+/**
+ * Parses a percentage between 0 and 100.
+ *
+ * An empty field means "use the default" and returns the fallback. Anything
+ * unreadable returns null, so the caller can refuse it. Collapsing those two
+ * cases meant that typing "7,5%" — with the percent sign — silently booked the
+ * 19% default instead of 7.5%, with no error anywhere.
+ */
 export function parsePercent(raw: string, fallback: number | null = null): number | null {
+  if (String(raw ?? "").trim() === "") return fallback;
   const parsed = parseDecimalInput(raw);
-  if (parsed === null) return fallback;
+  if (parsed === null) return null;
   if (parsed < 0 || parsed > 100) return null;
   return parsed;
 }

@@ -12,7 +12,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: title, template: "%s — WebForge" },
   description,
-  alternates: { canonical: "/" },
+  // Deliberately no `alternates` here: Next.js inherits it into every child
+  // segment, so a canonical set on the root layout points the demos, the
+  // imprint and the privacy policy at the homepage — while sitemap.ts submits
+  // those very URLs. Each page sets its own.
   openGraph: {
     type: "website",
     locale: "de_DE",

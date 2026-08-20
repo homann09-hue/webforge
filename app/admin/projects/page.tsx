@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import type {
   CustomerProject,
   OnboardingStatus,
@@ -115,7 +115,7 @@ export default function ProjectsAdmin() {
       await loadProjects();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
 
@@ -130,7 +130,7 @@ export default function ProjectsAdmin() {
       setAuthenticated(true);
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export default function ProjectsAdmin() {
       });
       await loadProjects();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Projekt konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Projekt konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -188,7 +188,7 @@ export default function ProjectsAdmin() {
         setTasks((current) => ({ ...current, [projectId]: data.tasks as ProjectTask[] }));
         setNewTasks((current) => ({ ...current, [projectId]: current[projectId] || defaultNewTask() }));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Checkliste konnte nicht geladen werden.");
+        handleAdminError(err, setError, setAuthenticated, "Checkliste konnte nicht geladen werden.");
       }
     }
   }
@@ -218,7 +218,7 @@ export default function ProjectsAdmin() {
         ),
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkliste konnte nicht aktualisiert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Checkliste konnte nicht aktualisiert werden.");
     } finally {
       setSavingId(null);
     }
@@ -245,7 +245,7 @@ export default function ProjectsAdmin() {
       setTasks((current) => ({ ...current, [projectId]: data.tasks as ProjectTask[] }));
       setNewTasks((current) => ({ ...current, [projectId]: defaultNewTask() }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checklistenpunkt konnte nicht erstellt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Checklistenpunkt konnte nicht erstellt werden.");
     } finally {
       setSavingId(null);
     }
@@ -262,7 +262,7 @@ export default function ProjectsAdmin() {
         [projectId]: (current[projectId] || []).filter((task) => task.id !== taskId),
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checklistenpunkt konnte nicht gelöscht werden.");
+      handleAdminError(err, setError, setAuthenticated, "Checklistenpunkt konnte nicht gelöscht werden.");
     } finally {
       setSavingId(null);
     }

@@ -20,6 +20,14 @@ export class AdminUnauthorized extends Error {
   }
 }
 
+/** Login refused because the brute-force limiter engaged, not because the password was wrong. */
+export class AdminRateLimited extends Error {
+  constructor() {
+    super("RATE_LIMITED");
+    this.name = "AdminRateLimited";
+  }
+}
+
 /**
  * Exchanges the shared admin password for a short lived session token.
  * Runs server side only, so the password never reaches the browser's storage.
@@ -33,6 +41,11 @@ export async function exchangePasswordForToken(password: string): Promise<string
   });
 
   const data = (await response.json().catch(() => ({}))) as { ok?: boolean; token?: unknown };
+
+  // Migration 005 exists to make the brute-force limiter actually work; telling
+  // a locked-out admin their password is wrong would waste that.
+  if (response.status === 429) throw new AdminRateLimited();
+
   if (!response.ok || !data?.ok || typeof data.token !== "string" || !TOKEN_PATTERN.test(data.token)) {
     throw new AdminUnauthorized();
   }
@@ -75,8 +88,8 @@ export function setAdminCookie(response: NextResponse, token: string): NextRespo
  * Never throws: a failed revoke must not stop the user from logging out
  * locally, and there is nothing useful they could do about it.
  */
-export async function revokeAdminSession(token: string): Promise<void> {
-  if (!TOKEN_PATTERN.test(token)) return;
+export async function revokeAdminSession(token: string): Promise<boolean> {
+  if (!TOKEN_PATTERN.test(token)) return true;
   try {
     const response = await fetch(edgeFunctionUrl("admin-logout"), {
       method: "POST",
@@ -84,9 +97,14 @@ export async function revokeAdminSession(token: string): Promise<void> {
       body: JSON.stringify({ token }),
       cache: "no-store",
     });
-    if (!response.ok) console.error("WEBFORGE_ADMIN_LOGOUT_FAILED", response.status);
+    if (!response.ok) {
+      console.error("WEBFORGE_ADMIN_LOGOUT_FAILED", response.status);
+      return false;
+    }
+    return true;
   } catch (error) {
     console.error("WEBFORGE_ADMIN_LOGOUT_FAILED", error);
+    return false;
   }
 }
 
@@ -111,6 +129,12 @@ export function adminErrorResponse(error: unknown, fallback: string): NextRespon
   const message = error instanceof Error ? error.message : "UNKNOWN";
   if (message === "UNAUTHORIZED") {
     return NextResponse.json({ ok: false, error: "Nicht angemeldet." }, { status: 401 });
+  }
+  if (message === "RATE_LIMITED") {
+    return NextResponse.json({ ok: false, error: "Zu viele Anfragen. Bitte kurz warten." }, { status: 429 });
+  }
+  if (message === "INVALID_REQUEST") {
+    return NextResponse.json({ ok: false, error: fallback }, { status: 400 });
   }
   console.error("WEBFORGE_ADMIN_ROUTE_ERROR", error);
   return NextResponse.json({ ok: false, error: fallback }, { status: 500 });

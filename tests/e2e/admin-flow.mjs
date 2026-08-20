@@ -97,33 +97,58 @@ const bodyText = (await page.textContent("body")) || "";
 check("Leads geladen", bodyText.includes("Mustermann GmbH"), "Firmenname im DOM");
 
 // --- 5. A write path --------------------------------------------------------
-const statusSelect = page.locator("select").first();
-if (await statusSelect.count()) {
-  await statusSelect.selectOption("qualified").catch(() => {});
-  await page.waitForTimeout(800);
-  check("Statusaenderung ohne Fehler", true);
+// Asserting "no error" proves nothing. Ask the backend what it received.
+// Selecting by position hit the offer lead picker, so the assertion below
+// never saw a status call — and the earlier version of this check, which
+// asserted a literal `true`, passed anyway. Find the control in the DOM.
+const statusIndex = await page.evaluate(() => {
+  const wanted = ["new", "contacted", "qualified", "won", "lost"];
+  return [...document.querySelectorAll("select")].findIndex((select) => {
+    const values = [...select.options].map((option) => option.value);
+    // The list filter offers the same five statuses plus "all". Matching it
+    // set the filter to "qualified", which emptied the list — taking the
+    // price fields the next step needs with it.
+    return wanted.every((value) => values.includes(value)) && !values.includes("all");
+  });
+});
+const statusSelect = statusIndex >= 0 ? page.locator("select").nth(statusIndex) : null;
+
+if (statusSelect) {
+  await statusSelect.selectOption("qualified");
+  await page.waitForTimeout(900);
+  const afterStatus = await mockState();
+  const statusCall = afterStatus.calls.find((c) => c.function === "admin_update_lead_status");
+  check(
+    "Statusaenderung erreicht das Backend",
+    statusCall?.args?.p_status === "qualified",
+    statusCall ? `p_status=${statusCall.args.p_status}` : "kein admin_update_lead_status-Aufruf",
+  );
+} else {
+  check("Lead-Status-Auswahl gefunden", false, "kein select mit den Status-Optionen");
 }
 
 // --- 6. Money parsing, the bug this branch fixed ----------------------------
-// "1.249,00" used to become NaN and then be booked as zero.
-const priceInputs = page.locator('input[type="text"], input:not([type])');
-const inputCount = await priceInputs.count();
-let moneyChecked = false;
-for (let i = 0; i < inputCount; i += 1) {
-  const el = priceInputs.nth(i);
-  const placeholder = (await el.getAttribute("placeholder")) || "";
-  const name = (await el.getAttribute("id")) || "";
-  if (/preis|price|betrag|setup|monat/i.test(placeholder + name)) {
-    await el.fill("1.249,00");
-    moneyChecked = true;
-    break;
-  }
+// "1.249,00" used to become NaN and then be booked as zero. Typing it into a
+// field proves nothing on its own — submit, and assert the cents that actually
+// reached the backend.
+const setupField = page.locator('input[placeholder="Setup \u20ac"]').first();
+if (await setupField.count()) {
+  await setupField.fill("1.249,00");
+  // The button is "Kundenakte speichern". A looser /speichern/ would match
+  // "Angebot speichern" higher up the page and silently test nothing.
+  await page.getByRole("button", { name: "Kundenakte speichern" }).first().click();
+  await page.waitForTimeout(1200);
+
+  const afterMoney = await mockState();
+  const commercial = afterMoney.calls.filter((c) => c.function === "admin_update_lead_commercial").pop();
+  check(
+    "1.249,00 kommt als 124900 Cent an",
+    commercial?.args?.p_setup_price_cents === 124900,
+    commercial ? `p_setup_price_cents=${commercial.args.p_setup_price_cents}` : "kein Speicheraufruf",
+  );
+} else {
+  check("Setup-Preisfeld gefunden", false, "Selektor passt nicht mehr");
 }
-check(
-  "Preisfeld akzeptiert deutsche Schreibweise",
-  moneyChecked || inputCount === 0,
-  moneyChecked ? "1.249,00 eingetragen" : "kein Preisfeld gefunden",
-);
 
 // --- 7. No client-side crashes ---------------------------------------------
 check("Keine JavaScript-Fehler", consoleErrors.length === 0, consoleErrors.slice(0, 2).join(" | "));

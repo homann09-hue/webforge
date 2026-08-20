@@ -29,6 +29,10 @@ export async function adminFetch<T = JsonRecord>(path: string, body: JsonRecord 
   });
 
   const data = (await response.json().catch(() => ({}))) as JsonRecord & { ok?: boolean; error?: string };
+
+  // Only 401 means "log in again". A 400 is a business error and a 429 is a
+  // rate limit; treating those as an expired session used to throw the admin
+  // out of a filled-in form.
   if (response.status === 401) throw new AdminSessionExpired();
   if (!response.ok || !data.ok) throw new Error(data.error || "Änderung fehlgeschlagen.");
   return data as T;
@@ -46,8 +50,39 @@ export async function adminLogin(password: string): Promise<void> {
   if (!response.ok || !data.ok) throw new Error(data.error || "Anmeldung fehlgeschlagen.");
 }
 
-export async function adminLogout(): Promise<void> {
-  await fetch("/api/admin/session", { method: "DELETE", credentials: "same-origin" }).catch(() => {});
+/**
+ * Logs out. Resolves to false when the server could not revoke the session, so
+ * the caller can say so instead of claiming success.
+ */
+export async function adminLogout(): Promise<boolean> {
+  try {
+    const response = await fetch("/api/admin/session", { method: "DELETE", credentials: "same-origin" });
+    const data = (await response.json().catch(() => ({}))) as { revoked?: boolean };
+    return data.revoked !== false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Wraps an action handler so an expired session lands the user back on the
+ * login form instead of leaving them clicking a dead UI.
+ *
+ * Without this, only the initial load reset `authenticated`; every button
+ * afterwards just set an error string on a fully rendered admin page.
+ */
+export function handleAdminError(
+  error: unknown,
+  setError: (message: string) => void,
+  setAuthenticated: (value: boolean) => void,
+  fallback: string,
+): void {
+  if (error instanceof AdminSessionExpired) {
+    setAuthenticated(false);
+    setError(error.message);
+    return;
+  }
+  setError(error instanceof Error ? error.message : fallback);
 }
 
 /** True when the browser already holds a valid session cookie. */

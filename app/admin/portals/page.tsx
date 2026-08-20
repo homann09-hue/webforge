@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 
 type Project = { id: number; project_number: string; name: string; company: string; portal_enabled?: boolean };
 
@@ -25,7 +25,7 @@ export default function PortalsAdmin() {
       await load();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
   async function load() {
@@ -36,7 +36,7 @@ export default function PortalsAdmin() {
       setError("");
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
   async function portal(projectId: number, action: "rotate" | "disable") {
@@ -45,7 +45,7 @@ export default function PortalsAdmin() {
     try {
       d = await adminFetch<{ token?: string }>("/api/admin/projects/portal", { projectId, action });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Portal-Aktion fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Portal-Aktion fehlgeschlagen.");
       return;
     }
     if (action === "rotate") {

@@ -1,5 +1,10 @@
 import LeadForm from "@/components/lead-form";
+import type { Metadata } from "next";
 import { isLegalComplete } from "@/lib/company";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 import styles from "./home-modern.module.css";
 
 const packages = [

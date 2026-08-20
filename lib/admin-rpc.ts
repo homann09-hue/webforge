@@ -18,7 +18,14 @@ export async function adminRpc(name: string, credential: string, args: Record<st
   if (!response.ok) {
     const detail = await response.text();
     console.error(`WEBFORGE_ADMIN_GATEWAY_${name}`, response.status, detail);
-    if ([400, 401, 403, 429].includes(response.status)) throw new Error("UNAUTHORIZED");
+
+    // These must stay distinct. Lumping 400 and 429 in with 401 meant an
+    // ordinary business error — deleting an invoice that has payments, say —
+    // logged the admin out and threw away their unsaved work, under the
+    // message "session expired".
+    if (response.status === 401 || response.status === 403) throw new Error("UNAUTHORIZED");
+    if (response.status === 429) throw new Error("RATE_LIMITED");
+    if (response.status === 400) throw new Error("INVALID_REQUEST");
     throw new Error("ADMIN_RPC_FAILED");
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent } from "@/lib/money";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
@@ -59,7 +59,7 @@ export default function SubscriptionsAdmin() {
       await loadAll();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
 
@@ -79,7 +79,7 @@ export default function SubscriptionsAdmin() {
       setAuthenticated(true);
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export default function SubscriptionsAdmin() {
       setNotice("Monatliche Betreuung angelegt.");
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Abo konnte nicht erstellt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Abo konnte nicht erstellt werden.");
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function SubscriptionsAdmin() {
       await post("/api/admin/subscriptions", { action: "status", subscriptionId, status });
       setSubscriptions((items) => items.map((item) => (item.id === subscriptionId ? { ...item, status } : item)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Status konnte nicht geändert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Status konnte nicht geändert werden.");
     } finally {
       setBusyId(null);
     }
@@ -147,7 +147,7 @@ export default function SubscriptionsAdmin() {
       );
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Monatsrechnungen konnten nicht erzeugt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Monatsrechnungen konnten nicht erzeugt werden.");
     } finally {
       setLoading(false);
     }
@@ -163,7 +163,7 @@ export default function SubscriptionsAdmin() {
       setNotice("Stripe Checkout wurde geöffnet.");
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Stripe Checkout konnte nicht erstellt werden.");
+      handleAdminError(err, setError, setAuthenticated, "Stripe Checkout konnte nicht erstellt werden.");
     } finally {
       setBusyId(null);
     }

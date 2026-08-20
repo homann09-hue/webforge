@@ -10,13 +10,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const leadId = Number(body.leadId);
     const proposalStatus = String(body.proposalStatus || "none") as ProposalStatus;
-    const setupPriceCents = Math.round(Number(body.setupPriceCents || 0));
-    const monthlyPriceCents = Math.round(Number(body.monthlyPriceCents || 0));
+    // Math.round(Number(...)) yields NaN for garbage, and `NaN < 0` is false,
+    // so the guard below used to wave it through — JSON.stringify then turned
+    // it into null on the way to the database. Every sibling route uses
+    // Number.isSafeInteger; this one was missed.
+    const setupPriceCents = Math.round(Number(body.setupPriceCents ?? 0));
+    const monthlyPriceCents = Math.round(Number(body.monthlyPriceCents ?? 0));
 
     if (
       !Number.isInteger(leadId) ||
       leadId <= 0 ||
       !allowedProposalStatuses.includes(proposalStatus) ||
+      !Number.isSafeInteger(setupPriceCents) ||
+      !Number.isSafeInteger(monthlyPriceCents) ||
       setupPriceCents < 0 ||
       monthlyPriceCents < 0
     ) {

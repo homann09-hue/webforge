@@ -1243,3 +1243,12 @@
   align-items: center;
   min-height: 24px;
 }
+
+/* .story-stats sits inside .gastro-story, the one dark block in this demo.
+   The global #ef5a32 -> #db3c11 darkening was right for the six light-background
+   uses and wrong here: contrast against #24110d fell from 5.32:1 to 4.02:1. It
+   stayed above AA only because 24px bold counts as large text, so the automated
+   scan did not flag it. */
+.demoScope :global(.gastro-story) :global(.story-stats) b {
+  color: #ef5a32;
+}

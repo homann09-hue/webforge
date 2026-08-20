@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import type { PortalSubmissionAdmin, SubmissionReviewStatus } from "@/lib/submissions";
 
 const statusLabels: Record<SubmissionReviewStatus, string> = {
@@ -64,7 +64,7 @@ export default function SubmissionsAdmin() {
       await load();
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     }
   }
 
@@ -79,7 +79,7 @@ export default function SubmissionsAdmin() {
       setAuthenticated(true);
     } catch (err) {
       setAuthenticated(false);
-      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+      handleAdminError(err, setError, setAuthenticated, "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function SubmissionsAdmin() {
         ),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Status konnte nicht gespeichert werden.");
+      handleAdminError(err, setError, setAuthenticated, "Status konnte nicht gespeichert werden.");
     } finally {
       setSavingId(null);
     }
@@ -116,7 +116,7 @@ export default function SubmissionsAdmin() {
       const data = await api<{ url: string }>({ action: "file-url", submissionId: item.id });
       window.open(data.url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Datei konnte nicht geöffnet werden.");
+      handleAdminError(err, setError, setAuthenticated, "Datei konnte nicht geöffnet werden.");
     } finally {
       setSavingId(null);
     }
