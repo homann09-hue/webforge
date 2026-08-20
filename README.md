@@ -102,8 +102,31 @@ CSP aus `next.config.ts`, weil sich eine Nonce nicht in eine vorgerenderte
 Seite backen lässt.
 
 ```bash
-npm run build && (npm start &) && sleep 5 && npm run test:csp
+npm run build && (npm start &) && sleep 5
+npm run test:csp
+npm run test:a11y
 ```
+
+Beide brauchen einmalig `npm i -D playwright @axe-core/playwright && npx playwright
+install chromium`. Ohne das überspringen sie sich mit Hinweis, statt zu scheitern —
+deshalb sind sie nicht Teil von `npm run verify`.
+
+## Barrierefreiheit
+
+Vertriebsseite, Demos, Admin und Portal erfüllen WCAG 2.1 AA, gemessen mit
+axe-core plus einem zweiten Skript für das, was Regelmaschinen nicht prüfen
+können: sichtbarer Fokus, Umbruch bei 200 % Zoom, Zielgrößen,
+Überschriftenhierarchie.
+
+Das ist kein Kür-Thema: seit dem **Barrierefreiheitsstärkungsgesetz (BFSG,
+28.06.2025)** sind viele elektronische Geschäftsangebote in Deutschland dazu
+verpflichtet. Wer Websites verkauft, sollte die eigene erst recht im Griff
+haben — und kann es als Verkaufsargument nutzen.
+
+Zwei Einschränkungen: automatisierte Prüfung deckt etwa ein Drittel der
+Kriterien ab, und ein echter Screenreader-Test (NVDA, VoiceOver) ersetzt sie
+nicht. Kleinstunternehmen sind unter Umständen ausgenommen — das ist eine
+Rechtsfrage, keine technische.
 
 ## Umgebungsvariablen
 

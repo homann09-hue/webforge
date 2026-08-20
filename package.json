@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:csp": "node scripts/csp-check.mjs"
+    "test:csp": "node scripts/csp-check.mjs",
+    "test:a11y": "node scripts/a11y-axe.mjs && node scripts/a11y-manual.mjs"
   },
   "dependencies": {
     "next": "15.5.21",

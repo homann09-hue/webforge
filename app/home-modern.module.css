@@ -1,6 +1,6 @@
 .home {
   --ink: #0d110d;
-  --muted: #73786f;
+  --muted: #62665e;
   --lime: #d9ff43;
   --paper: #f4f3ed;
   background: radial-gradient(circle at 20% 0, #eef7d9 0, transparent 28%), var(--paper);
@@ -43,6 +43,13 @@
   font-size: 13px;
   color: #61665d;
 }
+/* WCAG 2.5.8 asks for a 24x24 target. The text is 17px tall, so the links get
+   padding rather than a larger font, which would change the design. */
+.navLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
 .navCta,
 .primary,
 .secondary,
@@ -73,7 +80,7 @@
   letter-spacing: 0.22em;
   text-transform: uppercase;
   font-weight: 900;
-  color: #768044;
+  color: #616938;
 }
 .hero h1 {
   font-size: clamp(58px, 7.6vw, 100px);
@@ -159,7 +166,9 @@
   color: var(--lime);
   letter-spacing: 0.14em;
 }
-.screen h3 {
+/* Was an <h3>. It is decorative text inside a mock browser window, so it is
+   no longer a heading: it was jumping the outline from h1 straight to h3. */
+.screen .screenTitle {
   font-size: 43px;
   letter-spacing: -0.05em;
   max-width: 420px;
@@ -180,13 +189,18 @@
   padding: 16px;
   border-radius: 16px;
 }
+.screenCard small {
+  /* .screen small sets lime, which is correct on the dark screen but invisible
+     on this white card (contrast 1.14:1). Reset it explicitly. */
+  color: #5d6355;
+}
 .screenCard b {
   display: block;
   font-size: 26px;
 }
 .screenCard span {
   font-size: 10px;
-  color: #747970;
+  color: #6e736a;
 }
 .floating {
   position: absolute;
@@ -206,7 +220,7 @@
 }
 .floating small {
   display: block;
-  color: #888c83;
+  color: #70746b;
   font-size: 9px;
   letter-spacing: 0.12em;
 }
@@ -293,6 +307,13 @@
 }
 .demos .kicker {
   color: var(--lime);
+}
+/* .demos is the one dark section on the page, so the muted body colour that
+   works on white (#62665e) drops to 4.08:1 here. Lightened for this block
+   only — the same value would fail on the light sections. */
+.demos .sectionHead p,
+.demos p {
+  color: #80867c;
 }
 .demoGrid {
   display: grid;
@@ -436,7 +457,7 @@
 .care {
   text-align: center;
   margin-top: 28px;
-  color: #6c7168;
+  color: #62675f;
 }
 .care a {
   font-weight: 900;
@@ -501,6 +522,11 @@
   display: flex;
   gap: 18px;
   font-size: 12px;
+}
+.footerLinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
 @media (max-width: 900px) {
   .navLinks {

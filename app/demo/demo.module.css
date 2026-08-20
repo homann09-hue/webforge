@@ -1,6 +1,6 @@
 .demoScope {
   --ink: #111;
-  --muted: #6e716b;
+  --muted: #676a64;
   --line: #e7e4dc;
   --paper: #f7f5ef;
 }
@@ -91,7 +91,9 @@
   color: #667052;
 }
 .demoScope :global(.demo-kicker.red) {
-  color: #e4512c;
+  /* Sits on the cream section background (#fff8f1), where #d7411c reaches
+     only 4.28:1. */
+  color: #c63c1a;
 }
 .demoScope :global(.demo-kicker.light) {
   color: #d9ff43;
@@ -124,7 +126,7 @@
   align-items: center;
   gap: 20px;
   font-size: 11px;
-  color: #73766f;
+  color: #676a64;
 }
 .demoScope :global(.demo-footer > div) {
   display: flex;
@@ -215,7 +217,7 @@
 .demoScope :global(.floating-card small) {
   font-size: 9px;
   letter-spacing: 0.12em;
-  color: #7c8077;
+  color: #6f726a;
 }
 .demoScope :global(.craft-trust) {
   background: #151a13;
@@ -242,7 +244,7 @@
 }
 .demoScope :global(.craft-service-grid article > span) {
   font-size: 11px;
-  color: #90938b;
+  color: #70746b;
 }
 .demoScope :global(.craft-service-grid h3) {
   font-size: 27px;
@@ -319,14 +321,14 @@
 }
 .demoScope :global(.process-grid b) {
   font-size: 11px;
-  color: #788548;
+  color: #636d3b;
 }
 .demoScope :global(.process-grid h3) {
   font-size: 20px;
   margin: 20px 0 10px;
 }
 .demoScope :global(.process-grid p) {
-  color: #72766d;
+  color: #676a62;
   line-height: 1.6;
 }
 .demoScope :global(.craft-contact) {
@@ -378,7 +380,7 @@
 }
 .demoScope :global(.craft-contact form small),
 .demoScope :global(.flower-contact form small) {
-  color: #8a8d85;
+  color: #70746b;
 }
 .demoScope :global(.gastro-demo) {
   background: #fff8f1;
@@ -388,7 +390,7 @@
   border-bottom: 1px solid #f0ded3;
 }
 .demoScope :global(.gastro-logo span) {
-  background: #ef5a32;
+  background: #db3c11;
 }
 .demoScope :global(.cart-button) {
   border: 0;
@@ -400,7 +402,7 @@
   cursor: pointer;
 }
 .demoScope :global(.cart-button b) {
-  background: #ef5a32;
+  background: #db3c11;
   border-radius: 50%;
   padding: 3px 7px;
   margin-left: 7px;
@@ -422,7 +424,7 @@
 .demoScope :global(.gastro-hero h1 em) {
   font-family: Georgia, serif;
   font-weight: 400;
-  color: #ef5a32;
+  color: #db3c11;
 }
 .demoScope :global(.gastro-hero p) {
   font-size: 18px;
@@ -431,7 +433,7 @@
   max-width: 620px;
 }
 .demoScope :global(.gastro-primary) {
-  background: #ef5a32;
+  background: #db3c11;
   color: #fff;
 }
 .demoScope :global(.delivery-facts) {
@@ -492,7 +494,7 @@
 }
 .demoScope :global(.gastro-marquee) {
   overflow: hidden;
-  background: #ef5a32;
+  background: #db3c11;
   color: #fff;
   font-size: 13px;
   font-weight: 900;
@@ -615,7 +617,7 @@
 }
 .demoScope :global(.story-stats b) {
   display: block;
-  color: #ef5a32;
+  color: #db3c11;
   font-size: 24px;
 }
 .demoScope :global(.info-grid) {
@@ -630,7 +632,7 @@
   background: #fff;
 }
 .demoScope :global(.info-grid small) {
-  color: #ef5a32;
+  color: #db3c11;
   font-weight: 900;
 }
 .demoScope :global(.info-grid p) {
@@ -802,18 +804,19 @@
   color: #263126;
 }
 .demoScope :global(.flower-logo span) {
-  background: #83966c;
+  background: #6c7c58;
 }
 .demoScope :global(.flower-cta),
 .demoScope :global(.flower-primary) {
-  background: #83966c;
+  background: #6c7c58;
   color: #fff;
   padding: 13px 18px;
   border-radius: 999px;
   font-weight: 800;
 }
 .demoScope :global(.flower-kicker) {
-  color: #83966c;
+  /* Same story on #fbf8f3: the lighter sage managed 4.25:1. */
+  color: #5b684a;
 }
 .demoScope :global(.flower-hero) {
   min-height: 690px;
@@ -837,7 +840,7 @@
 .demoScope :global(.flower-copy p) {
   font-size: 18px;
   line-height: 1.75;
-  color: #737a70;
+  color: #696f66;
   max-width: 620px;
 }
 .demoScope :global(.flower-facts) {
@@ -845,7 +848,7 @@
   gap: 24px;
   margin-top: 34px;
   font-size: 12px;
-  color: #747c72;
+  color: #686f66;
 }
 .demoScope :global(.flower-visual) {
   height: 530px;
@@ -898,10 +901,10 @@
 .demoScope :global(.flower-card small) {
   font-size: 9px;
   letter-spacing: 0.12em;
-  color: #8a8f87;
+  color: #70746b;
 }
 .demoScope :global(.flower-note) {
-  background: #83966c;
+  background: #6c7c58;
   color: #fff;
 }
 .demoScope :global(.flower-note > div) {
@@ -952,7 +955,7 @@
   margin: 0;
 }
 .demoScope :global(.bouquet-grid p) {
-  color: #7c8179;
+  color: #6e736c;
   line-height: 1.55;
   min-height: 75px;
 }
@@ -996,10 +999,10 @@
 }
 .demoScope :global(.occasion-grid article > span) {
   font-size: 10px;
-  color: #83966c;
+  color: #6c7c58;
 }
 .demoScope :global(.occasion-grid p) {
-  color: #7a8077;
+  color: #6d736b;
   line-height: 1.6;
 }
 .demoScope :global(.flower-atelier) {
@@ -1022,7 +1025,7 @@
 }
 .demoScope :global(.flower-atelier p),
 .demoScope :global(.flower-atelier li) {
-  color: #747b72;
+  color: #696f67;
   line-height: 1.7;
 }
 .demoScope :global(.flower-contact) {
@@ -1209,4 +1212,34 @@
   .demoScope :global(.cart-drawer) {
     padding: 20px 16px;
   }
+}
+
+/* See the note in globals.css: these links are 17px tall on their own. */
+.demoScope :global(.demo-nav) a,
+.demoScope :global(.demo-footer) a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+/* .gastro-story is the one dark block in this demo, so the kicker colour tuned
+   for the cream sections only reaches 3.50:1 against it. Lightened here only. */
+.demoScope :global(.gastro-story) :global(.demo-kicker.red) {
+  color: #e45734;
+}
+
+/* .flower-contact is dark (#263126); the kicker tuned for the cream sections
+   reaches only 2.27:1 there. */
+.demoScope :global(.flower-contact) :global(.demo-kicker.flower-kicker) {
+  color: #91a27c;
+}
+
+/* Two more targets under 24px (WCAG 2.5.8): the service-card call to action
+   and the contact links. Both are standalone actions, not links inside a
+   sentence, so the exception does not apply. */
+.demoScope :global(.craft-service-grid) article > a,
+.demoScope :global(.flower-contact-links) a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }

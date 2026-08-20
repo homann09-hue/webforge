@@ -615,3 +615,34 @@ footer p {
     align-items: flex-start;
   }
 }
+
+/* Visually hidden but available to screen readers. Used for form labels in the
+   demos, which show their prompt as a placeholder — a placeholder disappears as
+   soon as the field is filled, so it cannot be the only label (WCAG 3.3.2). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* WCAG 2.5.8 (Target Size, Minimum) asks for 24x24 CSS pixels. Unstyled
+   inputs render around 21px tall, and the demo navigation links around 17px.
+   Padding rather than a larger font, so the design is unchanged. */
+input,
+select,
+textarea,
+button {
+  min-height: 24px;
+}
+
+input,
+select,
+textarea {
+  padding: 6px 8px;
+}

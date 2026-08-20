@@ -97,6 +97,21 @@ if (!sessionRoute.includes("revokeAdminSession")) {
   throw new Error("app/api/admin/session: DELETE must revoke the session server side");
 }
 
+// Accessibility invariants. The demo forms show their prompt as a placeholder,
+// which disappears as soon as the field is filled, so each control also needs a
+// real label (WCAG 3.3.2). Easy to drop when editing markup.
+const globals = await readFile("app/globals.css", "utf8");
+if (!globals.includes(".sr-only")) throw new Error("app/globals.css: .sr-only utility is required for form labels");
+
+for (const file of ["components/demo-handwerk.tsx", "components/demo-gastro.tsx", "components/demo-blumen.tsx"]) {
+  const source = await readFile(file, "utf8");
+  const controls = (source.match(/<(input|select|textarea)\b/g) || []).filter((tag) => !tag.includes("radio")).length;
+  const labels = (source.match(/htmlFor=/g) || []).length;
+  if (labels === 0 || labels < controls - 2) {
+    throw new Error(`${file}: form controls need labels (${labels} labels for ${controls} controls)`);
+  }
+}
+
 // The session cookie must stay httpOnly.
 const sessionModule = await readFile("lib/admin-session.ts", "utf8");
 for (const flag of ["httpOnly: true", 'sameSite: "strict"']) {

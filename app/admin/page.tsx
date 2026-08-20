@@ -370,8 +370,13 @@ export default function Admin() {
               }}
               style={{ display: "grid", gap: 12, maxWidth: 440 }}
             >
+              <label className="sr-only" htmlFor="admin-password">
+                Adminpasswort
+              </label>
               <input
+                id="admin-password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Adminpasswort"

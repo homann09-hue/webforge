@@ -172,11 +172,23 @@ export default function DemoHandwerk() {
           </div>
           <form onSubmit={(e) => e.preventDefault()}>
             <div className="form-row">
-              <input placeholder="Name" />
-              <input placeholder="Telefon" />
+              <label className="sr-only" htmlFor="hw-name">
+                Name
+              </label>
+              <input id="hw-name" placeholder="Name" />
+              <label className="sr-only" htmlFor="hw-phone">
+                Telefon
+              </label>
+              <input id="hw-phone" placeholder="Telefon" />
             </div>
-            <input placeholder="E-Mail" />
-            <select defaultValue="">
+            <label className="sr-only" htmlFor="hw-email">
+              E-Mail
+            </label>
+            <input id="hw-email" placeholder="E-Mail" />
+            <label className="sr-only" htmlFor="hw-topic">
+              Worum geht es?
+            </label>
+            <select id="hw-topic" defaultValue="">
               <option value="" disabled>
                 Worum geht es?
               </option>
@@ -185,7 +197,10 @@ export default function DemoHandwerk() {
               <option>Flachdach</option>
               <option>Dachfenster / Ausbau</option>
             </select>
-            <textarea placeholder="Projekt kurz beschreiben" rows={4} />
+            <label className="sr-only" htmlFor="hw-message">
+              Projekt kurz beschreiben
+            </label>
+            <textarea id="hw-message" placeholder="Projekt kurz beschreiben" rows={4} />
             <button className="demo-primary" type="submit">
               Anfrage senden
             </button>

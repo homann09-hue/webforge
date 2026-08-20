@@ -307,12 +307,30 @@ export default function DemoGastro() {
             <div className="demo-kicker red">Demo Checkout</div>
             <h2>Fast geschafft.</h2>
             <div className="checkout-grid">
-              <input placeholder="Vorname" />
-              <input placeholder="Nachname" />
-              <input placeholder="Straße & Hausnummer" />
-              <input placeholder="PLZ / Ort" />
-              <input placeholder="Telefon" />
-              <select defaultValue="delivery">
+              <label className="sr-only" htmlFor="g-first">
+                Vorname
+              </label>
+              <input id="g-first" placeholder="Vorname" />
+              <label className="sr-only" htmlFor="g-last">
+                Nachname
+              </label>
+              <input id="g-last" placeholder="Nachname" />
+              <label className="sr-only" htmlFor="g-street">
+                Straße und Hausnummer
+              </label>
+              <input id="g-street" placeholder="Straße & Hausnummer" />
+              <label className="sr-only" htmlFor="g-city">
+                PLZ und Ort
+              </label>
+              <input id="g-city" placeholder="PLZ / Ort" />
+              <label className="sr-only" htmlFor="g-phone">
+                Telefon
+              </label>
+              <input id="g-phone" placeholder="Telefon" />
+              <label className="sr-only" htmlFor="g-mode">
+                Lieferung oder Abholung
+              </label>
+              <select id="g-mode" defaultValue="delivery">
                 <option value="delivery">Lieferung</option>
                 <option value="pickup">Abholung</option>
               </select>

@@ -139,7 +139,7 @@ export default function Home() {
             </div>
             <div className={styles.screen}>
               <small>MODERNE UNTERNEHMENSWEBSITE</small>
-              <h3>Ein Auftritt, der professionell wirkt und klar führt.</h3>
+              <p className={styles.screenTitle}>Ein Auftritt, der professionell wirkt und klar führt.</p>
               <p>Leistungen, Vertrauen, Anfrage und Funktionen in einem sauberen System.</p>
               <div className={styles.screenCard}>
                 <small>MEHR ALS DESIGN</small>

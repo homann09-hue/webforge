@@ -160,9 +160,18 @@ export default function DemoBlumen() {
             </div>
           </div>
           <form onSubmit={(e) => e.preventDefault()}>
-            <input placeholder="Name" />
-            <input placeholder="E-Mail oder Telefon" />
-            <select value={selected || ""} onChange={(e) => setSelected(e.target.value)}>
+            <label className="sr-only" htmlFor="b-name">
+              Name
+            </label>
+            <input id="b-name" placeholder="Name" />
+            <label className="sr-only" htmlFor="b-contact">
+              E-Mail oder Telefon
+            </label>
+            <input id="b-contact" placeholder="E-Mail oder Telefon" />
+            <label className="sr-only" htmlFor="b-bouquet">
+              Anlass oder Strauß auswählen
+            </label>
+            <select id="b-bouquet" value={selected || ""} onChange={(e) => setSelected(e.target.value)}>
               <option value="">Anlass / Strauß auswählen</option>
               {bouquets.map((b) => (
                 <option key={b.name}>{b.name}</option>
@@ -170,7 +179,10 @@ export default function DemoBlumen() {
               <option>Hochzeit / Event</option>
               <option>Individuelle Anfrage</option>
             </select>
-            <textarea rows={4} placeholder="Wünsche, Farben, Abholtag ..." />
+            <label className="sr-only" htmlFor="b-message">
+              Wünsche, Farben, Abholtag
+            </label>
+            <textarea id="b-message" rows={4} placeholder="Wünsche, Farben, Abholtag ..." />
             <button className="flower-primary" type="submit">
               Anfrage vorbereiten
             </button>
