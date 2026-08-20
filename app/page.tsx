@@ -1,4 +1,5 @@
 import LeadForm from "@/components/lead-form";
+import { isLegalComplete } from "@/lib/company";
 import styles from "./home-modern.module.css";
 
 const packages = [
@@ -82,6 +83,11 @@ const demos = [
 ];
 
 export default function Home() {
+  // Selling from a page whose imprint still carries placeholders is a §5 DDG
+  // problem. Until lib/company.ts holds real data, the checkout links are
+  // replaced by a link to the contact form.
+  const canSell = isLegalComplete();
+
   return (
     <main className={styles.home}>
       <nav className={`${styles.nav} ${styles.shell}`}>
@@ -267,17 +273,27 @@ export default function Home() {
                     <li key={f}>✓ {f}</li>
                   ))}
                 </ul>
-                <a className={styles.priceButton} href={p.checkout} rel="noreferrer">
-                  Paket starten →
-                </a>
+                {canSell ? (
+                  <a className={styles.priceButton} href={p.checkout} rel="noreferrer">
+                    Paket starten →
+                  </a>
+                ) : (
+                  <a className={styles.priceButton} href="#kontakt">
+                    Paket anfragen →
+                  </a>
+                )}
               </article>
             ))}
           </div>
           <p className={styles.care}>
             Optional: Betreuung, Hosting und kleine Änderungen für <strong>99 €/Monat</strong>.{" "}
-            <a href={maintenanceCheckout} rel="noreferrer">
-              Betreuung starten →
-            </a>
+            {canSell ? (
+              <a href={maintenanceCheckout} rel="noreferrer">
+                Betreuung starten →
+              </a>
+            ) : (
+              <a href="#kontakt">Betreuung anfragen →</a>
+            )}
           </p>
         </div>
       </section>
