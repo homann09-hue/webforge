@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
 
     // Accept either a session token or the raw password, exactly like
     // admin-gateway does. Before this, only the password branch existed, so
-    // every call from the app — which sends a session token — failed with 401
+    // every call from the app - which sends a session token - failed with 401
     // and the "open file" button in the admin area never worked.
     let valid = false;
     if (/^wfs_[0-9a-f]{64}$/.test(credential)) {

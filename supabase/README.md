@@ -45,39 +45,36 @@ Migrationen anwenden:
 supabase db push
 ```
 
+## Bereits angewendet (20.08.2026)
+
+- `admin-portal-file-url` v3 deployt. Die vorherige Version prüfte nur
+  `internal_admin_validate_password`, bekam von der Anwendung aber ein
+  Session-Token — „Datei öffnen" im Adminbereich antwortete immer mit 401.
+  Die neue Version akzeptiert beides, genau wie `admin-gateway`.
+- Migration 002: Unique-Index auf `payments.external_payment_id`.
+- Migration 003: `submit_lead` entfernt.
+
+Die Dateien unter `functions/` und `migrations/` entsprechen damit dem
+Live-Stand.
+
 ## Offene Punkte
 
-**1. `admin-portal-file-url` ist noch nicht deployt** — die Repo-Version
-enthält einen Fix, die Live-Version nicht.
-
-Die Live-Version prüft nur `internal_admin_validate_password`, bekommt von der
-Anwendung aber ein Session-Token. Ergebnis: „Datei öffnen" im Adminbereich
-antwortet immer mit 401. Die Version hier akzeptiert beides, genau wie
-`admin-gateway`.
-
-```bash
-supabase functions deploy admin-portal-file-url
-```
-
-**2. Migrationen 002 und 003 sind noch nicht angewendet.**
-
-002 ergänzt den Unique-Index auf `payments.external_payment_id`. Ohne ihn kann
-PostgREST das `on_conflict` im Stripe-Webhook nicht auflösen und der Insert
-scheitert. 003 entfernt die ungenutzte Funktion `submit_lead`.
-
-**3. Der Stripe-Webhook-Endpunkt muss im Stripe-Dashboard gesetzt werden:**
+**1. Der Stripe-Webhook-Endpunkt muss im Stripe-Dashboard gesetzt werden:**
 
 ```
 https://jplqdaxtnrqimlgzwuaw.supabase.co/functions/v1/stripe-webhook
 ```
 
 Es gab zwei Implementierungen (Next.js und Edge Function); die Next-Route ist
-entfernt. Benötigte Events: `checkout.session.completed`, `invoice.paid`,
+entfernt. Das ist der einzige verbliebene manuelle Schritt, ohne den keine
+Zahlung verbucht wird. Benötigte Events: `checkout.session.completed`, `invoice.paid`,
 `invoice.payment_failed`, `customer.subscription.updated`,
 `customer.subscription.deleted`, `charge.refunded`, `charge.dispute.created`.
 
 Das Signing-Secret liegt in Supabase Vault unter
 `webforge_stripe_webhook_secret`, nicht in Vercel.
+
+**2. `supabase db pull` für die verifizierten Funktionsrümpfe** (siehe oben).
 
 ## Edge Functions und ihre Verträge
 
