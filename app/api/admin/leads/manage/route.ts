@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_ADMIN_MANAGE_ERROR", error);
     return NextResponse.json({ ok: false, error: "Änderung konnte nicht gespeichert werden." }, { status: 500 });
   }

@@ -12,7 +12,14 @@ export async function POST(req: Request) {
     const setupPriceCents = Math.round(Number(body.setupPriceCents || 0));
     const monthlyPriceCents = Math.round(Number(body.monthlyPriceCents || 0));
 
-    if (!password || !Number.isInteger(leadId) || leadId <= 0 || !allowedProposalStatuses.includes(proposalStatus) || setupPriceCents < 0 || monthlyPriceCents < 0) {
+    if (
+      !password ||
+      !Number.isInteger(leadId) ||
+      leadId <= 0 ||
+      !allowedProposalStatuses.includes(proposalStatus) ||
+      setupPriceCents < 0 ||
+      monthlyPriceCents < 0
+    ) {
       return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
     }
 
@@ -27,7 +34,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_ADMIN_COMMERCIAL_ERROR", error);
     return NextResponse.json({ ok: false, error: "Kundendaten konnten nicht gespeichert werden." }, { status: 500 });
   }

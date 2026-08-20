@@ -27,10 +27,29 @@ export async function POST(req: Request) {
       const amountCents = Number(body.amountCents);
       const taxPercent = Number(body.taxPercent ?? 19);
       const nextInvoiceDate = String(body.nextInvoiceDate || "");
-      if (!Number.isSafeInteger(leadId) || leadId <= 0 || (projectId !== null && (!Number.isSafeInteger(projectId) || projectId <= 0)) || name.length < 2 || name.length > 180 || !Number.isSafeInteger(amountCents) || amountCents < 0 || !Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100 || !/^\d{4}-\d{2}-\d{2}$/.test(nextInvoiceDate)) {
+      if (
+        !Number.isSafeInteger(leadId) ||
+        leadId <= 0 ||
+        (projectId !== null && (!Number.isSafeInteger(projectId) || projectId <= 0)) ||
+        name.length < 2 ||
+        name.length > 180 ||
+        !Number.isSafeInteger(amountCents) ||
+        amountCents < 0 ||
+        !Number.isFinite(taxPercent) ||
+        taxPercent < 0 ||
+        taxPercent > 100 ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(nextInvoiceDate)
+      ) {
         return NextResponse.json({ ok: false, error: "Abo-Daten sind ungültig." }, { status: 400 });
       }
-      const id = await createBillingSubscription(password, { leadId, projectId, name, amountCents, taxPercent, nextInvoiceDate });
+      const id = await createBillingSubscription(password, {
+        leadId,
+        projectId,
+        name,
+        amountCents,
+        taxPercent,
+        nextInvoiceDate,
+      });
       return NextResponse.json({ ok: true, id }, { status: 201 });
     }
 
@@ -46,7 +65,8 @@ export async function POST(req: Request) {
 
     if (action === "generate") {
       const asOf = body.asOf ? String(body.asOf) : undefined;
-      if (asOf && !/^\d{4}-\d{2}-\d{2}$/.test(asOf)) return NextResponse.json({ ok: false, error: "Datum ist ungültig." }, { status: 400 });
+      if (asOf && !/^\d{4}-\d{2}-\d{2}$/.test(asOf))
+        return NextResponse.json({ ok: false, error: "Datum ist ungültig." }, { status: 400 });
       const generated = await generateDueRecurringInvoices(password, asOf);
       return NextResponse.json({ ok: true, generated });
     }
@@ -54,7 +74,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_SUBSCRIPTIONS_API_ERROR", error);
     return NextResponse.json({ ok: false, error: "Abo konnte nicht verarbeitet werden." }, { status: 500 });
   }

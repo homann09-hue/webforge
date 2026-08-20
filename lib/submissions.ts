@@ -23,7 +23,11 @@ const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
 
 function headers() {
-  return { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, "Content-Type": "application/json" };
+  return {
+    apikey: SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+    "Content-Type": "application/json",
+  };
 }
 
 export async function listAllSubmissions(password: string): Promise<PortalSubmissionAdmin[]> {
@@ -31,8 +35,18 @@ export async function listAllSubmissions(password: string): Promise<PortalSubmis
   return (await response.json()) as PortalSubmissionAdmin[];
 }
 
-export async function setSubmissionReview(password: string, submissionId: number, status: SubmissionReviewStatus, note: string) {
-  await adminRpc("admin_set_submission_review", { p_password: password, p_submission_id: submissionId, p_status: status, p_note: note || null });
+export async function setSubmissionReview(
+  password: string,
+  submissionId: number,
+  status: SubmissionReviewStatus,
+  note: string,
+) {
+  await adminRpc("admin_set_submission_review", {
+    p_password: password,
+    p_submission_id: submissionId,
+    p_status: status,
+    p_note: note || null,
+  });
 }
 
 export async function getSubmissionFileUrl(password: string, submissionId: number): Promise<string> {

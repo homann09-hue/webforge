@@ -13,7 +13,13 @@ async function verifyStripeSignature(payload: string, signatureHeader: string, s
   if (!timestamp || signatures.length === 0) return false;
   const age = Math.abs(Date.now() / 1000 - Number(timestamp));
   if (!Number.isFinite(age) || age > 300) return false;
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${payload}`));
   const expected = hex(digest);
   return signatures.some((candidate) => candidate.length === expected.length && candidate === expected);
@@ -44,7 +50,8 @@ function stripeSubscriptionId(invoice: Record<string, unknown>) {
 export async function POST(req: Request) {
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) return NextResponse.json({ ok: false, error: "Stripe webhook not configured" }, { status: 503 });
+    if (!webhookSecret)
+      return NextResponse.json({ ok: false, error: "Stripe webhook not configured" }, { status: 503 });
     const signature = req.headers.get("stripe-signature") || "";
     const payload = await req.text();
     if (!(await verifyStripeSignature(payload, signature, webhookSecret))) {
@@ -58,7 +65,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({ event_id: event.id, event_type: event.type }),
     });
     if (!insertEvent.ok) throw new Error(`EVENT_LOG_${insertEvent.status}`);
-    const inserted = await insertEvent.json() as unknown[];
+    const inserted = (await insertEvent.json()) as unknown[];
     if (inserted.length === 0) return NextResponse.json({ ok: true, duplicate: true });
 
     const object = event.data.object;
@@ -83,18 +90,25 @@ export async function POST(req: Request) {
     if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
       const stripeSubId = stripeSubscriptionId(object);
       if (stripeSubId) {
-        const lookup = await sb(`billing_subscriptions?stripe_subscription_id=eq.${encodeURIComponent(stripeSubId)}&select=id`);
-        const rows = lookup.ok ? await lookup.json() as { id: number }[] : [];
+        const lookup = await sb(
+          `billing_subscriptions?stripe_subscription_id=eq.${encodeURIComponent(stripeSubId)}&select=id`,
+        );
+        const rows = lookup.ok ? ((await lookup.json()) as { id: number }[]) : [];
         const localSubscriptionId = rows[0]?.id;
         if (localSubscriptionId) {
           await sb(`billing_subscriptions?id=eq.${localSubscriptionId}`, {
             method: "PATCH",
-            body: JSON.stringify({ status: event.type === "invoice.paid" ? "active" : "past_due", updated_at: new Date().toISOString() }),
+            body: JSON.stringify({
+              status: event.type === "invoice.paid" ? "active" : "past_due",
+              updated_at: new Date().toISOString(),
+            }),
           });
 
           if (event.type === "invoice.paid") {
-            const invoices = await sb(`invoices?recurring_subscription_id=eq.${localSubscriptionId}&status=in.(open,overdue)&order=issue_date.desc&limit=1&select=id`);
-            const invoiceRows = invoices.ok ? await invoices.json() as { id: number }[] : [];
+            const invoices = await sb(
+              `invoices?recurring_subscription_id=eq.${localSubscriptionId}&status=in.(open,overdue)&order=issue_date.desc&limit=1&select=id`,
+            );
+            const invoiceRows = invoices.ok ? ((await invoices.json()) as { id: number }[]) : [];
             const invoiceId = invoiceRows[0]?.id;
             const amountPaid = Number(object.amount_paid || 0);
             if (invoiceId && Number.isSafeInteger(amountPaid) && amountPaid > 0) {
@@ -102,12 +116,22 @@ export async function POST(req: Request) {
               const paymentIntent = typeof object.payment_intent === "string" ? object.payment_intent : null;
               await sb(`invoices?id=eq.${invoiceId}`, {
                 method: "PATCH",
-                body: JSON.stringify({ stripe_invoice_id: stripeInvoiceId, stripe_payment_intent_id: paymentIntent, updated_at: new Date().toISOString() }),
+                body: JSON.stringify({
+                  stripe_invoice_id: stripeInvoiceId,
+                  stripe_payment_intent_id: paymentIntent,
+                  updated_at: new Date().toISOString(),
+                }),
               });
               await sb("payments", {
                 method: "POST",
                 headers: { Prefer: "return=minimal" },
-                body: JSON.stringify({ invoice_id: invoiceId, amount_cents: amountPaid, method: "stripe", reference: stripeInvoiceId || event.id, paid_at: new Date().toISOString() }),
+                body: JSON.stringify({
+                  invoice_id: invoiceId,
+                  amount_cents: amountPaid,
+                  method: "stripe",
+                  reference: stripeInvoiceId || event.id,
+                  paid_at: new Date().toISOString(),
+                }),
               });
             }
           }

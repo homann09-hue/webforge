@@ -40,15 +40,18 @@ export async function listOffers(password: string, leadId?: number): Promise<Off
   return (await response.json()) as Offer[];
 }
 
-export async function createOffer(password: string, input: {
-  leadId: number;
-  title: string;
-  discountPercent: number;
-  taxPercent: number;
-  validUntil?: string;
-  notes?: string;
-  items: Array<{ description: string; quantity: number; unit: string; unitPriceCents: number }>;
-}): Promise<number> {
+export async function createOffer(
+  password: string,
+  input: {
+    leadId: number;
+    title: string;
+    discountPercent: number;
+    taxPercent: number;
+    validUntil?: string;
+    notes?: string;
+    items: Array<{ description: string; quantity: number; unit: string; unitPriceCents: number }>;
+  },
+): Promise<number> {
   const response = await adminRpc("admin_create_offer", {
     p_password: password,
     p_lead_id: input.leadId,
@@ -64,7 +67,7 @@ export async function createOffer(password: string, input: {
       unit_price_cents: item.unitPriceCents,
     })),
   });
-  return await response.json() as number;
+  return (await response.json()) as number;
 }
 
 export async function updateOfferStatus(password: string, offerId: number, status: OfferStatus) {

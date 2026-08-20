@@ -1,18 +1,195 @@
 "use client";
-import {useState} from "react";
-const bouquets=[
- {name:"Sonnenglück",price:"29 €",text:"Gelb, Apricot und Creme – locker gebunden und saisonal.",cls:"b1"},
- {name:"Rosé Atelier",price:"39 €",text:"Rosen, Eustoma und feine Grünakzente in sanften Tönen.",cls:"b2"},
- {name:"Wild & Frei",price:"34 €",text:"Wiesenblumen-Look mit kräftigen Farben und viel Struktur.",cls:"b3"},
- {name:"Pur Weiß",price:"42 €",text:"Elegant, ruhig und modern – ideal als Geschenk oder Tischstrauß.",cls:"b4"}
+import { useState } from "react";
+const bouquets = [
+  { name: "Sonnenglück", price: "29 €", text: "Gelb, Apricot und Creme – locker gebunden und saisonal.", cls: "b1" },
+  { name: "Rosé Atelier", price: "39 €", text: "Rosen, Eustoma und feine Grünakzente in sanften Tönen.", cls: "b2" },
+  { name: "Wild & Frei", price: "34 €", text: "Wiesenblumen-Look mit kräftigen Farben und viel Struktur.", cls: "b3" },
+  {
+    name: "Pur Weiß",
+    price: "42 €",
+    text: "Elegant, ruhig und modern – ideal als Geschenk oder Tischstrauß.",
+    cls: "b4",
+  },
 ];
-export default function DemoBlumen(){const[selected,setSelected]=useState<string|null>(null);return <main className="demo flower-demo">
- <nav className="demo-nav demo-shell flower-nav"><a className="demo-logo flower-logo" href="#top"><span>BL</span><b>BLÜTENLIEBE</b></a><div><a href="#sortiment">Sträuße</a><a href="#anlaesse">Anlässe</a><a href="#atelier">Atelier</a><a href="#kontakt">Kontakt</a></div><a className="flower-cta" href="#sortiment">Strauß wählen</a></nav>
- <section className="flower-hero demo-shell" id="top"><div className="flower-copy"><div className="demo-kicker flower-kicker">Blumenatelier · Hildesheim</div><h1>Blumen, die sich nach <em>dir</em> anfühlen.</h1><p>Frische, saisonale Sträuße und kleine florale Konzepte für besondere Tage. Persönlich gebunden, lokal gedacht und ohne Massenware.</p><div className="demo-actions"><a className="flower-primary" href="#sortiment">Sträuße entdecken</a><a className="demo-secondary" href="#kontakt">Individuell anfragen</a></div><div className="flower-facts"><span>Heute frisch gebunden</span><span>Abholung in 2 Stunden</span><span>Lieferung in Hildesheim</span></div></div><div className="flower-visual"><div className="petal p-a"/><div className="petal p-b"/><div className="petal p-c"/><div className="flower-card"><small>HEUTE IM ATELIER</small><b>Sommerliche Pfingstrosen & Wiesenblumen</b></div></div></section>
- <section className="flower-note"><div className="demo-shell"><span>✿ Handgebunden</span><span>✿ Saisonale Auswahl</span><span>✿ Kleine Stückzahlen</span><span>✿ Persönliche Beratung</span></div></section>
- <section className="demo-section demo-shell" id="sortiment"><div className="demo-section-head"><div><div className="demo-kicker flower-kicker">Aktuelle Auswahl</div><h2>Vier Stimmungen. Ein guter Anlass reicht.</h2></div><p>Jeder Strauß wird frisch gebunden. Blumen können je nach Tagesangebot leicht variieren – die Farbwelt bleibt.</p></div><div className="bouquet-grid">{bouquets.map(b=><article key={b.name}><div className={`bouquet-img ${b.cls}`}><span>FRISCH GEBUNDEN</span></div><div><h3>{b.name}</h3><p>{b.text}</p><div><b>{b.price}</b><button onClick={()=>setSelected(b.name)}>Auswählen</button></div></div></article>)}</div></section>
- <section className="flower-occasions" id="anlaesse"><div className="demo-shell"><div><div className="demo-kicker flower-kicker">Für besondere Momente</div><h2>Nicht nur „ein Strauß“.</h2></div><div className="occasion-grid"><article><span>01</span><h3>Geburtstag & Danke</h3><p>Persönliche Sträuße, kleine Karten und unkomplizierte Abholung.</p></article><article><span>02</span><h3>Hochzeit & Feier</h3><p>Brautstrauß, Tischblumen und abgestimmte florale Akzente.</p></article><article><span>03</span><h3>Trauer & Erinnerung</h3><p>Ruhige, respektvolle Floristik mit persönlicher Abstimmung.</p></article></div></div></section>
- <section className="demo-section demo-shell flower-atelier" id="atelier"><div className="atelier-photo"><span>BLÜTENLIEBE</span></div><div><div className="demo-kicker flower-kicker">Unser Atelier</div><h2>Klein, lokal und mit Blick fürs Detail.</h2><p>Wir kaufen bewusst in kleinen Mengen ein und arbeiten bevorzugt mit saisonalen Blumen. Dadurch sieht nicht jeder Strauß gleich aus – und genau das ist gewollt.</p><ul><li>Frische Lieferung mehrmals pro Woche</li><li>Individuelle Farbwünsche möglich</li><li>Verpackung möglichst plastikarm</li></ul></div></section>
- <section className="flower-contact" id="kontakt"><div className="demo-shell"><div><div className="demo-kicker flower-kicker">Besuchen oder schreiben</div><h2>Wir sind lieber persönlich als kompliziert.</h2><p>Rosenstraße 8 · 31134 Hildesheim<br/>Mo–Fr 09:00–18:00 · Sa 09:00–14:00</p><div className="flower-contact-links"><a href="tel:05122000000">05121 200000</a><a href="mailto:hallo@bluetenliebe-demo.de">hallo@bluetenliebe-demo.de</a></div></div><form onSubmit={e=>e.preventDefault()}><input placeholder="Name"/><input placeholder="E-Mail oder Telefon"/><select value={selected||""} onChange={e=>setSelected(e.target.value)}><option value="">Anlass / Strauß auswählen</option>{bouquets.map(b=><option key={b.name}>{b.name}</option>)}<option>Hochzeit / Event</option><option>Individuelle Anfrage</option></select><textarea rows={4} placeholder="Wünsche, Farben, Abholtag ..."/><button className="flower-primary" type="submit">Anfrage vorbereiten</button><small>Demoformular – es werden keine Daten versendet.</small></form></div></section>
- <footer className="demo-footer demo-shell"><div><b>BLÜTENLIEBE</b><span>Blumenatelier · Hildesheim</span></div><div>Rosenstraße 8 · 05121 200000</div><div><span>Impressum</span><span>Datenschutz</span><span>WebForge Demo</span></div></footer>
- </main>}
+export default function DemoBlumen() {
+  const [selected, setSelected] = useState<string | null>(null);
+  return (
+    <main className="demo flower-demo">
+      <nav className="demo-nav demo-shell flower-nav">
+        <a className="demo-logo flower-logo" href="#top">
+          <span>BL</span>
+          <b>BLÜTENLIEBE</b>
+        </a>
+        <div>
+          <a href="#sortiment">Sträuße</a>
+          <a href="#anlaesse">Anlässe</a>
+          <a href="#atelier">Atelier</a>
+          <a href="#kontakt">Kontakt</a>
+        </div>
+        <a className="flower-cta" href="#sortiment">
+          Strauß wählen
+        </a>
+      </nav>
+      <section className="flower-hero demo-shell" id="top">
+        <div className="flower-copy">
+          <div className="demo-kicker flower-kicker">Blumenatelier · Hildesheim</div>
+          <h1>
+            Blumen, die sich nach <em>dir</em> anfühlen.
+          </h1>
+          <p>
+            Frische, saisonale Sträuße und kleine florale Konzepte für besondere Tage. Persönlich gebunden, lokal
+            gedacht und ohne Massenware.
+          </p>
+          <div className="demo-actions">
+            <a className="flower-primary" href="#sortiment">
+              Sträuße entdecken
+            </a>
+            <a className="demo-secondary" href="#kontakt">
+              Individuell anfragen
+            </a>
+          </div>
+          <div className="flower-facts">
+            <span>Heute frisch gebunden</span>
+            <span>Abholung in 2 Stunden</span>
+            <span>Lieferung in Hildesheim</span>
+          </div>
+        </div>
+        <div className="flower-visual">
+          <div className="petal p-a" />
+          <div className="petal p-b" />
+          <div className="petal p-c" />
+          <div className="flower-card">
+            <small>HEUTE IM ATELIER</small>
+            <b>Sommerliche Pfingstrosen & Wiesenblumen</b>
+          </div>
+        </div>
+      </section>
+      <section className="flower-note">
+        <div className="demo-shell">
+          <span>✿ Handgebunden</span>
+          <span>✿ Saisonale Auswahl</span>
+          <span>✿ Kleine Stückzahlen</span>
+          <span>✿ Persönliche Beratung</span>
+        </div>
+      </section>
+      <section className="demo-section demo-shell" id="sortiment">
+        <div className="demo-section-head">
+          <div>
+            <div className="demo-kicker flower-kicker">Aktuelle Auswahl</div>
+            <h2>Vier Stimmungen. Ein guter Anlass reicht.</h2>
+          </div>
+          <p>
+            Jeder Strauß wird frisch gebunden. Blumen können je nach Tagesangebot leicht variieren – die Farbwelt
+            bleibt.
+          </p>
+        </div>
+        <div className="bouquet-grid">
+          {bouquets.map((b) => (
+            <article key={b.name}>
+              <div className={`bouquet-img ${b.cls}`}>
+                <span>FRISCH GEBUNDEN</span>
+              </div>
+              <div>
+                <h3>{b.name}</h3>
+                <p>{b.text}</p>
+                <div>
+                  <b>{b.price}</b>
+                  <button onClick={() => setSelected(b.name)}>Auswählen</button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="flower-occasions" id="anlaesse">
+        <div className="demo-shell">
+          <div>
+            <div className="demo-kicker flower-kicker">Für besondere Momente</div>
+            <h2>Nicht nur „ein Strauß“.</h2>
+          </div>
+          <div className="occasion-grid">
+            <article>
+              <span>01</span>
+              <h3>Geburtstag & Danke</h3>
+              <p>Persönliche Sträuße, kleine Karten und unkomplizierte Abholung.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Hochzeit & Feier</h3>
+              <p>Brautstrauß, Tischblumen und abgestimmte florale Akzente.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Trauer & Erinnerung</h3>
+              <p>Ruhige, respektvolle Floristik mit persönlicher Abstimmung.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section className="demo-section demo-shell flower-atelier" id="atelier">
+        <div className="atelier-photo">
+          <span>BLÜTENLIEBE</span>
+        </div>
+        <div>
+          <div className="demo-kicker flower-kicker">Unser Atelier</div>
+          <h2>Klein, lokal und mit Blick fürs Detail.</h2>
+          <p>
+            Wir kaufen bewusst in kleinen Mengen ein und arbeiten bevorzugt mit saisonalen Blumen. Dadurch sieht nicht
+            jeder Strauß gleich aus – und genau das ist gewollt.
+          </p>
+          <ul>
+            <li>Frische Lieferung mehrmals pro Woche</li>
+            <li>Individuelle Farbwünsche möglich</li>
+            <li>Verpackung möglichst plastikarm</li>
+          </ul>
+        </div>
+      </section>
+      <section className="flower-contact" id="kontakt">
+        <div className="demo-shell">
+          <div>
+            <div className="demo-kicker flower-kicker">Besuchen oder schreiben</div>
+            <h2>Wir sind lieber persönlich als kompliziert.</h2>
+            <p>
+              Rosenstraße 8 · 31134 Hildesheim
+              <br />
+              Mo–Fr 09:00–18:00 · Sa 09:00–14:00
+            </p>
+            <div className="flower-contact-links">
+              <a href="tel:05122000000">05121 200000</a>
+              <a href="mailto:hallo@bluetenliebe-demo.de">hallo@bluetenliebe-demo.de</a>
+            </div>
+          </div>
+          <form onSubmit={(e) => e.preventDefault()}>
+            <input placeholder="Name" />
+            <input placeholder="E-Mail oder Telefon" />
+            <select value={selected || ""} onChange={(e) => setSelected(e.target.value)}>
+              <option value="">Anlass / Strauß auswählen</option>
+              {bouquets.map((b) => (
+                <option key={b.name}>{b.name}</option>
+              ))}
+              <option>Hochzeit / Event</option>
+              <option>Individuelle Anfrage</option>
+            </select>
+            <textarea rows={4} placeholder="Wünsche, Farben, Abholtag ..." />
+            <button className="flower-primary" type="submit">
+              Anfrage vorbereiten
+            </button>
+            <small>Demoformular – es werden keine Daten versendet.</small>
+          </form>
+        </div>
+      </section>
+      <footer className="demo-footer demo-shell">
+        <div>
+          <b>BLÜTENLIEBE</b>
+          <span>Blumenatelier · Hildesheim</span>
+        </div>
+        <div>Rosenstraße 8 · 05121 200000</div>
+        <div>
+          <span>Impressum</span>
+          <span>Datenschutz</span>
+          <span>WebForge Demo</span>
+        </div>
+      </footer>
+    </main>
+  );
+}

@@ -38,11 +38,40 @@ export async function POST(req: Request) {
         };
       });
 
-      if (!Number.isSafeInteger(leadId) || leadId <= 0 || title.length < 2 || title.length > 160 || !Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100 || !Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100 || items.length < 1 || items.length > 50 || items.some((item) => !item.description || !Number.isFinite(item.quantity) || item.quantity <= 0 || !Number.isSafeInteger(item.unitPriceCents) || item.unitPriceCents < 0)) {
+      if (
+        !Number.isSafeInteger(leadId) ||
+        leadId <= 0 ||
+        title.length < 2 ||
+        title.length > 160 ||
+        !Number.isFinite(discountPercent) ||
+        discountPercent < 0 ||
+        discountPercent > 100 ||
+        !Number.isFinite(taxPercent) ||
+        taxPercent < 0 ||
+        taxPercent > 100 ||
+        items.length < 1 ||
+        items.length > 50 ||
+        items.some(
+          (item) =>
+            !item.description ||
+            !Number.isFinite(item.quantity) ||
+            item.quantity <= 0 ||
+            !Number.isSafeInteger(item.unitPriceCents) ||
+            item.unitPriceCents < 0,
+        )
+      ) {
         return NextResponse.json({ ok: false, error: "Angebotsdaten sind ungültig." }, { status: 400 });
       }
 
-      const offerId = await createOffer(password, { leadId, title, discountPercent, taxPercent, validUntil, notes, items });
+      const offerId = await createOffer(password, {
+        leadId,
+        title,
+        discountPercent,
+        taxPercent,
+        validUntil,
+        notes,
+        items,
+      });
       return NextResponse.json({ ok: true, offerId }, { status: 201 });
     }
 
@@ -68,7 +97,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_OFFERS_API_ERROR", error);
     return NextResponse.json({ ok: false, error: "Angebot konnte nicht verarbeitet werden." }, { status: 500 });
   }

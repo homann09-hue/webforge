@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getSubmissionFileUrl, listAllSubmissions, setSubmissionReview, type SubmissionReviewStatus } from "@/lib/submissions";
+import {
+  getSubmissionFileUrl,
+  listAllSubmissions,
+  setSubmissionReview,
+  type SubmissionReviewStatus,
+} from "@/lib/submissions";
 
 const allowed: SubmissionReviewStatus[] = ["new", "reviewed", "incorporated"];
 
@@ -28,7 +33,8 @@ export async function POST(req: Request) {
 
     if (action === "file-url") {
       const submissionId = Number(body.submissionId);
-      if (!Number.isSafeInteger(submissionId) || submissionId <= 0) return NextResponse.json({ ok: false, error: "Ungültige Datei." }, { status: 400 });
+      if (!Number.isSafeInteger(submissionId) || submissionId <= 0)
+        return NextResponse.json({ ok: false, error: "Ungültige Datei." }, { status: 400 });
       const url = await getSubmissionFileUrl(password, submissionId);
       return NextResponse.json({ ok: true, url });
     }
@@ -36,7 +42,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_SUBMISSIONS_API_ERROR", error);
     return NextResponse.json({ ok: false, error: "Kundenabgaben konnten nicht verarbeitet werden." }, { status: 500 });
   }

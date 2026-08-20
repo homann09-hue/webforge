@@ -54,14 +54,36 @@ export async function listInvoices(password: string): Promise<Invoice[]> {
   return (await response.json()) as Invoice[];
 }
 
-export async function createInvoice(password: string, input: {
-  leadId: number; projectId?: number | null; invoiceType: InvoiceType; title: string; issueDate: string; dueDate: string; taxPercent: number; notes: string;
-  items: { description: string; quantity: number; unit: string; unitPriceCents: number }[];
-}) {
+export async function createInvoice(
+  password: string,
+  input: {
+    leadId: number;
+    projectId?: number | null;
+    invoiceType: InvoiceType;
+    title: string;
+    issueDate: string;
+    dueDate: string;
+    taxPercent: number;
+    notes: string;
+    items: { description: string; quantity: number; unit: string; unitPriceCents: number }[];
+  },
+) {
   const response = await adminRpc("admin_create_invoice", {
-    p_password: password, p_lead_id: input.leadId, p_project_id: input.projectId || null, p_invoice_type: input.invoiceType,
-    p_title: input.title, p_issue_date: input.issueDate || null, p_due_date: input.dueDate || null, p_tax_percent: input.taxPercent,
-    p_notes: input.notes || null, p_items: input.items.map((item) => ({ description: item.description, quantity: item.quantity, unit: item.unit, unit_price_cents: item.unitPriceCents })),
+    p_password: password,
+    p_lead_id: input.leadId,
+    p_project_id: input.projectId || null,
+    p_invoice_type: input.invoiceType,
+    p_title: input.title,
+    p_issue_date: input.issueDate || null,
+    p_due_date: input.dueDate || null,
+    p_tax_percent: input.taxPercent,
+    p_notes: input.notes || null,
+    p_items: input.items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit,
+      unit_price_cents: item.unitPriceCents,
+    })),
   });
   return (await response.json()) as number;
 }
@@ -70,8 +92,22 @@ export async function setInvoiceStatus(password: string, invoiceId: number, stat
   await adminRpc("admin_set_invoice_status", { p_password: password, p_invoice_id: invoiceId, p_status: status });
 }
 
-export async function addPayment(password: string, invoiceId: number, amountCents: number, method: PaymentMethod, reference: string, paidAt: string) {
-  await adminRpc("admin_add_payment", { p_password: password, p_invoice_id: invoiceId, p_amount_cents: amountCents, p_method: method, p_reference: reference || null, p_paid_at: paidAt || null });
+export async function addPayment(
+  password: string,
+  invoiceId: number,
+  amountCents: number,
+  method: PaymentMethod,
+  reference: string,
+  paidAt: string,
+) {
+  await adminRpc("admin_add_payment", {
+    p_password: password,
+    p_invoice_id: invoiceId,
+    p_amount_cents: amountCents,
+    p_method: method,
+    p_reference: reference || null,
+    p_paid_at: paidAt || null,
+  });
 }
 
 export async function deleteInvoice(password: string, invoiceId: number) {

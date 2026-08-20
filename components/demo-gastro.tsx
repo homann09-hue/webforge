@@ -1,36 +1,345 @@
 "use client";
-import {useMemo,useState} from "react";
+import { useMemo, useState } from "react";
 
-type MenuItem={id:number;name:string;desc:string;price:number;tag:string};
-type CartItem=MenuItem&{qty:number;size:"M"|"L";extras:string[]};
-const menu:MenuItem[]=[
-{id:1,name:"Margherita 2.0",desc:"San Marzano, Fior di Latte, Basilikum, Olivenöl",price:9.9,tag:"CLASSIC"},
-{id:2,name:"Inferno",desc:"Scharfe Salami, Chili, Honig, Mozzarella",price:12.9,tag:"SPICY"},
-{id:3,name:"Burrata Club",desc:"Burrata, Kirschtomaten, Pesto, Rucola",price:13.9,tag:"BESTSELLER"},
-{id:4,name:"Trüffel Bianca",desc:"Fior di Latte, Pilze, Trüffelcreme, Parmesan",price:14.9,tag:"SPECIAL"},
-{id:5,name:"Pasta Verde",desc:"Pesto, Parmesan, Kirschtomaten, Rucola",price:11.9,tag:"PASTA"},
-{id:6,name:"Tiramisu",desc:"Mascarpone, Espresso, Kakao",price:5.9,tag:"DESSERT"}
+type MenuItem = { id: number; name: string; desc: string; price: number; tag: string };
+type CartItem = MenuItem & { qty: number; size: "M" | "L"; extras: string[] };
+const menu: MenuItem[] = [
+  {
+    id: 1,
+    name: "Margherita 2.0",
+    desc: "San Marzano, Fior di Latte, Basilikum, Olivenöl",
+    price: 9.9,
+    tag: "CLASSIC",
+  },
+  { id: 2, name: "Inferno", desc: "Scharfe Salami, Chili, Honig, Mozzarella", price: 12.9, tag: "SPICY" },
+  { id: 3, name: "Burrata Club", desc: "Burrata, Kirschtomaten, Pesto, Rucola", price: 13.9, tag: "BESTSELLER" },
+  { id: 4, name: "Trüffel Bianca", desc: "Fior di Latte, Pilze, Trüffelcreme, Parmesan", price: 14.9, tag: "SPECIAL" },
+  { id: 5, name: "Pasta Verde", desc: "Pesto, Parmesan, Kirschtomaten, Rucola", price: 11.9, tag: "PASTA" },
+  { id: 6, name: "Tiramisu", desc: "Mascarpone, Espresso, Kakao", price: 5.9, tag: "DESSERT" },
 ];
-const extraPrices:Record<string,number>={"Extra Käse":1.5,"Salami":2,"Jalapeños":1,"Champignons":1.5,"Burrata":3.5};
-const money=(v:number)=>v.toFixed(2).replace(".",",")+" €";
+const extraPrices: Record<string, number> = {
+  "Extra Käse": 1.5,
+  Salami: 2,
+  Jalapeños: 1,
+  Champignons: 1.5,
+  Burrata: 3.5,
+};
+const money = (v: number) => v.toFixed(2).replace(".", ",") + " €";
 
-export default function DemoGastro(){
- const[cart,setCart]=useState<CartItem[]>([]);const[open,setOpen]=useState(false);const[config,setConfig]=useState<MenuItem|null>(null);const[size,setSize]=useState<"M"|"L">("M");const[extras,setExtras]=useState<string[]>([]);const[checkout,setCheckout]=useState(false);
- const subtotal=useMemo(()=>cart.reduce((s,i)=>s+(i.price+(i.size==="L"?3:0)+i.extras.reduce((a,e)=>a+(extraPrices[e]||0),0))*i.qty,0),[cart]);
- function add(item:MenuItem){setConfig(item);setSize("M");setExtras([])}
- function confirm(){if(!config)return;setCart(c=>[...c,{...config,qty:1,size,extras}]);setConfig(null);setOpen(true)}
- function qty(i:number,d:number){setCart(c=>c.map((x,idx)=>idx===i?{...x,qty:Math.max(0,x.qty+d)}:x).filter(x=>x.qty>0))}
- function toggle(e:string){setExtras(x=>x.includes(e)?x.filter(v=>v!==e):[...x,e])}
- return <main className="demo gastro-demo">
-  <nav className="demo-nav demo-shell gastro-nav"><a className="demo-logo gastro-logo" href="#top"><span>F37</span><b>FORNO 37</b></a><div><a href="#menu">Speisekarte</a><a href="#story">Über uns</a><a href="#info">Liefergebiet</a></div><button className="cart-button" onClick={()=>setOpen(true)}>Warenkorb <b>{cart.reduce((a,b)=>a+b.qty,0)}</b></button></nav>
-  <section className="gastro-hero demo-shell" id="top"><div><div className="demo-kicker red">Pizza · Pasta · Hildesheim</div><h1>Heiß. Frisch. <em>Direkt.</em></h1><p>48 Stunden Teigruhe, starke Zutaten und Bestellung ohne Umwege. Lieferung oder Abholung – du entscheidest.</p><div className="demo-actions"><a className="demo-primary gastro-primary" href="#menu">Jetzt bestellen</a><a className="demo-secondary" href="#story">Unsere Story</a></div><div className="delivery-facts"><span><b>25–40 min</b> Lieferzeit</span><span><b>4,8 ★</b> Bewertung</span><span><b>ab 15 €</b> Mindestbestellwert</span></div></div><div className="pizza-stage"><div className="pizza-disc"><span>FORNO<br/>37</span></div><div className="pizza-note">🔥 Ofenheiß bis zu deiner Tür</div></div></section>
-  <section className="gastro-marquee"><div>NEAPOLITAN STYLE · 48H TEIGRUHE · FRISCHE ZUTATEN · DIREKT BESTELLEN · NEAPOLITAN STYLE · 48H TEIGRUHE</div></section>
-  <section className="demo-section demo-shell" id="menu"><div className="demo-section-head"><div><div className="demo-kicker red">Speisekarte</div><h2>Heute schon was Gutes vor?</h2></div><p>Alle Pizzen kannst du in M oder L bestellen und mit Extras erweitern.</p></div><div className="food-grid">{menu.map((m,i)=><article key={m.id}><div className={`food-visual food-${i+1}`}><span>{m.tag}</span></div><div className="food-copy"><div><h3>{m.name}</h3><p>{m.desc}</p></div><div className="food-buy"><b>ab {money(m.price)}</b><button onClick={()=>add(m)}>+</button></div></div></article>)}</div></section>
-  <section className="gastro-story" id="story"><div className="demo-shell"><div className="story-photo"><span>EST. 2024</span></div><div><div className="demo-kicker red">Forno 37</div><h2>Wenig Schnickschnack. Viel Geschmack.</h2><p>Wir machen Pizza, wie wir sie selbst bestellen wollen: luftiger Rand, guter Teig und Zutaten, die man erkennt. Kein anonymer Marktplatz – du bestellst direkt bei uns.</p><div className="story-stats"><span><b>48h</b> Teigruhe</span><span><b>430°C</b> Ofen</span><span><b>100%</b> direkt</span></div></div></div></section>
-  <section className="demo-section demo-shell" id="info"><div className="info-grid"><article><small>LIEFERGEBIET</small><h3>Hildesheim + 8 km</h3><p>Ab 15 € Mindestbestellwert. Lieferkosten werden im Checkout simuliert.</p></article><article><small>ÖFFNUNGSZEITEN</small><h3>Di–So · 16–23 Uhr</h3><p>Montag ist Teigtag. Vorbestellungen sind in dieser Demo nicht aktiv.</p></article><article><small>ABHOLUNG</small><h3>Markt 37</h3><p>31134 Hildesheim · Bestellung meist in 15–20 Minuten bereit.</p></article></div></section>
-  <footer className="demo-footer demo-shell"><div><b>FORNO 37</b><span>Pizza · Pasta · Hildesheim</span></div><div>05121 111111 · ciao@forno37-demo.de</div><div><span>Impressum</span><span>Datenschutz</span><span>WebForge Demo</span></div></footer>
-  {config&&<div className="modal-backdrop" onClick={()=>setConfig(null)}><div className="food-modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setConfig(null)}>×</button><div className="demo-kicker red">Konfigurieren</div><h2>{config.name}</h2><p>{config.desc}</p><h4>Größe</h4><div className="option-row"><button className={size==="M"?"active":""} onClick={()=>setSize("M")}>M · 28 cm</button><button className={size==="L"?"active":""} onClick={()=>setSize("L")}>L · 32 cm +3,00 €</button></div><h4>Extras</h4><div className="option-row extras">{Object.keys(extraPrices).map(e=><button className={extras.includes(e)?"active":""} key={e} onClick={()=>toggle(e)}>{e} +{money(extraPrices[e])}</button>)}</div><div className="modal-total"><span>Gesamt</span><b>{money(config.price+(size==="L"?3:0)+extras.reduce((a,e)=>a+extraPrices[e],0))}</b></div><button className="demo-primary gastro-primary wide" onClick={confirm}>In den Warenkorb</button></div></div>}
-  {open&&<div className="cart-drawer"><div className="cart-head"><div><small>DEINE BESTELLUNG</small><h2>Warenkorb</h2></div><button onClick={()=>setOpen(false)}>×</button></div><div className="cart-lines">{cart.length===0?<p className="empty-cart">Noch nichts drin. Such dir etwas Leckeres aus.</p>:cart.map((i,idx)=><div className="cart-line" key={idx}><div><b>{i.name} · {i.size}</b><small>{i.extras.length?i.extras.join(", "):"ohne Extras"}</small><span>{money((i.price+(i.size==="L"?3:0)+i.extras.reduce((a,e)=>a+extraPrices[e],0))*i.qty)}</span></div><div className="qty"><button onClick={()=>qty(idx,-1)}>−</button><b>{i.qty}</b><button onClick={()=>qty(idx,1)}>+</button></div></div>)}</div>{cart.length>0&&<div className="cart-bottom"><div><span>Zwischensumme</span><b>{money(subtotal)}</b></div><div><span>Lieferung</span><b>{subtotal>=25?"0,00 €":"2,90 €"}</b></div><div className="grand"><span>Gesamt</span><b>{money(subtotal+(subtotal>=25?0:2.9))}</b></div><button className="demo-primary gastro-primary wide" onClick={()=>setCheckout(true)}>Zur Kasse</button><small>Demo-Bestellsystem · keine echte Bestellung</small></div>}</div>}
-  {checkout&&<div className="modal-backdrop"><div className="checkout-modal"><button className="modal-close" onClick={()=>setCheckout(false)}>×</button><div className="demo-kicker red">Demo Checkout</div><h2>Fast geschafft.</h2><div className="checkout-grid"><input placeholder="Vorname"/><input placeholder="Nachname"/><input placeholder="Straße & Hausnummer"/><input placeholder="PLZ / Ort"/><input placeholder="Telefon"/><select defaultValue="delivery"><option value="delivery">Lieferung</option><option value="pickup">Abholung</option></select></div><div className="payment-choice"><label><input type="radio" defaultChecked name="pay"/> Bar / Karte bei Lieferung</label><label><input type="radio" name="pay"/> Online-Zahlung (Demo)</label></div><button className="demo-primary gastro-primary wide" onClick={()=>{setCheckout(false);setOpen(false);setCart([]);alert("Demo: Bestellung erfolgreich simuliert.")}}>Bestellung simulieren</button><small>Es wird nichts versendet und keine Zahlung ausgelöst.</small></div></div>}
- </main>
+export default function DemoGastro() {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [open, setOpen] = useState(false);
+  const [config, setConfig] = useState<MenuItem | null>(null);
+  const [size, setSize] = useState<"M" | "L">("M");
+  const [extras, setExtras] = useState<string[]>([]);
+  const [checkout, setCheckout] = useState(false);
+  const subtotal = useMemo(
+    () =>
+      cart.reduce(
+        (s, i) =>
+          s + (i.price + (i.size === "L" ? 3 : 0) + i.extras.reduce((a, e) => a + (extraPrices[e] || 0), 0)) * i.qty,
+        0,
+      ),
+    [cart],
+  );
+  function add(item: MenuItem) {
+    setConfig(item);
+    setSize("M");
+    setExtras([]);
+  }
+  function confirm() {
+    if (!config) return;
+    setCart((c) => [...c, { ...config, qty: 1, size, extras }]);
+    setConfig(null);
+    setOpen(true);
+  }
+  function qty(i: number, d: number) {
+    setCart((c) => c.map((x, idx) => (idx === i ? { ...x, qty: Math.max(0, x.qty + d) } : x)).filter((x) => x.qty > 0));
+  }
+  function toggle(e: string) {
+    setExtras((x) => (x.includes(e) ? x.filter((v) => v !== e) : [...x, e]));
+  }
+  return (
+    <main className="demo gastro-demo">
+      <nav className="demo-nav demo-shell gastro-nav">
+        <a className="demo-logo gastro-logo" href="#top">
+          <span>F37</span>
+          <b>FORNO 37</b>
+        </a>
+        <div>
+          <a href="#menu">Speisekarte</a>
+          <a href="#story">Über uns</a>
+          <a href="#info">Liefergebiet</a>
+        </div>
+        <button className="cart-button" onClick={() => setOpen(true)}>
+          Warenkorb <b>{cart.reduce((a, b) => a + b.qty, 0)}</b>
+        </button>
+      </nav>
+      <section className="gastro-hero demo-shell" id="top">
+        <div>
+          <div className="demo-kicker red">Pizza · Pasta · Hildesheim</div>
+          <h1>
+            Heiß. Frisch. <em>Direkt.</em>
+          </h1>
+          <p>
+            48 Stunden Teigruhe, starke Zutaten und Bestellung ohne Umwege. Lieferung oder Abholung – du entscheidest.
+          </p>
+          <div className="demo-actions">
+            <a className="demo-primary gastro-primary" href="#menu">
+              Jetzt bestellen
+            </a>
+            <a className="demo-secondary" href="#story">
+              Unsere Story
+            </a>
+          </div>
+          <div className="delivery-facts">
+            <span>
+              <b>25–40 min</b> Lieferzeit
+            </span>
+            <span>
+              <b>4,8 ★</b> Bewertung
+            </span>
+            <span>
+              <b>ab 15 €</b> Mindestbestellwert
+            </span>
+          </div>
+        </div>
+        <div className="pizza-stage">
+          <div className="pizza-disc">
+            <span>
+              FORNO
+              <br />
+              37
+            </span>
+          </div>
+          <div className="pizza-note">🔥 Ofenheiß bis zu deiner Tür</div>
+        </div>
+      </section>
+      <section className="gastro-marquee">
+        <div>
+          NEAPOLITAN STYLE · 48H TEIGRUHE · FRISCHE ZUTATEN · DIREKT BESTELLEN · NEAPOLITAN STYLE · 48H TEIGRUHE
+        </div>
+      </section>
+      <section className="demo-section demo-shell" id="menu">
+        <div className="demo-section-head">
+          <div>
+            <div className="demo-kicker red">Speisekarte</div>
+            <h2>Heute schon was Gutes vor?</h2>
+          </div>
+          <p>Alle Pizzen kannst du in M oder L bestellen und mit Extras erweitern.</p>
+        </div>
+        <div className="food-grid">
+          {menu.map((m, i) => (
+            <article key={m.id}>
+              <div className={`food-visual food-${i + 1}`}>
+                <span>{m.tag}</span>
+              </div>
+              <div className="food-copy">
+                <div>
+                  <h3>{m.name}</h3>
+                  <p>{m.desc}</p>
+                </div>
+                <div className="food-buy">
+                  <b>ab {money(m.price)}</b>
+                  <button onClick={() => add(m)}>+</button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="gastro-story" id="story">
+        <div className="demo-shell">
+          <div className="story-photo">
+            <span>EST. 2024</span>
+          </div>
+          <div>
+            <div className="demo-kicker red">Forno 37</div>
+            <h2>Wenig Schnickschnack. Viel Geschmack.</h2>
+            <p>
+              Wir machen Pizza, wie wir sie selbst bestellen wollen: luftiger Rand, guter Teig und Zutaten, die man
+              erkennt. Kein anonymer Marktplatz – du bestellst direkt bei uns.
+            </p>
+            <div className="story-stats">
+              <span>
+                <b>48h</b> Teigruhe
+              </span>
+              <span>
+                <b>430°C</b> Ofen
+              </span>
+              <span>
+                <b>100%</b> direkt
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="demo-section demo-shell" id="info">
+        <div className="info-grid">
+          <article>
+            <small>LIEFERGEBIET</small>
+            <h3>Hildesheim + 8 km</h3>
+            <p>Ab 15 € Mindestbestellwert. Lieferkosten werden im Checkout simuliert.</p>
+          </article>
+          <article>
+            <small>ÖFFNUNGSZEITEN</small>
+            <h3>Di–So · 16–23 Uhr</h3>
+            <p>Montag ist Teigtag. Vorbestellungen sind in dieser Demo nicht aktiv.</p>
+          </article>
+          <article>
+            <small>ABHOLUNG</small>
+            <h3>Markt 37</h3>
+            <p>31134 Hildesheim · Bestellung meist in 15–20 Minuten bereit.</p>
+          </article>
+        </div>
+      </section>
+      <footer className="demo-footer demo-shell">
+        <div>
+          <b>FORNO 37</b>
+          <span>Pizza · Pasta · Hildesheim</span>
+        </div>
+        <div>05121 111111 · ciao@forno37-demo.de</div>
+        <div>
+          <span>Impressum</span>
+          <span>Datenschutz</span>
+          <span>WebForge Demo</span>
+        </div>
+      </footer>
+      {config && (
+        <div className="modal-backdrop" onClick={() => setConfig(null)}>
+          <div className="food-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setConfig(null)}>
+              ×
+            </button>
+            <div className="demo-kicker red">Konfigurieren</div>
+            <h2>{config.name}</h2>
+            <p>{config.desc}</p>
+            <h4>Größe</h4>
+            <div className="option-row">
+              <button className={size === "M" ? "active" : ""} onClick={() => setSize("M")}>
+                M · 28 cm
+              </button>
+              <button className={size === "L" ? "active" : ""} onClick={() => setSize("L")}>
+                L · 32 cm +3,00 €
+              </button>
+            </div>
+            <h4>Extras</h4>
+            <div className="option-row extras">
+              {Object.keys(extraPrices).map((e) => (
+                <button className={extras.includes(e) ? "active" : ""} key={e} onClick={() => toggle(e)}>
+                  {e} +{money(extraPrices[e])}
+                </button>
+              ))}
+            </div>
+            <div className="modal-total">
+              <span>Gesamt</span>
+              <b>{money(config.price + (size === "L" ? 3 : 0) + extras.reduce((a, e) => a + extraPrices[e], 0))}</b>
+            </div>
+            <button className="demo-primary gastro-primary wide" onClick={confirm}>
+              In den Warenkorb
+            </button>
+          </div>
+        </div>
+      )}
+      {open && (
+        <div className="cart-drawer">
+          <div className="cart-head">
+            <div>
+              <small>DEINE BESTELLUNG</small>
+              <h2>Warenkorb</h2>
+            </div>
+            <button onClick={() => setOpen(false)}>×</button>
+          </div>
+          <div className="cart-lines">
+            {cart.length === 0 ? (
+              <p className="empty-cart">Noch nichts drin. Such dir etwas Leckeres aus.</p>
+            ) : (
+              cart.map((i, idx) => (
+                <div className="cart-line" key={idx}>
+                  <div>
+                    <b>
+                      {i.name} · {i.size}
+                    </b>
+                    <small>{i.extras.length ? i.extras.join(", ") : "ohne Extras"}</small>
+                    <span>
+                      {money(
+                        (i.price + (i.size === "L" ? 3 : 0) + i.extras.reduce((a, e) => a + extraPrices[e], 0)) * i.qty,
+                      )}
+                    </span>
+                  </div>
+                  <div className="qty">
+                    <button onClick={() => qty(idx, -1)}>−</button>
+                    <b>{i.qty}</b>
+                    <button onClick={() => qty(idx, 1)}>+</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          {cart.length > 0 && (
+            <div className="cart-bottom">
+              <div>
+                <span>Zwischensumme</span>
+                <b>{money(subtotal)}</b>
+              </div>
+              <div>
+                <span>Lieferung</span>
+                <b>{subtotal >= 25 ? "0,00 €" : "2,90 €"}</b>
+              </div>
+              <div className="grand">
+                <span>Gesamt</span>
+                <b>{money(subtotal + (subtotal >= 25 ? 0 : 2.9))}</b>
+              </div>
+              <button className="demo-primary gastro-primary wide" onClick={() => setCheckout(true)}>
+                Zur Kasse
+              </button>
+              <small>Demo-Bestellsystem · keine echte Bestellung</small>
+            </div>
+          )}
+        </div>
+      )}
+      {checkout && (
+        <div className="modal-backdrop">
+          <div className="checkout-modal">
+            <button className="modal-close" onClick={() => setCheckout(false)}>
+              ×
+            </button>
+            <div className="demo-kicker red">Demo Checkout</div>
+            <h2>Fast geschafft.</h2>
+            <div className="checkout-grid">
+              <input placeholder="Vorname" />
+              <input placeholder="Nachname" />
+              <input placeholder="Straße & Hausnummer" />
+              <input placeholder="PLZ / Ort" />
+              <input placeholder="Telefon" />
+              <select defaultValue="delivery">
+                <option value="delivery">Lieferung</option>
+                <option value="pickup">Abholung</option>
+              </select>
+            </div>
+            <div className="payment-choice">
+              <label>
+                <input type="radio" defaultChecked name="pay" /> Bar / Karte bei Lieferung
+              </label>
+              <label>
+                <input type="radio" name="pay" /> Online-Zahlung (Demo)
+              </label>
+            </div>
+            <button
+              className="demo-primary gastro-primary wide"
+              onClick={() => {
+                setCheckout(false);
+                setOpen(false);
+                setCart([]);
+                alert("Demo: Bestellung erfolgreich simuliert.");
+              }}
+            >
+              Bestellung simulieren
+            </button>
+            <small>Es wird nichts versendet und keine Zahlung ausgelöst.</small>
+          </div>
+        </div>
+      )}
+    </main>
+  );
 }

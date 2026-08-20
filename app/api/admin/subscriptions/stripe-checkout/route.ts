@@ -18,7 +18,8 @@ export async function POST(req: Request) {
     const subscriptions = await listBillingSubscriptions(password);
     const subscription = subscriptions.find((item) => item.id === subscriptionId);
     if (!subscription) return NextResponse.json({ ok: false, error: "Abo nicht gefunden." }, { status: 404 });
-    if (subscription.status === "cancelled") return NextResponse.json({ ok: false, error: "Storniertes Abo kann nicht aktiviert werden." }, { status: 400 });
+    if (subscription.status === "cancelled")
+      return NextResponse.json({ ok: false, error: "Storniertes Abo kann nicht aktiviert werden." }, { status: 400 });
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin;
     const params = new URLSearchParams();
@@ -44,17 +45,21 @@ export async function POST(req: Request) {
       cache: "no-store",
     });
 
-    const session = await response.json() as { id?: string; url?: string; error?: { message?: string } };
+    const session = (await response.json()) as { id?: string; url?: string; error?: { message?: string } };
     if (!response.ok || !session.url) {
       console.error("WEBFORGE_STRIPE_CHECKOUT_ERROR", response.status, session.error?.message || session);
-      return NextResponse.json({ ok: false, error: session.error?.message || "Stripe Checkout konnte nicht erstellt werden." }, { status: 502 });
+      return NextResponse.json(
+        { ok: false, error: session.error?.message || "Stripe Checkout konnte nicht erstellt werden." },
+        { status: 502 },
+      );
     }
 
     await setBillingSubscriptionStripe(password, subscription.id, { checkoutUrl: session.url });
     return NextResponse.json({ ok: true, url: session.url, sessionId: session.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+    if (message === "UNAUTHORIZED")
+      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
     console.error("WEBFORGE_STRIPE_CHECKOUT_REQUEST_ERROR", error);
     return NextResponse.json({ ok: false, error: "Stripe Checkout konnte nicht erstellt werden." }, { status: 500 });
   }

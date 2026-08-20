@@ -1,1 +1,31 @@
-export default function Datenschutz(){return <main className="shell section"><div className="eyebrow">Rechtliches</div><h1>Datenschutz</h1><p><strong>Entwurf – vor dem produktiven Geschäftsbetrieb an tatsächliche Datenverarbeitung und Anbieter anpassen.</strong></p><h2>Verantwortlicher</h2><p>WebForge · [Name und ladungsfähige Anschrift] · [E-Mail]</p><h2>Kontaktanfragen</h2><p>Wenn Sie über das Anfrageformular Kontakt aufnehmen, werden die von Ihnen angegebenen Daten zur Bearbeitung Ihrer Anfrage verarbeitet. Umfang, Rechtsgrundlage, Speicherdauer und eingesetzte Dienstleister sind vor Veröffentlichung anhand der tatsächlichen technischen Konfiguration zu ergänzen.</p><h2>Ihre Rechte</h2><p>Betroffene Personen können insbesondere Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und – soweit anwendbar – Datenübertragbarkeit verlangen sowie sich bei einer Datenschutzaufsichtsbehörde beschweren.</p><p><a className="ghost" href="/">← Zurück</a></p></main>}
+export default function Datenschutz() {
+  return (
+    <main className="shell section">
+      <div className="eyebrow">Rechtliches</div>
+      <h1>Datenschutz</h1>
+      <p>
+        <strong>
+          Entwurf – vor dem produktiven Geschäftsbetrieb an tatsächliche Datenverarbeitung und Anbieter anpassen.
+        </strong>
+      </p>
+      <h2>Verantwortlicher</h2>
+      <p>WebForge · [Name und ladungsfähige Anschrift] · [E-Mail]</p>
+      <h2>Kontaktanfragen</h2>
+      <p>
+        Wenn Sie über das Anfrageformular Kontakt aufnehmen, werden die von Ihnen angegebenen Daten zur Bearbeitung
+        Ihrer Anfrage verarbeitet. Umfang, Rechtsgrundlage, Speicherdauer und eingesetzte Dienstleister sind vor
+        Veröffentlichung anhand der tatsächlichen technischen Konfiguration zu ergänzen.
+      </p>
+      <h2>Ihre Rechte</h2>
+      <p>
+        Betroffene Personen können insbesondere Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und –
+        soweit anwendbar – Datenübertragbarkeit verlangen sowie sich bei einer Datenschutzaufsichtsbehörde beschweren.
+      </p>
+      <p>
+        <a className="ghost" href="/">
+          ← Zurück
+        </a>
+      </p>
+    </main>
+  );
+}

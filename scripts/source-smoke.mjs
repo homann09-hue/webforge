@@ -13,9 +13,9 @@ for (const file of required) await access(file);
 
 const demoRouter = await readFile("app/demo/[slug]/page.tsx", "utf8");
 for (const slug of ["handwerk", "gastro", "blumen"]) {
-  if (!demoRouter.includes(`slug:\"${slug}\"`) && !demoRouter.includes(`slug:"${slug}"`)) {
-    throw new Error(`Missing demo route: ${slug}`);
-  }
+  // Tolerate any formatting of the object literal (prettier may add spaces).
+  const pattern = new RegExp(`slug\\s*:\\s*["']${slug}["']`);
+  if (!pattern.test(demoRouter)) throw new Error(`Missing demo route: ${slug}`);
 }
 
 const envExample = await readFile(".env.example", "utf8");

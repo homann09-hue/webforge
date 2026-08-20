@@ -37,11 +37,15 @@ export default function AdminSessionBridge() {
       }
       if (/^wfs_[0-9a-f]{64}$/.test(sessionToken)) return sessionToken;
       if (!exchangePromise) {
-        exchangePromise = exchangePassword(credential, originalFetch).then((token) => {
-          sessionToken = token;
-          sessionStorage.setItem(SESSION_KEY, token);
-          return token;
-        }).finally(() => { exchangePromise = null; });
+        exchangePromise = exchangePassword(credential, originalFetch)
+          .then((token) => {
+            sessionToken = token;
+            sessionStorage.setItem(SESSION_KEY, token);
+            return token;
+          })
+          .finally(() => {
+            exchangePromise = null;
+          });
       }
       return exchangePromise;
     }
@@ -69,12 +73,16 @@ export default function AdminSessionBridge() {
 
     const stored = sessionStorage.getItem(LEGACY_KEY);
     if (stored && !/^wfs_[0-9a-f]{64}$/.test(stored)) {
-      void ensureSession(stored).then((token) => {
-        sessionStorage.setItem(LEGACY_KEY, token);
-      }).catch(() => {});
+      void ensureSession(stored)
+        .then((token) => {
+          sessionStorage.setItem(LEGACY_KEY, token);
+        })
+        .catch(() => {});
     }
 
-    return () => { window.fetch = originalFetch; };
+    return () => {
+      window.fetch = originalFetch;
+    };
   }, []);
 
   return null;
