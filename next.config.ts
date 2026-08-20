@@ -25,8 +25,8 @@ const csp = [
   "upgrade-insecure-requests",
 ].join("; ");
 
+// Everything except the Content-Security-Policy, which is path dependent.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -41,6 +41,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      {
+        // The static CSP, scoped away from /admin and /portal. Those get a
+        // nonce-based policy from middleware.ts, and two Content-Security-Policy
+        // headers on one response are enforced as an intersection — which would
+        // block the nonced scripts.
+        source: "/((?!admin|portal).*)",
+        headers: [{ key: "Content-Security-Policy", value: csp }],
+      },
       {
         // Customer portal links are handed out by mail. Keep them out of
         // referrer headers and out of any cache.

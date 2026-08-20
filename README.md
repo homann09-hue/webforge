@@ -92,6 +92,19 @@ Token nicht heran.
 Alle `/api/admin/*`-Routen lesen die Berechtigung ausschließlich aus dem Cookie
 und nie aus dem Request-Body — ein Aufrufer kann also keine mitliefern.
 
+Abmelden widerruft das Token serverseitig, nicht nur im Browser. Das Passwort
+liegt als bcrypt-Hash (Kosten 12), Loginversuche sind auf 20 pro Minute
+begrenzt.
+
+`/admin` und `/portal` bekommen eine Nonce-basierte CSP aus `middleware.ts` —
+dort läuft kein Inline-Skript ohne Nonce. Die statischen Seiten behalten die
+CSP aus `next.config.ts`, weil sich eine Nonce nicht in eine vorgerenderte
+Seite backen lässt.
+
+```bash
+npm run build && (npm start &) && sleep 5 && npm run test:csp
+```
+
 ## Umgebungsvariablen
 
 Siehe `.env.example`. `NEXT_PUBLIC_SUPABASE_URL` und
