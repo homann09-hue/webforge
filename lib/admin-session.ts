@@ -64,6 +64,32 @@ export function setAdminCookie(response: NextResponse, token: string): NextRespo
   return response;
 }
 
+/**
+ * Revokes the session server side.
+ *
+ * Clearing the cookie only stops *this* browser from presenting the token —
+ * the token itself stayed valid in private.admin_sessions for its full eight
+ * hours. Anything that had captured it kept working after "logout". This
+ * closes that window.
+ *
+ * Never throws: a failed revoke must not stop the user from logging out
+ * locally, and there is nothing useful they could do about it.
+ */
+export async function revokeAdminSession(token: string): Promise<void> {
+  if (!TOKEN_PATTERN.test(token)) return;
+  try {
+    const response = await fetch(edgeFunctionUrl("admin-logout"), {
+      method: "POST",
+      headers: supabaseHeaders(),
+      body: JSON.stringify({ token }),
+      cache: "no-store",
+    });
+    if (!response.ok) console.error("WEBFORGE_ADMIN_LOGOUT_FAILED", response.status);
+  } catch (error) {
+    console.error("WEBFORGE_ADMIN_LOGOUT_FAILED", error);
+  }
+}
+
 export function clearAdminCookie(response: NextResponse): NextResponse {
   response.cookies.set({
     name: ADMIN_COOKIE,

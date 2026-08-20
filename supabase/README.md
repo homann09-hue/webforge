@@ -112,7 +112,15 @@ ausschließlich als SHA-256-Hash. Das Stripe-Secret liegt in Vault. Die
 Supabase-Security-Lints melden nur INFO („RLS enabled, no policy"), was hier
 das gewollte Verhalten ist.
 
-Eine Schwachstelle bleibt: `admin_config.password_sha256` ist ein ungesalzener
-SHA-256-Hash. Das ist kein Passwort-Hash — ohne Arbeitsfaktor ist er bei einem
-Leak schnell durchprobierbar. `crypt()` mit bcrypt aus `pgcrypto` wäre richtig.
-Gehört zusammen mit echten Benutzerkonten angegangen.
+Das Adminpasswort liegt seit Migration 004 als bcrypt-Hash (Kosten 12) in
+`admin_config.password_hash`. Altbestände im alten ungesalzenen SHA-256-Format
+werden weiterhin akzeptiert und beim nächsten erfolgreichen Login in place
+aufgewertet — niemand wird ausgesperrt, und das Passwort muss dafür nicht
+bekannt sein.
+
+Migration 005 repariert die Ratenbegrenzung für Loginversuche. Sie hat vorher
+nie gegriffen: die Funktion schrieb den Fehlversuch in
+`private.admin_gateway_failures` und warf danach eine Exception — was in
+PL/pgSQL genau diesen Insert wieder zurückrollt. Online-Passwortraten war
+damit unbegrenzt. Verifiziert und behoben; die Grenze liegt bei 20
+Fehlversuchen pro Minute.

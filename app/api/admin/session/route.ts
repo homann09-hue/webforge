@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import {
   AdminUnauthorized,
+  ADMIN_COOKIE,
   clearAdminCookie,
   exchangePasswordForToken,
   requireAdminSession,
+  revokeAdminSession,
   setAdminCookie,
 } from "@/lib/admin-session";
+import { cookies } from "next/headers";
 
 /** Login: swaps the shared admin password for a session token in an httpOnly cookie. */
 export async function POST(req: Request) {
@@ -37,7 +40,10 @@ export async function GET() {
   }
 }
 
-/** Logout. */
+/** Logout: revoke the token server side, then drop the cookie. */
 export async function DELETE() {
+  const store = await cookies();
+  const token = store.get(ADMIN_COOKIE)?.value ?? "";
+  await revokeAdminSession(token);
   return clearAdminCookie(NextResponse.json({ ok: true }));
 }

@@ -91,6 +91,12 @@ if (!edgeWebhook.includes("timingSafeEqual")) {
   throw new Error("supabase/functions/stripe-webhook: signature comparison must be constant time");
 }
 
+// Logging out must revoke the token server side, not just drop the cookie.
+const sessionRoute = await readFile("app/api/admin/session/route.ts", "utf8");
+if (!sessionRoute.includes("revokeAdminSession")) {
+  throw new Error("app/api/admin/session: DELETE must revoke the session server side");
+}
+
 // The session cookie must stay httpOnly.
 const sessionModule = await readFile("lib/admin-session.ts", "utf8");
 for (const flag of ["httpOnly: true", 'sameSite: "strict"']) {
