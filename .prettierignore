@@ -2,3 +2,8 @@
 node_modules
 package-lock.json
 out
+
+# Vendored verbatim from the live Supabase project. Reformatting these would
+# make them diverge from what is actually deployed, which is the whole point
+# of having them here.
+supabase/functions

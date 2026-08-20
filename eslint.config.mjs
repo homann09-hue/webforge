@@ -28,7 +28,9 @@ const config = [
     },
   },
   {
-    ignores: [".next/**", "node_modules/**"],
+    // supabase/functions is Deno source vendored verbatim from the live
+    // project; linting it with the Next config only produces noise.
+    ignores: [".next/**", "node_modules/**", "supabase/functions/**"],
   },
 ];
 
