@@ -26,11 +26,11 @@ entwickeln.
 
 - Das Template-/Konfigurationssystem für Kundenseiten. `lib/site-config.ts` ist
   bislang nur eine Namensliste; die Demos sind fest verdrahtete Komponenten.
-- Die Supabase Edge Functions und das vollständige DB-Schema liegen nicht im
-  Repository. Siehe [`supabase/README.md`](supabase/README.md) — das ist das
-  wichtigste offene Thema.
-- Echte Benutzerkonten. Der Admin-Bereich hat ein einziges geteiltes Passwort,
-  keine Rollen und kein Audit-Log.
+- Echte Benutzerkonten. Der Admin-Bereich hat ein einziges geteiltes Passwort
+  und keine Rollen. Ein Audit-Log gibt es (`admin_audit_log`, geschrieben von
+  `admin-gateway`), es unterscheidet aber keine Personen.
+- Die plpgsql-Funktionsrümpfe fehlen noch im Repo — ein `supabase db pull`
+  holt sie. Siehe [`supabase/README.md`](supabase/README.md).
 
 ## Technik
 
@@ -38,8 +38,9 @@ Next.js 15 (App Router) · React 19 · TypeScript · Supabase (Postgres, Edge
 Functions, Storage) · Stripe · Vercel
 
 Datenfluss: Browser → Next Route Handler (Validierung) → Supabase Edge Function
-(Authentifizierung) → Postgres RPC. Einzige Ausnahme ist der Stripe-Webhook,
-der mit dem Service-Role-Key direkt auf PostgREST zugreift.
+(Authentifizierung) → Postgres RPC. Der Stripe-Webhook ist selbst eine Edge
+Function und wird von Stripe direkt aufgerufen — die Next.js-Anwendung braucht
+deshalb keinen Service-Role-Key.
 
 ## Lokal starten
 
@@ -99,10 +100,12 @@ Produktionsprojekt zurück — setzen Sie sie, um eine Staging-Instanz zu betrei
 
 ## Nächste Meilensteine
 
-1. Edge Functions und Schema ins Repository holen (`supabase/README.md`)
-2. Firmendaten in `lib/company.ts` eintragen und Rechtstexte prüfen lassen
-3. Admin-Login manuell gegen die Live-Instanz testen
-4. Echte Benutzerkonten statt geteiltem Passwort
-5. Kunden-Template und zentrale Konfiguration
-6. Gastronomie- und Handwerker-Module
-7. Demo-Websites und Deployment-Automatisierung
+1. Firmendaten in `lib/company.ts` eintragen und Rechtstexte prüfen lassen
+2. `admin-portal-file-url` deployen und Migrationen 002/003 anwenden
+   (`supabase/README.md`)
+3. Stripe-Webhook-Endpunkt auf die Edge Function zeigen lassen
+4. Admin-Login manuell gegen die Live-Instanz testen
+5. `supabase db pull` für die verifizierten Funktionsrümpfe
+6. Echte Benutzerkonten statt geteiltem Passwort
+7. Kunden-Template und zentrale Konfiguration
+8. Gastronomie- und Handwerker-Module

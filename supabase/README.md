@@ -1,98 +1,121 @@
 # Supabase
 
-## The problem this file documents
+## Was hier liegt
 
-Roughly half of WebForge does not live in this repository.
+| Pfad          | Inhalt                                                                            |
+| ------------- | --------------------------------------------------------------------------------- |
+| `functions/`  | Alle 7 Edge Functions, verbatim aus dem Live-Projekt                              |
+| `migrations/` | 001 (überholt, siehe Kopfkommentar), 002 und 003 (neu, noch **nicht** angewendet) |
+| `SCHEMA.md`   | Tabellen, Constraints und alle 42 Funktionen als Referenz                         |
 
-The application code calls **6 Edge Functions** and **31 database RPCs**, and
-reads at least 15 tables. What is version-controlled is one migration for the
-`leads` table — and that migration is out of date (see the header comment in
-`migrations/001_create_leads.sql`).
+Projekt: `jplqdaxtnrqimlgzwuaw` (WebForge, eu-central-1)
 
-Everything that actually enforces security — password checking, rate limiting,
-session token issuing and expiry, portal token validation, RLS policies — lives
-only in the Supabase project. That means it cannot be reviewed, cannot be
-rolled back, cannot be recreated if the project is lost, and cannot be tested
-before it reaches production.
+## Was noch fehlt
 
-**Fixing this is the highest-value work remaining on this codebase.** The steps
-are below.
-
-## Pulling the current state into the repo
+Die **Funktionsrümpfe** (42 `SECURITY DEFINER`-Funktionen, zusammen ~48 KB
+plpgsql) sind bewusst nicht abgeschrieben, sondern nur in `SCHEMA.md`
+dokumentiert. Ein Tippfehler in einer Datenbankfunktion fällt erst in
+Produktion auf. Hol dir stattdessen eine verifizierte Migration:
 
 ```bash
-npm i -g supabase            # or: brew install supabase/tap/supabase
+npm i -g supabase          # oder: brew install supabase/tap/supabase
 supabase login
 supabase link --project-ref jplqdaxtnrqimlgzwuaw
-
-# 1. The schema, as a real migration
-supabase db pull
-
-# 2. Every Edge Function
-for fn in admin-login admin-gateway admin-portal-file-url lead-submit portal-gateway portal-upload; do
-  supabase functions download "$fn"
-done
-
-git add supabase && git commit -m "Vendor the Supabase schema and Edge Functions"
+supabase db pull           # erzeugt supabase/migrations/<timestamp>_remote_schema.sql
+git add supabase && git commit -m "Vendor the verified database schema"
 ```
 
-After that, `supabase db diff` shows drift, and changes go through migrations
-instead of the web console.
+Danach zeigt `supabase db diff` Abweichungen, und Änderungen laufen über
+Migrationen statt über die Web-Konsole.
 
-## Edge Functions the application depends on
+## Deployen
 
-| Function                | Called from                   | Contract                                                                   |
-| ----------------------- | ----------------------------- | -------------------------------------------------------------------------- |
-| `admin-login`           | `lib/admin-session.ts`        | `{ password }` → `{ ok, token }` where token matches `wfs_[0-9a-f]{64}`    |
-| `admin-gateway`         | `lib/admin-rpc.ts`            | `{ password: <session token>, function, args }` → the RPC's JSON result    |
-| `admin-portal-file-url` | `lib/submissions.ts`          | `{ password: <session token>, submissionId }` → `{ ok, url }` (signed URL) |
-| `lead-submit`           | `lib/leads.ts`                | `{ company, email, website }` → 2xx, public, must rate limit               |
-| `portal-gateway`        | `lib/portal.ts`               | `{ action: "get" \| "submit", token, … }` → `{ ok, project }`              |
-| `portal-upload`         | `app/portal/[token]/page.tsx` | multipart `{ token, label, file }`, called directly from the browser       |
+Die Edge Functions hier sind der Stand des Live-Projekts, **mit einer
+Ausnahme**: `admin-portal-file-url` enthält einen Fix, der noch nicht deployt
+ist (siehe unten). Nach Änderungen:
 
-Status codes the application relies on: `401`/`403` mean "not authorised",
-`429` means "rate limited". Both surface to the user as a login failure.
+```bash
+supabase functions deploy admin-portal-file-url
+supabase functions deploy <name>            # einzeln
+```
 
-### Note on the credential field name
+Migrationen anwenden:
 
-`admin-gateway` and `admin-portal-file-url` receive the session token in a
-field still named `password`, for historical reasons. The application no longer
-sends a real password anywhere except to `admin-login`. Renaming the field is a
-worthwhile follow-up, but it has to change on both sides at once.
+```bash
+supabase db push
+```
 
-## Admin RPCs in use
+## Offene Punkte
 
-Leads: `admin_list_leads`, `admin_update_lead_status`, `admin_update_lead_notes`,
-`admin_mark_lead_contacted`, `admin_archive_lead`, `admin_delete_lead`,
-`admin_update_lead_commercial`
+**1. `admin-portal-file-url` ist noch nicht deployt** — die Repo-Version
+enthält einen Fix, die Live-Version nicht.
 
-Offers: `admin_list_offers`, `admin_create_offer`, `admin_update_offer_status`,
-`admin_delete_offer`
+Die Live-Version prüft nur `internal_admin_validate_password`, bekommt von der
+Anwendung aber ein Session-Token. Ergebnis: „Datei öffnen" im Adminbereich
+antwortet immer mit 401. Die Version hier akzeptiert beides, genau wie
+`admin-gateway`.
 
-Projects: `admin_list_projects`, `admin_update_project`,
-`admin_save_project_onboarding`, `admin_project_tasks`,
-`admin_upsert_project_task`, `admin_delete_project_task`,
-`admin_rotate_project_portal_token`, `admin_disable_project_portal`
+```bash
+supabase functions deploy admin-portal-file-url
+```
 
-Invoicing: `admin_list_invoices`, `admin_create_invoice`,
-`admin_set_invoice_status`, `admin_add_payment`, `admin_delete_invoice`
+**2. Migrationen 002 und 003 sind noch nicht angewendet.**
 
-Subscriptions: `admin_list_billing_subscriptions`,
-`admin_create_billing_subscription`, `admin_set_billing_subscription_status`,
-`admin_set_billing_subscription_stripe`, `admin_generate_due_recurring_invoices`
+002 ergänzt den Unique-Index auf `payments.external_payment_id`. Ohne ihn kann
+PostgREST das `on_conflict` im Stripe-Webhook nicht auflösen und der Insert
+scheitert. 003 entfernt die ungenutzte Funktion `submit_lead`.
 
-Portal submissions: `admin_list_all_submissions`, `admin_set_submission_review`
+**3. Der Stripe-Webhook-Endpunkt muss im Stripe-Dashboard gesetzt werden:**
 
-## Tables the application reads or writes
+```
+https://jplqdaxtnrqimlgzwuaw.supabase.co/functions/v1/stripe-webhook
+```
 
-Inferred from the TypeScript types and the REST calls in
-`app/api/stripe/webhook/route.ts`. Replace this list with the real dump.
+Es gab zwei Implementierungen (Next.js und Edge Function); die Next-Route ist
+entfernt. Benötigte Events: `checkout.session.completed`, `invoice.paid`,
+`invoice.payment_failed`, `customer.subscription.updated`,
+`customer.subscription.deleted`, `charge.refunded`, `charge.dispute.created`.
 
-`leads`, `offers`, `offer_items`, `customer_projects`, `project_tasks`,
-`portal_submissions`, `invoices`, `invoice_items`, `payments`,
-`billing_subscriptions`, `stripe_webhook_events`
+Das Signing-Secret liegt in Supabase Vault unter
+`webforge_stripe_webhook_secret`, nicht in Vercel.
 
-The webhook writes `billing_subscriptions`, `invoices`, `payments` and
-`stripe_webhook_events` directly over PostgREST with the service role key —
-the one path that bypasses the gateway. `stripe_webhook_events.event_id` must
-carry a unique constraint, or the idempotency guard silently stops working.
+## Edge Functions und ihre Verträge
+
+| Function                | Aufrufer                                    | Vertrag                                                                            |
+| ----------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `admin-login`           | `lib/admin-session.ts` (serverseitig)       | `{ password }` → `{ ok, token, expiresIn }`, Token `wfs_[0-9a-f]{64}`, 8 h         |
+| `admin-gateway`         | `lib/admin-rpc.ts` (serverseitig)           | `{ password: <Token>, function, args }` → RPC-Ergebnis; schreibt `admin_audit_log` |
+| `admin-portal-file-url` | `lib/submissions.ts` (serverseitig)         | `{ password: <Token>, submissionId }` → `{ ok, url }`, signierte URL, 120 s        |
+| `lead-submit`           | `lib/leads.ts` (serverseitig)               | `{ company, email, website, clientIp }` → 201; 5 Anfragen/IP/Stunde                |
+| `portal-gateway`        | `lib/portal.ts` (serverseitig)              | `{ action: "get" \| "submit", token, … }`                                          |
+| `portal-upload`         | `app/portal/[token]/page.tsx` (**Browser**) | multipart `{ token, label, file }`; JPG/PNG/WebP/PDF/TXT, max. 10 MB               |
+| `stripe-webhook`        | Stripe                                      | signaturgeprüft, idempotent über `stripe_webhook_events.event_id`                  |
+
+Statuscodes, auf die sich die Anwendung verlässt: `401`/`403` = nicht
+autorisiert, `429` = ratenbegrenzt.
+
+Alle Functions erlauben nur den Origin `https://webforge-virid.vercel.app`.
+Serverseitige Aufrufe senden keinen `Origin`-Header und passieren deshalb —
+**bei einer neuen Domain muss `ALLOWED_ORIGINS` in allen Functions ergänzt
+werden**, sonst bricht der Browser-Upload im Kundenportal.
+
+### Zum Feldnamen `password`
+
+`admin-gateway` und `admin-portal-file-url` nehmen das Session-Token in einem
+Feld entgegen, das historisch `password` heißt. Ein echtes Passwort geht nur
+noch an `admin-login`. Umbenennen wäre sauberer, muss aber auf beiden Seiten
+gleichzeitig passieren.
+
+## Sicherheitsmodell in einem Absatz
+
+Alle Tabellen: RLS an, keine Policies — für `anon` also komplett gesperrt.
+Zugriff ausschließlich über `SECURITY DEFINER`-Funktionen, deren `EXECUTE` nur
+`postgres` und `service_role` haben. Session-Token und Portal-Token liegen
+ausschließlich als SHA-256-Hash. Das Stripe-Secret liegt in Vault. Die
+Supabase-Security-Lints melden nur INFO („RLS enabled, no policy"), was hier
+das gewollte Verhalten ist.
+
+Eine Schwachstelle bleibt: `admin_config.password_sha256` ist ein ungesalzener
+SHA-256-Hash. Das ist kein Passwort-Hash — ohne Arbeitsfaktor ist er bei einem
+Leak schnell durchprobierbar. `crypt()` mit bcrypt aus `pgcrypto` wäre richtig.
+Gehört zusammen mit echten Benutzerkonten angegangen.
