@@ -330,13 +330,21 @@ export default function Admin() {
     }
   }
 
-  function logout() {
-    void adminLogout();
+  async function logout() {
+    // The result was previously discarded with `void adminLogout()`, which made
+    // the whole revoked/not-revoked plumbing decorative: a failed server-side
+    // revoke looked like a clean logout while the token stayed valid for eight
+    // hours. Local state is cleared either way — the user asked to leave.
+    const revoked = await adminLogout();
     setPassword("");
     setLeads([]);
     setOffers([]);
     setAuthenticated(false);
-    setError("");
+    setError(
+      revoked
+        ? ""
+        : "Abgemeldet — die Sitzung konnte serverseitig aber nicht widerrufen werden. Sie läuft spätestens nach 8 Stunden ab.",
+    );
   }
 
   if (!authenticated)
@@ -416,7 +424,7 @@ export default function Admin() {
             <button className="button" onClick={() => void loadWorkspace()}>
               {loading ? "Lädt …" : "Aktualisieren"}
             </button>
-            <button className="button" onClick={logout}>
+            <button className="button" onClick={() => void logout()}>
               Abmelden
             </button>
           </div>

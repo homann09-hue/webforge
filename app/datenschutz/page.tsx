@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   description:
     "Wie WebForge personenbezogene Daten verarbeitet: Kontaktformular, Kundenportal, Zahlungen und eingesetzte Dienstleister.",
   alternates: { canonical: "/datenschutz" },
+  // Without this the page inherits the root openGraph block whole and
+  // advertises the homepage URL and title while the canonical says otherwise.
+  openGraph: {
+    title: "Datenschutzerklärung — WebForge",
+    url: "/datenschutz",
+    siteName: "WebForge",
+    locale: "de_DE",
+    type: "website",
+  },
+  twitter: { title: "Datenschutzerklärung — WebForge" },
   robots: { index: true, follow: true },
 };
 

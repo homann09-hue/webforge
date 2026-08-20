@@ -89,6 +89,9 @@ export function setAdminCookie(response: NextResponse, token: string): NextRespo
  * locally, and there is nothing useful they could do about it.
  */
 export async function revokeAdminSession(token: string): Promise<boolean> {
+  // No usable token means there is nothing to revoke. Reported as revoked
+  // because the end state is what the caller wanted, but it is the one branch
+  // that never contacts the server — keep that visible.
   if (!TOKEN_PATTERN.test(token)) return true;
   try {
     const response = await fetch(edgeFunctionUrl("admin-logout"), {
@@ -133,8 +136,17 @@ export function adminErrorResponse(error: unknown, fallback: string): NextRespon
   if (message === "RATE_LIMITED") {
     return NextResponse.json({ ok: false, error: "Zu viele Anfragen. Bitte kurz warten." }, { status: 429 });
   }
+  if (message === "FILE_NOT_FOUND") {
+    return NextResponse.json({ ok: false, error: "Datei nicht gefunden." }, { status: 404 });
+  }
   if (message === "INVALID_REQUEST") {
-    return NextResponse.json({ ok: false, error: fallback }, { status: 400 });
+    // Still logged: a 400 caused by an app-side bug is worth seeing, and the
+    // branch used to return before reaching the console.error below.
+    console.warn("WEBFORGE_ADMIN_ROUTE_REJECTED", fallback);
+    return NextResponse.json(
+      { ok: false, error: `${fallback} Die Aktion wurde abgelehnt — bitte Eingaben prüfen.` },
+      { status: 400 },
+    );
   }
   console.error("WEBFORGE_ADMIN_ROUTE_ERROR", error);
   return NextResponse.json({ ok: false, error: fallback }, { status: 500 });

@@ -17,9 +17,10 @@ try {
   ({ chromium } = await import("playwright"));
   ({ AxeBuilder } = await import("@axe-core/playwright"));
 } catch {
-  console.log("playwright / @axe-core/playwright nicht installiert — Scan uebersprungen.");
+  console.log("\n!!! ÜBERSPRUNGEN — NICHT BESTANDEN: playwright / @axe-core/playwright fehlen.");
   console.log("  npm i -D playwright @axe-core/playwright && npx playwright install chromium");
-  process.exit(0);
+  console.log("    npm run test:browser:setup\n");
+  process.exit(process.env.CI ? 1 : 0);
 }
 
 const BASE = process.env.A11Y_BASE_URL || "http://localhost:3000";

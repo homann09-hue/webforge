@@ -21,3 +21,50 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run verify
+
+  # The browser-driven checks live in their own job because they need Chromium,
+  # which is too heavy to put in every developer's `npm install`. Leaving them
+  # out of CI entirely was the mistake: the assertions existed but nothing ran
+  # them, so they could rot without anyone noticing.
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm i --no-save playwright @axe-core/playwright
+      - run: npx playwright install --with-deps chromium
+
+      # CI=true makes the scripts fail rather than skip if the tooling is
+      # missing, so a broken install can never look like a pass.
+      - name: End-to-end admin flow
+        run: npm run test:e2e
+        env:
+          CI: "true"
+
+      - name: Build and serve for the header and accessibility checks
+        run: |
+          npm run build
+          npx next start -p 3000 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/ && break
+            sleep 1
+          done
+          curl -sf -o /dev/null http://localhost:3000/ || { echo "Server kam nicht hoch"; exit 1; }
+        env:
+          CI: "true"
+
+      - name: Content-Security-Policy
+        run: npm run test:csp
+        env:
+          CI: "true"
+
+      - name: Accessibility (WCAG 2.1 AA)
+        run: npm run test:a11y
+        env:
+          CI: "true"

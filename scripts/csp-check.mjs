@@ -14,6 +14,7 @@
  * one honest probe available from here. They are also a realistic XSS vector.
  */
 import { get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 
 const BASE = process.env.CSP_BASE_URL || "http://localhost:3000";
 
@@ -53,13 +54,22 @@ function check(name, ok, detail = "") {
  */
 function rawHeaderCount(url, header) {
   return new Promise((resolve, reject) => {
-    const request = httpGet(url, (response) => {
+    // node:http cannot speak https, and the rest of this script uses fetch(),
+    // which can — so a CSP_BASE_URL pointing at the deployed site used to abort
+    // the whole run with ERR_INVALID_PROTOCOL instead of reporting a failure.
+    const get = url.startsWith("https:") ? httpsGet : httpGet;
+    const request = get(url, (response) => {
       const names = [];
       for (let i = 0; i < response.rawHeaders.length; i += 2) names.push(response.rawHeaders[i].toLowerCase());
       response.resume();
       resolve(names.filter((name) => name === header).length);
     });
     request.on("error", reject);
+    // http.get has no default timeout; a server that accepts the socket and
+    // never answers would hang the check indefinitely.
+    request.setTimeout(10_000, () => {
+      request.destroy(new Error(`Zeitüberschreitung beim Lesen der Header von ${url}`));
+    });
   });
 }
 

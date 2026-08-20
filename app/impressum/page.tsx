@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: "Impressum",
   description: "Anbieterkennzeichnung nach § 5 DDG.",
   alternates: { canonical: "/impressum" },
+  // Without this the page inherits the root openGraph block whole and
+  // advertises the homepage URL and title while the canonical says otherwise.
+  openGraph: {
+    title: "Impressum — WebForge",
+    url: "/impressum",
+    siteName: "WebForge",
+    locale: "de_DE",
+    type: "website",
+  },
+  twitter: { title: "Impressum — WebForge" },
   robots: { index: true, follow: true },
 };
 

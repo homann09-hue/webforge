@@ -24,7 +24,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description,
     alternates: { canonical: `/demo/${site.slug}` },
-    openGraph: { title, description, url: `/demo/${site.slug}`, type: "website", locale: "de_DE" },
+    openGraph: {
+      title,
+      description,
+      url: `/demo/${site.slug}`,
+      type: "website",
+      locale: "de_DE",
+      siteName: "WebForge",
+    },
+    // A child openGraph replaces the parent's wholesale; twitter is separate
+    // and would otherwise keep advertising the homepage.
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 

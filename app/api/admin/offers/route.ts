@@ -1,4 +1,11 @@
 import { NextResponse } from "next/server";
+
+/**
+ * The client caps quantities too, but a route handler cannot rely on that.
+ * lineTotalCents(1e6, 1e10) already exceeds Number.MAX_SAFE_INTEGER, so an
+ * unbounded quantity is an overflow, not just an odd number.
+ */
+const MAX_SERVER_QUANTITY = 1_000_000;
 import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import { createOffer, deleteOffer, listOffers, updateOfferStatus, type OfferStatus } from "@/lib/offers";
 
@@ -56,6 +63,7 @@ export async function POST(req: Request) {
             !item.description ||
             !Number.isFinite(item.quantity) ||
             item.quantity <= 0 ||
+            item.quantity > MAX_SERVER_QUANTITY ||
             !Number.isSafeInteger(item.unitPriceCents) ||
             item.unitPriceCents < 0,
         )

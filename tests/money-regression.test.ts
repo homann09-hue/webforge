@@ -44,8 +44,12 @@ describe("Regression: parsePercent must distinguish empty from unreadable", () =
   });
 
   it("rejects unreadable input instead of silently booking the fallback", () => {
-    expect(parsePercent("7,5%", 19)).toBeNull();
+    // "7,5%" was listed here originally, which locked in the wrong answer:
+    // a percent sign in a percent field is not unreadable input. See the
+    // "Regression 2" block below.
     expect(parsePercent("abc", 19)).toBeNull();
+    expect(parsePercent("7,5,5", 19)).toBeNull();
+    expect(parsePercent("1.2.3", 19)).toBeNull();
   });
 
   it("still reads a plain percentage", () => {
@@ -63,5 +67,39 @@ describe("Regression: parseQuantity needs an upper bound", () => {
     expect(parseQuantity("1")).toBe(1);
     expect(parseQuantity("1,5")).toBe(1.5);
     expect(parseQuantity("1000")).toBe(1000);
+  });
+});
+
+/**
+ * Second review round: cases the strict rewrite refused that people
+ * legitimately type, and the percent sign it still could not read.
+ */
+describe("Regression 2: legitimate input must not be refused", () => {
+  it("accepts a trailing separator (typed, then tabbed away)", () => {
+    expect(parseDecimalInput("1249,")).toBe(1249);
+    expect(parseDecimalInput("5,")).toBe(5);
+    expect(parseDecimalInput("1.")).toBe(1);
+  });
+
+  it("accepts a leading separator", () => {
+    expect(parseDecimalInput(",5")).toBe(0.5);
+    expect(parseDecimalInput(".5")).toBe(0.5);
+  });
+
+  it("still rejects a bare separator", () => {
+    expect(parseDecimalInput(",")).toBeNull();
+    expect(parseDecimalInput(".")).toBeNull();
+  });
+
+  it("reads a percentage written with its sign", () => {
+    expect(parsePercent("7,5%", 19)).toBe(7.5);
+    expect(parsePercent("19 %", 19)).toBe(19);
+    expect(parsePercent("0%", 19)).toBe(0);
+  });
+
+  it("does not let the percent sign smuggle nonsense through", () => {
+    expect(parsePercent("%%", 19)).toBeNull();
+    expect(parsePercent("7,5%%", 19)).toBeNull();
+    expect(parsePercent("abc%", 19)).toBeNull();
   });
 });

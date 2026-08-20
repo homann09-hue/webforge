@@ -17,9 +17,10 @@ let chromium;
 try {
   ({ chromium } = await import("playwright"));
 } catch {
-  console.log("playwright nicht installiert — E2E uebersprungen.");
+  console.log("\n!!! ÜBERSPRUNGEN — NICHT BESTANDEN: playwright fehlt.");
   console.log("  npm i -D playwright && npx playwright install chromium");
-  process.exit(0);
+  console.log("    npm run test:browser:setup\n");
+  process.exit(process.env.CI ? 1 : 0);
 }
 
 const BASE = process.env.E2E_BASE_URL || "http://localhost:3200";

@@ -41,6 +41,14 @@ const GRAMMARS: Array<{ pattern: RegExp; normalise: (value: string) => string }>
   { pattern: /^-?\d{1,3}(,\d{3})+(\.\d+)?$/, normalise: (v) => v.split(",").join("") },
   // 1249.00 — decimal point
   { pattern: /^-?\d+\.\d+$/, normalise: (v) => v },
+  // "1249," — a separator typed but not yet followed by decimals. Someone who
+  // types an amount and tabs away lands here; refusing it blocked the save.
+  { pattern: /^-?\d+[.,]$/, normalise: (v) => v.slice(0, -1) },
+  // ",5" — leading separator, meaning nought point five.
+  {
+    pattern: /^-?[.,]\d+$/,
+    normalise: (v) => v.replace(",", ".").replace(/^-?\./, (m) => (m[0] === "-" ? "-0." : "0.")),
+  },
 ];
 
 /**
@@ -101,8 +109,14 @@ export function parseQuantity(raw: string): number | null {
  * 19% default instead of 7.5%, with no error anywhere.
  */
 export function parsePercent(raw: string, fallback: number | null = null): number | null {
-  if (String(raw ?? "").trim() === "") return fallback;
-  const parsed = parseDecimalInput(raw);
+  const text = String(raw ?? "").trim();
+  if (text === "") return fallback;
+
+  // "7,5%" is what people type into a field labelled with a percent sign.
+  // parseDecimalInput deliberately does not know about %, so strip exactly one
+  // trailing sign here — "%%" or "abc%" must still be refused.
+  const withoutSign = text.replace(/\s*%$/, "");
+  const parsed = parseDecimalInput(withoutSign);
   if (parsed === null) return null;
   if (parsed < 0 || parsed > 100) return null;
   return parsed;

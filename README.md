@@ -107,9 +107,17 @@ npm run test:csp
 npm run test:a11y
 ```
 
-Beide brauchen einmalig `npm i -D playwright @axe-core/playwright && npx playwright
-install chromium`. Ohne das überspringen sie sich mit Hinweis, statt zu scheitern —
-deshalb sind sie nicht Teil von `npm run verify`.
+Einmalige Einrichtung:
+
+```bash
+npm run test:browser:setup
+```
+
+Ohne diese Werkzeuge überspringen sich die Prüfungen mit einem deutlichen
+Hinweis — lokal mit Exit-Code 0, **unter `CI=true` mit einem Fehlschlag**, damit
+eine kaputte Installation nicht wie ein bestandener Lauf aussieht. Sie sind
+nicht Teil von `npm run verify` (das braucht keinen Browser), laufen aber in CI
+in einem eigenen Job.
 
 ## Admin-Bereich testen
 

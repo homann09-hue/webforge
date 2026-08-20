@@ -57,8 +57,11 @@ export async function adminLogin(password: string): Promise<void> {
 export async function adminLogout(): Promise<boolean> {
   try {
     const response = await fetch("/api/admin/session", { method: "DELETE", credentials: "same-origin" });
+    // Without this check a 500 with an HTML body parsed to {} and reported
+    // success — from the one function whose job is to tell the difference.
+    if (!response.ok) return false;
     const data = (await response.json().catch(() => ({}))) as { revoked?: boolean };
-    return data.revoked !== false;
+    return data.revoked === true;
   } catch {
     return false;
   }

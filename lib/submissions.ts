@@ -49,7 +49,13 @@ export async function getSubmissionFileUrl(session: string, submissionId: number
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data?.ok || !data?.url) {
+    // Mirror the mapping in lib/admin-rpc.ts. Without the 404 branch a missing
+    // file surfaced as a 500 and the admin was told the whole submissions view
+    // had failed.
     if (response.status === 401 || response.status === 403) throw new Error("UNAUTHORIZED");
+    if (response.status === 429) throw new Error("RATE_LIMITED");
+    if (response.status === 404) throw new Error("FILE_NOT_FOUND");
+    if (response.status === 400) throw new Error("INVALID_REQUEST");
     throw new Error("FILE_URL_FAILED");
   }
   return String(data.url);
