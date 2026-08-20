@@ -331,20 +331,22 @@ export default function Admin() {
   }
 
   async function logout() {
-    // The result was previously discarded with `void adminLogout()`, which made
-    // the whole revoked/not-revoked plumbing decorative: a failed server-side
-    // revoke looked like a clean logout while the token stayed valid for eight
-    // hours. Local state is cleared either way — the user asked to leave.
-    const revoked = await adminLogout();
+    // Clear local state first. Awaiting the revoke before touching the UI made
+    // a slow DELETE look like a dead button: no spinner, still logged in,
+    // still clickable. The warning below arrives afterwards if it is needed.
     setPassword("");
     setLeads([]);
     setOffers([]);
     setAuthenticated(false);
-    setError(
-      revoked
-        ? ""
-        : "Abgemeldet — die Sitzung konnte serverseitig aber nicht widerrufen werden. Sie läuft spätestens nach 8 Stunden ab.",
-    );
+    setError("");
+
+    const revoked = await adminLogout();
+    if (!revoked) {
+      setError(
+        "Abgemeldet — die Sitzung konnte serverseitig aber nicht widerrufen werden. " +
+          "Sie bleibt bis zu 8 Stunden gültig.",
+      );
+    }
   }
 
   if (!authenticated)

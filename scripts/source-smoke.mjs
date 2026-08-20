@@ -125,3 +125,27 @@ if (!stripeModule.includes("timingSafeEqual")) {
 }
 
 console.log("Source smoke: routes, secret placeholders and auth invariants verified.");
+
+// Every browser script must resolve Chromium through the shared helper.
+// Three of them hardcoded a path that exists only in one dev container, so the
+// CI job they were added to could never have passed.
+for (const file of [
+  "scripts/csp-check.mjs",
+  "scripts/a11y-axe.mjs",
+  "scripts/a11y-manual.mjs",
+  "tests/e2e/admin-flow.mjs",
+]) {
+  const source = await readFile(file, "utf8");
+  if (/\/opt\/pw-browsers/.test(source)) {
+    throw new Error(`${file}: must not hardcode a container-specific Chromium path`);
+  }
+  if (!source.includes("launchChromium")) {
+    throw new Error(`${file}: must launch Chromium via scripts/lib/browser.mjs`);
+  }
+  // A relative import that does not resolve fails only when the script runs,
+  // which is exactly when nobody is watching.
+  const relative = source.match(/from "(\.[^"]*browser\.mjs)"/)?.[1];
+  if (!relative) throw new Error(`${file}: no import of the browser helper found`);
+  const resolved = new URL(relative, new URL(file, `file://${process.cwd()}/`)).pathname;
+  await access(resolved);
+}

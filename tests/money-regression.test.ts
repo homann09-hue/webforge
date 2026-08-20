@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseDecimalInput, parsePercent, parseQuantity } from "@/lib/money";
+import { MAX_CENTS, MAX_QUANTITY, isBookableLine, parseDecimalInput, parsePercent, parseQuantity } from "@/lib/money";
 
 /**
  * Cases from the independent review of this branch. Each one is a value the
@@ -101,5 +101,39 @@ describe("Regression 2: legitimate input must not be refused", () => {
     expect(parsePercent("%%", 19)).toBeNull();
     expect(parsePercent("7,5%%", 19)).toBeNull();
     expect(parsePercent("abc%", 19)).toBeNull();
+  });
+});
+
+/**
+ * Third review round. The server-side bound capped the quantity only, so the
+ * overflow its own comment cited was still reachable.
+ */
+describe("Regression 3: line items must be bounded by their product", () => {
+  it("accepts an ordinary line", () => {
+    expect(isBookableLine(1, 69900)).toBe(true);
+    expect(isBookableLine(2.5, 9900)).toBe(true);
+  });
+
+  it("refuses the exact overflow the quantity cap missed", () => {
+    // Both factors pass their individual checks; the product does not.
+    expect(MAX_QUANTITY).toBe(1_000_000);
+    expect(Number.isSafeInteger(10_000_000_000)).toBe(true);
+    expect(isBookableLine(1_000_000, 10_000_000_000)).toBe(false);
+  });
+
+  it("refuses a price beyond the cent ceiling", () => {
+    expect(isBookableLine(1, MAX_CENTS + 1)).toBe(false);
+    expect(isBookableLine(1, MAX_CENTS)).toBe(true);
+  });
+
+  it("refuses zero, negative and non-finite quantities", () => {
+    for (const q of [0, -1, Number.NaN, Number.POSITIVE_INFINITY, MAX_QUANTITY + 1]) {
+      expect(isBookableLine(q, 100)).toBe(false);
+    }
+  });
+
+  it("refuses a fractional or negative price", () => {
+    expect(isBookableLine(1, 10.5)).toBe(false);
+    expect(isBookableLine(1, -1)).toBe(false);
   });
 });

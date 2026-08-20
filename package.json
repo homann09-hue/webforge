@@ -19,7 +19,7 @@
     "test:csp": "node scripts/csp-check.mjs",
     "test:a11y": "node scripts/a11y-axe.mjs && node scripts/a11y-manual.mjs",
     "test:e2e": "node scripts/e2e.mjs",
-    "test:browser:setup": "npm i -D playwright @axe-core/playwright && npx playwright install --with-deps chromium"
+    "test:browser:setup": "npm i --no-save playwright @axe-core/playwright && npx playwright install chromium"
   },
   "dependencies": {
     "next": "15.5.21",

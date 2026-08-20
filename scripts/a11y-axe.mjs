@@ -11,17 +11,17 @@
  *
  * Requires: npm i -D playwright @axe-core/playwright && npx playwright install chromium
  */
-/* Optional tooling: see the note in scripts/csp-check.mjs. */
-let chromium, AxeBuilder;
+import { bailWithoutPlaywright, launchChromium, loadPlaywright } from "./lib/browser.mjs";
+
+const playwright = await loadPlaywright();
+let AxeBuilder;
 try {
-  ({ chromium } = await import("playwright"));
   ({ AxeBuilder } = await import("@axe-core/playwright"));
 } catch {
-  console.log("\n!!! ÜBERSPRUNGEN — NICHT BESTANDEN: playwright / @axe-core/playwright fehlen.");
-  console.log("  npm i -D playwright @axe-core/playwright && npx playwright install chromium");
-  console.log("    npm run test:browser:setup\n");
-  process.exit(process.env.CI ? 1 : 0);
+  AxeBuilder = null;
 }
+if (!playwright || !AxeBuilder) bailWithoutPlaywright("Barrierefreiheit (axe)");
+const { chromium } = playwright;
 
 const BASE = process.env.A11Y_BASE_URL || "http://localhost:3000";
 const PAGES = [
@@ -34,9 +34,7 @@ const PAGES = [
   "/admin",
   "/portal/testtoken",
 ];
-const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM || "/opt/pw-browsers/chromium",
-});
+const browser = await launchChromium(chromium);
 const all = {};
 
 for (const path of PAGES) {

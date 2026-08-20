@@ -21,8 +21,18 @@ const MOCK_URL = `http://localhost:${MOCK_PORT}`;
 const APP_URL = `http://localhost:${APP_PORT}`;
 
 const children = [];
+
+/**
+ * `detached: true` puts each child in its own process group.
+ *
+ * Without it, `npx next start` is a shell wrapper around the real server:
+ * killing the child killed the wrapper and orphaned `next-server`, which kept
+ * holding the port. The next run then found the port busy and refused to
+ * start — or worse, on a differently configured machine, silently measured the
+ * stale build still answering there.
+ */
 function spawnChild(command, args, options = {}) {
-  const child = spawn(command, args, { stdio: "pipe", ...options });
+  const child = spawn(command, args, { stdio: "pipe", detached: true, ...options });
   children.push(child);
   return child;
 }
@@ -30,9 +40,14 @@ function spawnChild(command, args, options = {}) {
 async function shutdown() {
   for (const child of children) {
     try {
-      child.kill("SIGKILL");
+      // Negative pid = the whole process group, wrapper and server together.
+      process.kill(-child.pid, "SIGKILL");
     } catch {
-      /* already gone */
+      try {
+        child.kill("SIGKILL");
+      } catch {
+        /* already gone */
+      }
     }
   }
 }

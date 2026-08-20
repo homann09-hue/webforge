@@ -8,15 +8,11 @@
  *
  *   npm run build && (npx next start -p 3100 &) && node scripts/a11y-manual.mjs
  */
-let chromium;
-try {
-  ({ chromium } = await import("playwright"));
-} catch {
-  console.log("\n!!! ÜBERSPRUNGEN — NICHT BESTANDEN: playwright fehlt.");
-  console.log("  npm i -D playwright && npx playwright install chromium");
-  console.log("    npm run test:browser:setup\n");
-  process.exit(process.env.CI ? 1 : 0);
-}
+import { bailWithoutPlaywright, launchChromium, loadPlaywright } from "./lib/browser.mjs";
+
+const playwright = await loadPlaywright();
+if (!playwright) bailWithoutPlaywright("Barrierefreiheit (manuell)");
+const { chromium } = playwright;
 
 const BASE = process.env.A11Y_BASE_URL || "http://localhost:3000";
 const PAGES = ["/", "/demo/handwerk", "/demo/gastro", "/demo/blumen", "/admin", "/portal/testtoken"];
@@ -28,9 +24,7 @@ const fail = (msg) => {
 };
 const pass = (msg) => console.log(`  ok    ${msg}`);
 
-const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM || "/opt/pw-browsers/chromium",
-});
+const browser = await launchChromium(chromium);
 
 for (const path of PAGES) {
   console.log(`\n=== ${path} ===`);

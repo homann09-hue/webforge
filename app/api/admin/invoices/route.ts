@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
+import { isBookableLine } from "@/lib/money";
 
-/**
- * The client caps quantities too, but a route handler cannot rely on that.
- * lineTotalCents(1e6, 1e10) already exceeds Number.MAX_SAFE_INTEGER, so an
- * unbounded quantity is an overflow, not just an odd number.
- */
-const MAX_SERVER_QUANTITY = 1_000_000;
 import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import {
   addPayment,
@@ -48,12 +43,7 @@ export async function POST(req: Request) {
       }));
       const invalidItem = items.some(
         (item: { description: string; quantity: number; unit: string; unitPriceCents: number }) =>
-          !item.description ||
-          !Number.isFinite(item.quantity) ||
-          item.quantity <= 0 ||
-          item.quantity > MAX_SERVER_QUANTITY ||
-          !Number.isSafeInteger(item.unitPriceCents) ||
-          item.unitPriceCents < 0,
+          !item.description || !isBookableLine(item.quantity, item.unitPriceCents),
       );
       if (
         !Number.isSafeInteger(leadId) ||

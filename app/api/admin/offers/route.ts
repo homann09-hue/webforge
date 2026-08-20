@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
+import { isBookableLine } from "@/lib/money";
 
-/**
- * The client caps quantities too, but a route handler cannot rely on that.
- * lineTotalCents(1e6, 1e10) already exceeds Number.MAX_SAFE_INTEGER, so an
- * unbounded quantity is an overflow, not just an odd number.
- */
-const MAX_SERVER_QUANTITY = 1_000_000;
 import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import { createOffer, deleteOffer, listOffers, updateOfferStatus, type OfferStatus } from "@/lib/offers";
 
@@ -58,15 +53,7 @@ export async function POST(req: Request) {
         taxPercent > 100 ||
         items.length < 1 ||
         items.length > 50 ||
-        items.some(
-          (item) =>
-            !item.description ||
-            !Number.isFinite(item.quantity) ||
-            item.quantity <= 0 ||
-            item.quantity > MAX_SERVER_QUANTITY ||
-            !Number.isSafeInteger(item.unitPriceCents) ||
-            item.unitPriceCents < 0,
-        )
+        items.some((item) => !item.description || !isBookableLine(item.quantity, item.unitPriceCents))
       ) {
         return NextResponse.json({ ok: false, error: "Angebotsdaten sind ungültig." }, { status: 400 });
       }

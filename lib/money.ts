@@ -8,10 +8,10 @@
  */
 
 /** Amounts above this are refused rather than silently overflowing. */
-const MAX_CENTS = 100_000_000_00; // 100 million euro
+export const MAX_CENTS = 100_000_000_00; // 100 million euro
 
 /** Quantities above this are refused. An invoice line is not a warehouse. */
-const MAX_QUANTITY = 1_000_000;
+export const MAX_QUANTITY = 1_000_000;
 
 /** Longer than this is not a number a person typed. */
 const MAX_INPUT_LENGTH = 32;
@@ -148,4 +148,22 @@ export function documentTotals(
   const netCents = subtotalCents - discountCents;
   const taxCents = Math.round((netCents * taxPercent) / 100);
   return { subtotalCents, discountCents, netCents, taxCents, grossCents: netCents + taxCents };
+}
+
+/**
+ * Whether a line item is safe to store.
+ *
+ * The bound that matters is the PRODUCT, not either factor. An earlier version
+ * capped only the quantity, which left `quantity: 1_000_000` with
+ * `unitPriceCents: 10_000_000_000` — both individually acceptable — producing
+ * 1e16, past Number.MAX_SAFE_INTEGER. The multiplication happens in the
+ * database, so the route is the last place that can refuse it.
+ *
+ * Shared by the client and both route handlers so the three copies of the
+ * limits cannot drift apart.
+ */
+export function isBookableLine(quantity: number, unitPriceCents: number): boolean {
+  if (!Number.isFinite(quantity) || quantity <= 0 || quantity > MAX_QUANTITY) return false;
+  if (!Number.isSafeInteger(unitPriceCents) || unitPriceCents < 0 || unitPriceCents > MAX_CENTS) return false;
+  return Number.isSafeInteger(Math.round(quantity * unitPriceCents));
 }

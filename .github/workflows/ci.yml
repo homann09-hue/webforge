@@ -8,6 +8,8 @@ on:
 permissions:
   contents: read
 
+# GitHub sets CI=true for every job, so the scripts already fail rather than
+# skip when their tooling is missing. No per-step env block is needed.
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -40,31 +42,41 @@ jobs:
       - run: npm i --no-save playwright @axe-core/playwright
       - run: npx playwright install --with-deps chromium
 
-      # CI=true makes the scripts fail rather than skip if the tooling is
-      # missing, so a broken install can never look like a pass.
+      # The e2e run builds and serves on its own (scripts/e2e.mjs), against the
+      # mock Edge Functions.
       - name: End-to-end admin flow
         run: npm run test:e2e
-        env:
-          CI: "true"
 
-      - name: Build and serve for the header and accessibility checks
+      # Everything below shares one server. It has to be one step: a background
+      # process does not survive into the next step's shell, and its inherited
+      # stdout keeps the step from ever returning. nohup plus a log file fixes
+      # both, and the trap stops the runner waiting on it at the end.
+      #
+      # NEXT_PUBLIC_SUPABASE_URL points at a port with nothing behind it on
+      # purpose. Without it, lib/supabase-env.ts falls back to the production
+      # project and every pull request would talk to the live database.
+      - name: Header and accessibility checks
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:59999
         run: |
+          set -euo pipefail
           npm run build
-          npx next start -p 3000 &
-          for i in $(seq 1 60); do
-            curl -sf -o /dev/null http://localhost:3000/ && break
+
+          nohup npx next start -p 3000 > /tmp/next.log 2>&1 &
+          echo $! > /tmp/next.pid
+          trap 'kill "$(cat /tmp/next.pid)" 2>/dev/null || true' EXIT
+
+          for _ in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/; then break; fi
             sleep 1
           done
-          curl -sf -o /dev/null http://localhost:3000/ || { echo "Server kam nicht hoch"; exit 1; }
-        env:
-          CI: "true"
+          if ! curl -sf -o /dev/null http://127.0.0.1:3000/; then
+            echo "Server kam nicht hoch:"; cat /tmp/next.log; exit 1
+          fi
 
-      - name: Content-Security-Policy
-        run: npm run test:csp
-        env:
-          CI: "true"
+          npm run test:csp
+          npm run test:a11y
 
-      - name: Accessibility (WCAG 2.1 AA)
-        run: npm run test:a11y
-        env:
-          CI: "true"
+      - name: Serverprotokoll bei Fehlschlag
+        if: failure()
+        run: tail -50 /tmp/next.log || true

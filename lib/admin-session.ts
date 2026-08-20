@@ -140,13 +140,12 @@ export function adminErrorResponse(error: unknown, fallback: string): NextRespon
     return NextResponse.json({ ok: false, error: "Datei nicht gefunden." }, { status: 404 });
   }
   if (message === "INVALID_REQUEST") {
-    // Still logged: a 400 caused by an app-side bug is worth seeing, and the
-    // branch used to return before reaching the console.error below.
-    console.warn("WEBFORGE_ADMIN_ROUTE_REJECTED", fallback);
-    return NextResponse.json(
-      { ok: false, error: `${fallback} Die Aktion wurde abgelehnt — bitte Eingaben prüfen.` },
-      { status: 400 },
-    );
+    // A gateway 400 is usually an ordinary business rule — deleting an invoice
+    // that already has payments against it, say — not malformed input. Telling
+    // the admin to check their entries would send them looking for a mistake
+    // they did not make. Log the real error; say only what is known.
+    console.warn("WEBFORGE_ADMIN_ROUTE_REJECTED", fallback, error);
+    return NextResponse.json({ ok: false, error: `${fallback} Die Aktion wurde abgelehnt.` }, { status: 400 });
   }
   console.error("WEBFORGE_ADMIN_ROUTE_ERROR", error);
   return NextResponse.json({ ok: false, error: fallback }, { status: 500 });

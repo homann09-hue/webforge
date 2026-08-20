@@ -13,15 +13,11 @@
  *
  * Or just: npm run test:e2e
  */
-let chromium;
-try {
-  ({ chromium } = await import("playwright"));
-} catch {
-  console.log("\n!!! ÜBERSPRUNGEN — NICHT BESTANDEN: playwright fehlt.");
-  console.log("  npm i -D playwright && npx playwright install chromium");
-  console.log("    npm run test:browser:setup\n");
-  process.exit(process.env.CI ? 1 : 0);
-}
+import { bailWithoutPlaywright, launchChromium, loadPlaywright } from "../../scripts/lib/browser.mjs";
+
+const playwright = await loadPlaywright();
+if (!playwright) bailWithoutPlaywright("Admin-Flow");
+const { chromium } = playwright;
 
 const BASE = process.env.E2E_BASE_URL || "http://localhost:3200";
 const MOCK = process.env.MOCK_BASE_URL || "http://localhost:54321";
@@ -34,9 +30,7 @@ const check = (name, ok, detail = "") => {
   if (!ok) failures += 1;
 };
 
-const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM || "/opt/pw-browsers/chromium",
-});
+const browser = await launchChromium(chromium);
 const context = await browser.newContext();
 const page = await context.newPage();
 
