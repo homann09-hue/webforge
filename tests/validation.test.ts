@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAdminSessionToken, isValidEmail, validateLeadInput } from "@/lib/validation";
+import { clientIpFrom, isAdminSessionToken, isValidEmail, validateLeadInput } from "@/lib/validation";
 
 describe("isValidEmail", () => {
   it("accepts ordinary addresses", () => {
@@ -71,5 +71,31 @@ describe("isAdminSessionToken", () => {
     expect(isAdminSessionToken("hunter2")).toBe(false);
     expect(isAdminSessionToken("")).toBe(false);
     expect(isAdminSessionToken(undefined)).toBe(false);
+  });
+});
+
+describe("clientIpFrom", () => {
+  it("takes the left-most entry of x-forwarded-for", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.7, 70.41.3.18, 150.172.238.178" });
+    expect(clientIpFrom(headers)).toBe("203.0.113.7");
+  });
+
+  it("handles a single address", () => {
+    expect(clientIpFrom(new Headers({ "x-forwarded-for": "203.0.113.7" }))).toBe("203.0.113.7");
+  });
+
+  it("falls back to the other proxy headers", () => {
+    expect(clientIpFrom(new Headers({ "x-real-ip": "203.0.113.9" }))).toBe("203.0.113.9");
+    expect(clientIpFrom(new Headers({ "cf-connecting-ip": "203.0.113.10" }))).toBe("203.0.113.10");
+  });
+
+  it("prefers x-forwarded-for over the fallbacks", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.7", "x-real-ip": "10.0.0.1" });
+    expect(clientIpFrom(headers)).toBe("203.0.113.7");
+  });
+
+  it("returns null when no address is present", () => {
+    expect(clientIpFrom(new Headers())).toBeNull();
+    expect(clientIpFrom(new Headers({ "x-forwarded-for": "  " }))).toBeNull();
   });
 });

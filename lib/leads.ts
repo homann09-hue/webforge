@@ -23,11 +23,22 @@ export type Lead = {
   customer_since: string | null;
 };
 
-export async function createLead(input: { company: string; email: string; website?: string }) {
+export async function createLead(input: {
+  company: string;
+  email: string;
+  website?: string;
+  /** Real visitor address — the Edge Function keys its rate limit on it. */
+  clientIp?: string | null;
+}) {
   const response = await fetch(edgeFunctionUrl("lead-submit"), {
     method: "POST",
     headers: supabaseHeaders(),
-    body: JSON.stringify({ company: input.company, email: input.email, website: input.website || null }),
+    body: JSON.stringify({
+      company: input.company,
+      email: input.email,
+      website: input.website || null,
+      clientIp: input.clientIp || null,
+    }),
     cache: "no-store",
   });
   if (!response.ok) {

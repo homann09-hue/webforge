@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createLead } from "@/lib/leads";
-import { validateLeadInput } from "@/lib/validation";
+import { clientIpFrom, validateLeadInput } from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: validated.error }, { status: 400 });
     }
 
-    await createLead(validated.value);
+    await createLead({ ...validated.value, clientIp: clientIpFrom(req.headers) });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error("WEBFORGE_LEAD_REQUEST_ERROR", error);
