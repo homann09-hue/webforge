@@ -1,38 +1,23 @@
 import { NextResponse } from "next/server";
-import { createLead, isLeadStoreConfigured } from "@/lib/leads";
-
-function validEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
+import { createLead } from "@/lib/leads";
+import { validateLeadInput } from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const company = String(body.company || "").trim();
-    const email = String(body.email || "")
-      .trim()
-      .toLowerCase();
-    const website = String(body.website || "").trim();
+    const body = await req.json().catch(() => ({}));
+    const validated = validateLeadInput(body as Record<string, unknown>);
 
-    if (
-      company.length < 2 ||
-      company.length > 120 ||
-      !validEmail(email) ||
-      email.length > 254 ||
-      website.length > 300
-    ) {
-      return NextResponse.json({ ok: false, error: "Bitte Unternehmen und gültige E-Mail angeben." }, { status: 400 });
+    if (!validated.ok) {
+      // A tripped honeypot gets the same 201 a real submission gets, so a bot
+      // cannot tell that it was filtered. Nothing is stored.
+      if (validated.error === "SPAM") {
+        console.warn("WEBFORGE_LEAD_HONEYPOT_TRIPPED");
+        return NextResponse.json({ ok: true }, { status: 201 });
+      }
+      return NextResponse.json({ ok: false, error: validated.error }, { status: 400 });
     }
 
-    if (!isLeadStoreConfigured()) {
-      console.error("WEBFORGE_LEAD_STORE_NOT_CONFIGURED");
-      return NextResponse.json(
-        { ok: false, error: "Anfragen können gerade nicht gespeichert werden. Bitte später erneut versuchen." },
-        { status: 503 },
-      );
-    }
-
-    await createLead({ company, email, website });
+    await createLead(validated.value);
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error("WEBFORGE_LEAD_REQUEST_ERROR", error);

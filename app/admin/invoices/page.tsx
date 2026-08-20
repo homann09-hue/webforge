@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import type { Invoice, InvoiceStatus, InvoiceType, PaymentMethod } from "@/lib/billing";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
@@ -25,9 +26,6 @@ const methodLabels: Record<PaymentMethod, string> = {
 type ItemDraft = { description: string; quantity: string; unit: string; unitPrice: string };
 type PaymentDraft = { amount: string; method: PaymentMethod; reference: string; paidAt: string };
 
-function money(cents: number) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format((cents || 0) / 100);
-}
 function esc(value: string) {
   return value.replace(
     /[&<>"']/g,
@@ -152,12 +150,16 @@ export default function InvoicesAdmin() {
     setLoading(true);
     setError("");
     try {
-      const payloadItems = items.map((item) => ({
-        description: item.description.trim(),
-        quantity: Number(item.quantity.replace(",", ".")),
-        unit: item.unit.trim() || "Stk.",
-        unitPriceCents: Math.round((Number(item.unitPrice.replace(",", ".")) || 0) * 100),
-      }));
+      const payloadItems = items.map((item) => {
+        const quantity = parseQuantity(item.quantity);
+        const unitPriceCents = parseAmountToCents(item.unitPrice);
+        if (quantity === null || unitPriceCents === null) {
+          throw new Error(`Position "${item.description || "ohne Bezeichnung"}": Menge oder Preis ist ungültig.`);
+        }
+        return { description: item.description.trim(), quantity, unit: item.unit.trim() || "Stk.", unitPriceCents };
+      });
+      const tax = parsePercent(taxPercent, 19);
+      if (tax === null) throw new Error("Der Steuersatz muss zwischen 0 und 100 liegen.");
       await post("/api/admin/invoices", {
         action: "create",
         leadId: Number(leadId),
@@ -166,7 +168,7 @@ export default function InvoicesAdmin() {
         title,
         issueDate,
         dueDate,
-        taxPercent: Number(taxPercent.replace(",", ".")),
+        taxPercent: tax,
         notes,
         items: payloadItems,
       });
@@ -197,7 +199,11 @@ export default function InvoicesAdmin() {
       reference: "",
       paidAt: new Date().toISOString().slice(0, 16),
     };
-    const amountCents = Math.round((Number(draft.amount.replace(",", ".")) || 0) * 100);
+    const amountCents = parseAmountToCents(draft.amount);
+    if (amountCents === null) {
+      setError("Bitte einen gültigen Betrag eingeben, z. B. 1.249,00.");
+      return;
+    }
     setError("");
     try {
       await post("/api/admin/invoices", {
@@ -229,13 +235,13 @@ export default function InvoicesAdmin() {
     const rows = invoice.items
       .map(
         (item) =>
-          `<tr><td>${item.position}</td><td>${esc(item.description)}</td><td>${item.quantity} ${esc(item.unit)}</td><td style="text-align:right">${money(item.unit_price_cents)}</td><td style="text-align:right">${money(item.line_total_cents)}</td></tr>`,
+          `<tr><td>${item.position}</td><td>${esc(item.description)}</td><td>${item.quantity} ${esc(item.unit)}</td><td style="text-align:right">${formatMoney(item.unit_price_cents)}</td><td style="text-align:right">${formatMoney(item.line_total_cents)}</td></tr>`,
       )
       .join("");
     const win = window.open("", "_blank", "width=900,height=1000");
     if (!win) return;
     win.document.write(
-      `<!doctype html><html><head><title>${esc(invoice.invoice_number)}</title><style>body{font-family:Arial,sans-serif;color:#111;padding:48px;max-width:850px;margin:auto}header{display:flex;justify-content:space-between;margin-bottom:48px}h1{font-size:34px;margin:0}table{width:100%;border-collapse:collapse;margin-top:28px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px;margin-top:24px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.gross{font-weight:700;font-size:18px}.muted{color:#666} @media print{button{display:none}}</style></head><body><header><div><h1>WebForge</h1><div class="muted">Webdesign & digitale Lösungen</div></div><div><strong>Rechnung ${esc(invoice.invoice_number)}</strong><br>Datum: ${new Date(invoice.issue_date + "T00:00:00").toLocaleDateString("de-DE")}<br>${invoice.due_date ? `Fällig: ${new Date(invoice.due_date + "T00:00:00").toLocaleDateString("de-DE")}` : ""}</div></header><section><strong>${esc(invoice.company)}</strong>${invoice.contact_name ? `<br>${esc(invoice.contact_name)}` : ""}<br>${esc(invoice.email)}</section><h2>${esc(invoice.title)}</h2><table><thead><tr><th>#</th><th>Leistung</th><th>Menge</th><th style="text-align:right">Einzelpreis</th><th style="text-align:right">Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Netto</span><span>${money(invoice.net_cents)}</span></div><div><span>MwSt. ${invoice.tax_percent}%</span><span>${money(invoice.tax_cents)}</span></div><div class="gross"><span>Gesamt</span><span>${money(invoice.gross_cents)}</span></div><div><span>Bezahlt</span><span>${money(invoice.paid_cents)}</span></div><div class="gross"><span>Offen</span><span>${money(invoice.balance_cents)}</span></div></div>${invoice.notes ? `<p style="margin-top:36px">${esc(invoice.notes)}</p>` : ""}<button onclick="window.print()" style="margin-top:40px;padding:12px 18px">Drucken / als PDF speichern</button></body></html>`,
+      `<!doctype html><html><head><title>${esc(invoice.invoice_number)}</title><style>body{font-family:Arial,sans-serif;color:#111;padding:48px;max-width:850px;margin:auto}header{display:flex;justify-content:space-between;margin-bottom:48px}h1{font-size:34px;margin:0}table{width:100%;border-collapse:collapse;margin-top:28px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px;margin-top:24px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.gross{font-weight:700;font-size:18px}.muted{color:#666} @media print{button{display:none}}</style></head><body><header><div><h1>WebForge</h1><div class="muted">Webdesign & digitale Lösungen</div></div><div><strong>Rechnung ${esc(invoice.invoice_number)}</strong><br>Datum: ${new Date(invoice.issue_date + "T00:00:00").toLocaleDateString("de-DE")}<br>${invoice.due_date ? `Fällig: ${new Date(invoice.due_date + "T00:00:00").toLocaleDateString("de-DE")}` : ""}</div></header><section><strong>${esc(invoice.company)}</strong>${invoice.contact_name ? `<br>${esc(invoice.contact_name)}` : ""}<br>${esc(invoice.email)}</section><h2>${esc(invoice.title)}</h2><table><thead><tr><th>#</th><th>Leistung</th><th>Menge</th><th style="text-align:right">Einzelpreis</th><th style="text-align:right">Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Netto</span><span>${formatMoney(invoice.net_cents)}</span></div><div><span>MwSt. ${invoice.tax_percent}%</span><span>${formatMoney(invoice.tax_cents)}</span></div><div class="gross"><span>Gesamt</span><span>${formatMoney(invoice.gross_cents)}</span></div><div><span>Bezahlt</span><span>${formatMoney(invoice.paid_cents)}</span></div><div class="gross"><span>Offen</span><span>${formatMoney(invoice.balance_cents)}</span></div></div>${invoice.notes ? `<p style="margin-top:36px">${esc(invoice.notes)}</p>` : ""}<button onclick="window.print()" style="margin-top:40px;padding:12px 18px">Drucken / als PDF speichern</button></body></html>`,
     );
     win.document.close();
   }
@@ -309,22 +315,22 @@ export default function InvoicesAdmin() {
         <div className="stats">
           <article>
             <small>FAKTURIERT</small>
-            <strong>{money(totalInvoiced)}</strong>
+            <strong>{formatMoney(totalInvoiced)}</strong>
             <span>ohne Storno</span>
           </article>
           <article>
             <small>BEZAHLT</small>
-            <strong>{money(totalPaid)}</strong>
+            <strong>{formatMoney(totalPaid)}</strong>
             <span>Zahlungseingänge</span>
           </article>
           <article>
             <small>OFFEN</small>
-            <strong>{money(outstanding)}</strong>
+            <strong>{formatMoney(outstanding)}</strong>
             <span>noch einzuziehen</span>
           </article>
           <article>
             <small>ÜBERFÄLLIG</small>
-            <strong>{money(overdue)}</strong>
+            <strong>{formatMoney(overdue)}</strong>
             <span>Handlungsbedarf</span>
           </article>
         </div>
@@ -491,12 +497,12 @@ export default function InvoicesAdmin() {
                     </small>
                   </div>
                   <b>{statusLabels[invoice.status]}</b>
-                  <strong>{money(invoice.gross_cents)}</strong>
+                  <strong>{formatMoney(invoice.gross_cents)}</strong>
                 </div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  <small>Netto {money(invoice.net_cents)}</small>
-                  <small>Bezahlt {money(invoice.paid_cents)}</small>
-                  <small>Offen {money(invoice.balance_cents)}</small>
+                  <small>Netto {formatMoney(invoice.net_cents)}</small>
+                  <small>Bezahlt {formatMoney(invoice.paid_cents)}</small>
+                  <small>Offen {formatMoney(invoice.balance_cents)}</small>
                   <small>Ausgestellt {new Date(invoice.issue_date + "T00:00:00").toLocaleDateString("de-DE")}</small>
                   {invoice.due_date && (
                     <small>Fällig {new Date(invoice.due_date + "T00:00:00").toLocaleDateString("de-DE")}</small>
@@ -572,7 +578,7 @@ export default function InvoicesAdmin() {
                   <div>
                     {invoice.payments.map((payment) => (
                       <small key={payment.id} style={{ display: "block" }}>
-                        Zahlung {money(payment.amount_cents)} · {methodLabels[payment.method]} ·{" "}
+                        Zahlung {formatMoney(payment.amount_cents)} · {methodLabels[payment.method]} ·{" "}
                         {new Date(payment.paid_at).toLocaleString("de-DE")}
                         {payment.reference ? ` · ${payment.reference}` : ""}
                       </small>

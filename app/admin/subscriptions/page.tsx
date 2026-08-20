@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
+import { formatMoney, parseAmountToCents, parsePercent } from "@/lib/money";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
 import type { BillingSubscription, BillingSubscriptionStatus } from "@/lib/subscriptions";
@@ -12,10 +13,6 @@ const statusLabels: Record<BillingSubscriptionStatus, string> = {
   past_due: "Zahlung offen",
   cancelled: "Gekündigt",
 };
-
-function money(cents: number) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100);
-}
 
 export default function SubscriptionsAdmin() {
   const [password, setPassword] = useState("");
@@ -90,8 +87,12 @@ export default function SubscriptionsAdmin() {
 
   async function createSubscription() {
     const parsedLeadId = Number(leadId);
-    const amountCents = Math.round((Number(amount.replace(",", ".")) || 0) * 100);
-    const tax = Number(taxPercent.replace(",", "."));
+    const amountCents = parseAmountToCents(amount);
+    const tax = parsePercent(taxPercent, 19);
+    if (amountCents === null || tax === null) {
+      setError("Bitte gültigen Betrag und Steuersatz eingeben, z. B. 99,00 und 19.");
+      return;
+    }
     if (!parsedLeadId) {
       setError("Bitte Kunde auswählen.");
       return;
@@ -247,7 +248,7 @@ export default function SubscriptionsAdmin() {
           </article>
           <article>
             <small>MRR</small>
-            <strong>{money(mrr)}</strong>
+            <strong>{formatMoney(mrr)}</strong>
             <span>netto</span>
           </article>
           <article>
@@ -333,7 +334,7 @@ export default function SubscriptionsAdmin() {
                   {subscription.company} · {subscription.name}
                 </strong>
                 <small>
-                  {money(subscription.amount_cents)} netto/Monat · nächste Rechnung{" "}
+                  {formatMoney(subscription.amount_cents)} netto/Monat · nächste Rechnung{" "}
                   {new Date(subscription.next_invoice_date + "T00:00:00").toLocaleDateString("de-DE")}
                   {subscription.project_number ? ` · ${subscription.project_number}` : ""}
                 </small>

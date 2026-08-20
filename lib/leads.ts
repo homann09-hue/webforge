@@ -23,9 +23,6 @@ export type Lead = {
   customer_since: string | null;
 };
 
-export function isLeadStoreConfigured() {
-  return true;
-}
 export async function createLead(input: { company: string; email: string; website?: string }) {
   const response = await fetch(edgeFunctionUrl("lead-submit"), {
     method: "POST",

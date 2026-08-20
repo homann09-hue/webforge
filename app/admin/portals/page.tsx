@@ -15,7 +15,6 @@ export default function PortalsAdmin() {
     void adminSessionActive().then((active) => {
       if (active) void load();
     });
-     
   }, []);
 
   async function signIn() {

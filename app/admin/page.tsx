@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminLogout, adminSessionActive } from "@/lib/admin-client";
+import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import { sites } from "@/lib/site-config";
 import type { Lead, LeadStatus, ProposalStatus } from "@/lib/leads";
 import type { Offer, OfferStatus } from "@/lib/offers";
@@ -38,9 +39,6 @@ type CommercialDraft = {
 };
 type OfferItemDraft = { description: string; quantity: string; unit: string; unitPrice: string };
 
-function money(cents: number) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100);
-}
 function draftFromLead(lead: Lead): CommercialDraft {
   return {
     contactName: lead.contact_name || "",
@@ -188,8 +186,11 @@ export default function Admin() {
     setSavingId(leadId);
     setError("");
     try {
-      const setupPriceCents = Math.round(Math.max(0, Number(draft.setupPrice.replace(",", ".")) || 0) * 100);
-      const monthlyPriceCents = Math.round(Math.max(0, Number(draft.monthlyPrice.replace(",", ".")) || 0) * 100);
+      const setupPriceCents = parseAmountToCents(draft.setupPrice || "0");
+      const monthlyPriceCents = parseAmountToCents(draft.monthlyPrice || "0");
+      if (setupPriceCents === null || monthlyPriceCents === null) {
+        throw new Error("Bitte gültige Beträge eingeben, z. B. 1.249,00.");
+      }
       await request("/api/admin/leads/commercial", {
         leadId,
         contactName: draft.contactName,
@@ -262,18 +263,25 @@ export default function Admin() {
     setLoading(true);
     setError("");
     try {
-      const items = offerItems.map((item) => ({
-        description: item.description.trim(),
-        quantity: Number(item.quantity.replace(",", ".")),
-        unit: item.unit.trim() || "Stk.",
-        unitPriceCents: Math.round((Number(item.unitPrice.replace(",", ".")) || 0) * 100),
-      }));
+      const items = offerItems.map((item) => {
+        const quantity = parseQuantity(item.quantity);
+        const unitPriceCents = parseAmountToCents(item.unitPrice);
+        if (quantity === null || unitPriceCents === null) {
+          throw new Error(`Position "${item.description || "ohne Bezeichnung"}": Menge oder Preis ist ungültig.`);
+        }
+        return { description: item.description.trim(), quantity, unit: item.unit.trim() || "Stk.", unitPriceCents };
+      });
+      const discountPercent = parsePercent(offerDiscount, 0);
+      const taxPercent = parsePercent(offerTax, 19);
+      if (discountPercent === null || taxPercent === null) {
+        throw new Error("Rabatt und Steuersatz müssen zwischen 0 und 100 liegen.");
+      }
       await request("/api/admin/offers", {
         action: "create",
         leadId: offerLeadId,
         title: offerTitle,
-        discountPercent: Number(offerDiscount.replace(",", ".")) || 0,
-        taxPercent: Number(offerTax.replace(",", ".")) || 19,
+        discountPercent,
+        taxPercent,
         validUntil: offerValidUntil,
         notes: offerNotes,
         items,
@@ -325,11 +333,11 @@ export default function Admin() {
     const rows = offer.items
       .map(
         (item) =>
-          `<tr><td>${item.position}</td><td>${escapeHtml(item.description)}</td><td>${item.quantity} ${escapeHtml(item.unit)}</td><td>${money(item.unit_price_cents)}</td><td>${money(item.line_total_cents)}</td></tr>`,
+          `<tr><td>${item.position}</td><td>${escapeHtml(item.description)}</td><td>${item.quantity} ${escapeHtml(item.unit)}</td><td>${formatMoney(item.unit_price_cents)}</td><td>${formatMoney(item.line_total_cents)}</td></tr>`,
       )
       .join("");
     popup.document.write(
-      `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(offer.offer_number)}</title><style>body{font:15px Arial,sans-serif;color:#111;padding:48px;max-width:900px;margin:auto}header{display:flex;justify-content:space-between;gap:24px;margin-bottom:48px}h1{font-size:28px;margin:0}small{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.total{font-size:20px;font-weight:700;border-top:2px solid #111;margin-top:8px;padding-top:12px!important}@media print{button{display:none}body{padding:20px}}</style></head><body><button onclick="window.print()">Als PDF drucken / speichern</button><header><div><h1>WebForge</h1><small>Professionelle Websites für Unternehmen</small></div><div><b>Angebot ${escapeHtml(offer.offer_number)}</b><br><small>${new Date(offer.created_at).toLocaleDateString("de-DE")}</small></div></header><h2>${escapeHtml(offer.title)}</h2><p><b>${escapeHtml(offer.company)}</b>${offer.contact_name ? `<br>${escapeHtml(offer.contact_name)}` : ""}<br>${escapeHtml(offer.email)}</p><table><thead><tr><th>Pos.</th><th>Leistung</th><th>Menge</th><th>Einzel</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Zwischensumme</span><span>${money(offer.subtotal_cents)}</span></div><div><span>Rabatt (${offer.discount_percent}%)</span><span>− ${money(offer.discount_cents)}</span></div><div><span>Netto</span><span>${money(offer.net_cents)}</span></div><div><span>MwSt. (${offer.tax_percent}%)</span><span>${money(offer.tax_cents)}</span></div><div class="total"><span>Gesamt</span><span>${money(offer.gross_cents)}</span></div></div>${offer.valid_until ? `<p>Gültig bis: ${new Date(offer.valid_until).toLocaleDateString("de-DE")}</p>` : ""}${offer.notes ? `<p>${escapeHtml(offer.notes)}</p>` : ""}</body></html>`,
+      `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(offer.offer_number)}</title><style>body{font:15px Arial,sans-serif;color:#111;padding:48px;max-width:900px;margin:auto}header{display:flex;justify-content:space-between;gap:24px;margin-bottom:48px}h1{font-size:28px;margin:0}small{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.total{font-size:20px;font-weight:700;border-top:2px solid #111;margin-top:8px;padding-top:12px!important}@media print{button{display:none}body{padding:20px}}</style></head><body><button onclick="window.print()">Als PDF drucken / speichern</button><header><div><h1>WebForge</h1><small>Professionelle Websites für Unternehmen</small></div><div><b>Angebot ${escapeHtml(offer.offer_number)}</b><br><small>${new Date(offer.created_at).toLocaleDateString("de-DE")}</small></div></header><h2>${escapeHtml(offer.title)}</h2><p><b>${escapeHtml(offer.company)}</b>${offer.contact_name ? `<br>${escapeHtml(offer.contact_name)}` : ""}<br>${escapeHtml(offer.email)}</p><table><thead><tr><th>Pos.</th><th>Leistung</th><th>Menge</th><th>Einzel</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Zwischensumme</span><span>${formatMoney(offer.subtotal_cents)}</span></div><div><span>Rabatt (${offer.discount_percent}%)</span><span>− ${formatMoney(offer.discount_cents)}</span></div><div><span>Netto</span><span>${formatMoney(offer.net_cents)}</span></div><div><span>MwSt. (${offer.tax_percent}%)</span><span>${formatMoney(offer.tax_cents)}</span></div><div class="total"><span>Gesamt</span><span>${formatMoney(offer.gross_cents)}</span></div></div>${offer.valid_until ? `<p>Gültig bis: ${new Date(offer.valid_until).toLocaleDateString("de-DE")}</p>` : ""}${offer.notes ? `<p>${escapeHtml(offer.notes)}</p>` : ""}</body></html>`,
     );
     popup.document.close();
     popup.focus();
@@ -430,11 +438,11 @@ export default function Admin() {
           <article>
             <small>KUNDEN</small>
             <strong>{customers.length}</strong>
-            <span>{money(acceptedOfferVolume)} Angebotsvolumen</span>
+            <span>{formatMoney(acceptedOfferVolume)} Angebotsvolumen</span>
           </article>
           <article>
             <small>MRR</small>
-            <strong>{money(mrr)}</strong>
+            <strong>{formatMoney(mrr)}</strong>
             <span>monatlich</span>
           </article>
         </div>
@@ -557,11 +565,11 @@ export default function Admin() {
                     </option>
                   ))}
                 </select>
-                <strong>{money(offer.gross_cents)}</strong>
+                <strong>{formatMoney(offer.gross_cents)}</strong>
               </div>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                <small>Netto: {money(offer.net_cents)}</small>
-                <small>MwSt.: {money(offer.tax_cents)}</small>
+                <small>Netto: {formatMoney(offer.net_cents)}</small>
+                <small>MwSt.: {formatMoney(offer.tax_cents)}</small>
                 <small>Rabatt: {offer.discount_percent}%</small>
                 {offer.valid_until && (
                   <small>Gültig bis: {new Date(offer.valid_until).toLocaleDateString("de-DE")}</small>
@@ -725,8 +733,8 @@ export default function Admin() {
                 </div>
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   <small>Angebot: {proposalLabels[lead.proposal_status]}</small>
-                  <small>Setup: {money(lead.setup_price_cents)}</small>
-                  <small>MRR: {money(lead.monthly_price_cents)}</small>
+                  <small>Setup: {formatMoney(lead.setup_price_cents)}</small>
+                  <small>MRR: {formatMoney(lead.monthly_price_cents)}</small>
                   {lead.customer_since && (
                     <small>Kunde seit: {new Date(lead.customer_since).toLocaleDateString("de-DE")}</small>
                   )}
