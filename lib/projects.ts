@@ -46,13 +46,13 @@ export type ProjectTask = {
   sort_order: number;
 };
 
-export async function listProjects(password: string): Promise<CustomerProject[]> {
-  const response = await adminRpc("admin_list_projects", { p_password: password });
+export async function listProjects(session: string): Promise<CustomerProject[]> {
+  const response = await adminRpc("admin_list_projects", session);
   return (await response.json()) as CustomerProject[];
 }
 
 export async function updateProject(
-  password: string,
+  session: string,
   projectId: number,
   input: {
     status: ProjectStatus;
@@ -63,8 +63,7 @@ export async function updateProject(
     notes: string;
   },
 ) {
-  await adminRpc("admin_update_project", {
-    p_password: password,
+  await adminRpc("admin_update_project", session, {
     p_project_id: projectId,
     p_status: input.status,
     p_progress: input.progress,
@@ -76,7 +75,7 @@ export async function updateProject(
 }
 
 export async function saveProjectOnboarding(
-  password: string,
+  session: string,
   projectId: number,
   input: {
     onboardingStatus: OnboardingStatus;
@@ -88,8 +87,7 @@ export async function saveProjectOnboarding(
     legalDataReceived: boolean;
   },
 ) {
-  await adminRpc("admin_save_project_onboarding", {
-    p_password: password,
+  await adminRpc("admin_save_project_onboarding", session, {
     p_project_id: projectId,
     p_onboarding_status: input.onboardingStatus,
     p_content_deadline: input.contentDeadline || null,
@@ -101,18 +99,17 @@ export async function saveProjectOnboarding(
   });
 }
 
-export async function listProjectTasks(password: string, projectId: number): Promise<ProjectTask[]> {
-  const response = await adminRpc("admin_project_tasks", { p_password: password, p_project_id: projectId });
+export async function listProjectTasks(session: string, projectId: number): Promise<ProjectTask[]> {
+  const response = await adminRpc("admin_project_tasks", session, { p_project_id: projectId });
   return (await response.json()) as ProjectTask[];
 }
 
 export async function saveProjectTask(
-  password: string,
+  session: string,
   projectId: number,
   task: Partial<ProjectTask> & Pick<ProjectTask, "title" | "category" | "required" | "completed" | "sort_order">,
 ) {
-  const response = await adminRpc("admin_upsert_project_task", {
-    p_password: password,
+  const response = await adminRpc("admin_upsert_project_task", session, {
     p_project_id: projectId,
     p_task_id: task.id || null,
     p_title: task.title,
@@ -126,6 +123,6 @@ export async function saveProjectTask(
   return (await response.json()) as number;
 }
 
-export async function deleteProjectTask(password: string, projectId: number, taskId: number) {
-  await adminRpc("admin_delete_project_task", { p_password: password, p_project_id: projectId, p_task_id: taskId });
+export async function deleteProjectTask(session: string, projectId: number, taskId: number) {
+  await adminRpc("admin_delete_project_task", session, { p_project_id: projectId, p_task_id: taskId });
 }

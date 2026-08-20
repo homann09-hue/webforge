@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import {
   deleteProjectTask,
   listProjects,
@@ -26,13 +27,12 @@ const allowedCategories: ProjectTaskCategory[] = ["general", "content", "brandin
 
 export async function POST(req: Request) {
   try {
+    const session = await requireAdminSession();
     const body = await req.json();
-    const password = String(body.password || "");
     const action = String(body.action || "list");
-    if (!password) return NextResponse.json({ ok: false, error: "Passwort fehlt." }, { status: 400 });
 
     if (action === "list") {
-      return NextResponse.json({ ok: true, projects: await listProjects(password) });
+      return NextResponse.json({ ok: true, projects: await listProjects(session) });
     }
 
     const projectId = Number(body.projectId);
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       ) {
         return NextResponse.json({ ok: false, error: "Projektdaten sind ungültig." }, { status: 400 });
       }
-      await updateProject(password, projectId, { status, progress, domain, liveUrl, targetLaunchDate, notes });
+      await updateProject(session, projectId, { status, progress, domain, liveUrl, targetLaunchDate, notes });
       return NextResponse.json({ ok: true });
     }
 
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       const contentDeadline = String(body.contentDeadline || "").trim();
       if (!allowedOnboarding.includes(onboardingStatus))
         return NextResponse.json({ ok: false, error: "Ungültiger Onboarding-Status." }, { status: 400 });
-      await saveProjectOnboarding(password, projectId, {
+      await saveProjectOnboarding(session, projectId, {
         onboardingStatus,
         contentDeadline,
         logoReceived: Boolean(body.logoReceived),
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     }
 
     if (action === "tasks") {
-      return NextResponse.json({ ok: true, tasks: await listProjectTasks(password, projectId) });
+      return NextResponse.json({ ok: true, tasks: await listProjectTasks(session, projectId) });
     }
 
     if (action === "task-save") {
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
       ) {
         return NextResponse.json({ ok: false, error: "Checklistenpunkt ist ungültig." }, { status: 400 });
       }
-      const id = await saveProjectTask(password, projectId, {
+      const id = await saveProjectTask(session, projectId, {
         id: taskId,
         title,
         category,
@@ -117,16 +117,12 @@ export async function POST(req: Request) {
       const taskId = Number(body.taskId);
       if (!Number.isSafeInteger(taskId) || taskId <= 0)
         return NextResponse.json({ ok: false, error: "Ungültiger Checklistenpunkt." }, { status: 400 });
-      await deleteProjectTask(password, projectId, taskId);
+      await deleteProjectTask(session, projectId, taskId);
       return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED")
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
-    console.error("WEBFORGE_PROJECTS_API_ERROR", error);
-    return NextResponse.json({ ok: false, error: "Projekt konnte nicht verarbeitet werden." }, { status: 500 });
+    return adminErrorResponse(error, "Projekt konnte nicht verarbeitet werden.");
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
 
 type Project = { id: number; project_number: string; name: string; company: string; portal_enabled?: boolean };
 
@@ -11,38 +12,41 @@ export default function PortalsAdmin() {
   const [error, setError] = useState("");
   const [links, setLinks] = useState<Record<number, string>>({});
   useEffect(() => {
-    const saved = sessionStorage.getItem("webforge_admin_password");
-    if (saved) {
-      setPassword(saved);
-      void load(saved);
-    }
-  }, []);
-  async function load(candidate = password) {
-    const r = await fetch("/api/admin/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: candidate, action: "list" }),
+    void adminSessionActive().then((active) => {
+      if (active) void load();
     });
-    const d = await r.json();
-    if (!r.ok) {
-      setError(d.error || "Anmeldung fehlgeschlagen.");
-      return;
+     
+  }, []);
+
+  async function signIn() {
+    setError("");
+    try {
+      await adminLogin(password);
+      setPassword("");
+      await load();
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     }
-    setProjects(d.projects);
-    setAuthenticated(true);
-    setPassword(candidate);
-    sessionStorage.setItem("webforge_admin_password", candidate);
+  }
+  async function load() {
+    try {
+      const data = await adminFetch<{ projects: Project[] }>("/api/admin/projects", { action: "list" });
+      setProjects(data.projects);
+      setAuthenticated(true);
+      setError("");
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+    }
   }
   async function portal(projectId: number, action: "rotate" | "disable") {
     setError("");
-    const r = await fetch("/api/admin/projects/portal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password, projectId, action }),
-    });
-    const d = await r.json();
-    if (!r.ok) {
-      setError(d.error || "Portal-Aktion fehlgeschlagen.");
+    let d: { token?: string };
+    try {
+      d = await adminFetch<{ token?: string }>("/api/admin/projects/portal", { projectId, action });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Portal-Aktion fehlgeschlagen.");
       return;
     }
     if (action === "rotate") {
@@ -81,7 +85,7 @@ export default function PortalsAdmin() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void load();
+                void signIn();
               }}
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >

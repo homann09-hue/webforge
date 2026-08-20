@@ -1,3 +1,4 @@
+import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type PortalTask = {
@@ -37,13 +38,10 @@ export type PortalProject = {
   tasks: PortalTask[];
   submissions: PortalSubmission[];
 };
-const URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-const KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-const headers = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 async function portalGateway(body: Record<string, unknown>) {
-  const r = await fetch(`${URL}/functions/v1/portal-gateway`, {
+  const r = await fetch(edgeFunctionUrl("portal-gateway"), {
     method: "POST",
-    headers,
+    headers: supabaseHeaders(),
     body: JSON.stringify(body),
     cache: "no-store",
   });
@@ -61,11 +59,11 @@ export async function getPortalProject(token: string) {
 export async function submitPortal(token: string, kind: "text" | "link", label: string, content: string) {
   await portalGateway({ action: "submit", token, kind, label, content });
 }
-export async function rotatePortalToken(password: string, projectId: number) {
-  const r = await adminRpc("admin_rotate_project_portal_token", { p_password: password, p_project_id: projectId });
+export async function rotatePortalToken(session: string, projectId: number) {
+  const r = await adminRpc("admin_rotate_project_portal_token", session, { p_project_id: projectId });
   return (await r.json()) as string;
 }
-export async function disablePortal(password: string, projectId: number) {
-  await adminRpc("admin_disable_project_portal", { p_password: password, p_project_id: projectId });
+export async function disablePortal(session: string, projectId: number) {
+  await adminRpc("admin_disable_project_portal", session, { p_project_id: projectId });
 }
-export const portalUploadUrl = "https://jplqdaxtnrqimlgzwuaw.supabase.co/functions/v1/portal-upload";
+export const portalUploadUrl = edgeFunctionUrl("portal-upload");

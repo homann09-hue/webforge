@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import {
   addPayment,
   createInvoice,
@@ -14,13 +15,12 @@ const paymentMethods: PaymentMethod[] = ["bank_transfer", "cash", "stripe", "pay
 
 export async function POST(req: Request) {
   try {
+    const session = await requireAdminSession();
     const body = await req.json();
-    const password = String(body.password || "");
     const action = String(body.action || "list");
-    if (!password) return NextResponse.json({ ok: false, error: "Passwort fehlt." }, { status: 400 });
 
     if (action === "list") {
-      return NextResponse.json({ ok: true, invoices: await listInvoices(password) });
+      return NextResponse.json({ ok: true, invoices: await listInvoices(session) });
     }
 
     if (action === "create") {
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       ) {
         return NextResponse.json({ ok: false, error: "Rechnungsdaten sind ungültig." }, { status: 400 });
       }
-      const invoiceId = await createInvoice(password, {
+      const invoiceId = await createInvoice(session, {
         leadId,
         projectId,
         invoiceType,
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       const status = String(body.status || "");
       if (!Number.isSafeInteger(invoiceId) || invoiceId <= 0 || !["draft", "open", "void"].includes(status))
         return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
-      await setInvoiceStatus(password, invoiceId, status as "draft" | "open" | "void");
+      await setInvoiceStatus(session, invoiceId, status as "draft" | "open" | "void");
       return NextResponse.json({ ok: true });
     }
 
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
         !paymentMethods.includes(method)
       )
         return NextResponse.json({ ok: false, error: "Zahlungsdaten sind ungültig." }, { status: 400 });
-      await addPayment(password, invoiceId, amountCents, method, reference, paidAt);
+      await addPayment(session, invoiceId, amountCents, method, reference, paidAt);
       return NextResponse.json({ ok: true });
     }
 
@@ -108,16 +108,12 @@ export async function POST(req: Request) {
       const invoiceId = Number(body.invoiceId);
       if (!Number.isSafeInteger(invoiceId) || invoiceId <= 0)
         return NextResponse.json({ ok: false, error: "Ungültige Rechnung." }, { status: 400 });
-      await deleteInvoice(password, invoiceId);
+      await deleteInvoice(session, invoiceId);
       return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED")
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
-    console.error("WEBFORGE_INVOICES_API_ERROR", error);
-    return NextResponse.json({ ok: false, error: "Rechnung konnte nicht verarbeitet werden." }, { status: 500 });
+    return adminErrorResponse(error, "Rechnung konnte nicht verarbeitet werden.");
   }
 }

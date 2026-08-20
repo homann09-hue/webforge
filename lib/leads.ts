@@ -1,3 +1,4 @@
+import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
@@ -22,21 +23,13 @@ export type Lead = {
   customer_since: string | null;
 };
 
-const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-const publicHeaders = {
-  apikey: SUPABASE_PUBLISHABLE_KEY,
-  Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-  "Content-Type": "application/json",
-};
-
 export function isLeadStoreConfigured() {
   return true;
 }
 export async function createLead(input: { company: string; email: string; website?: string }) {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/lead-submit`, {
+  const response = await fetch(edgeFunctionUrl("lead-submit"), {
     method: "POST",
-    headers: publicHeaders,
+    headers: supabaseHeaders(),
     body: JSON.stringify({ company: input.company, email: input.email, website: input.website || null }),
     cache: "no-store",
   });
@@ -45,31 +38,28 @@ export async function createLead(input: { company: string; email: string; websit
     throw new Error(String(data?.error || "LEAD_SUBMIT_FAILED"));
   }
 }
-export async function listLeads(password: string, limit = 100): Promise<Lead[]> {
-  const response = await adminRpc("admin_list_leads", {
-    p_password: password,
-    p_limit: Math.min(Math.max(limit, 1), 200),
-  });
+export async function listLeads(session: string, limit = 100): Promise<Lead[]> {
+  const response = await adminRpc("admin_list_leads", session, { p_limit: Math.min(Math.max(limit, 1), 200) });
   return (await response.json()) as Lead[];
 }
-export async function updateLeadStatus(password: string, leadId: number, status: LeadStatus) {
-  await adminRpc("admin_update_lead_status", { p_password: password, p_lead_id: leadId, p_status: status });
+export async function updateLeadStatus(session: string, leadId: number, status: LeadStatus) {
+  await adminRpc("admin_update_lead_status", session, { p_lead_id: leadId, p_status: status });
 }
-export async function updateLeadNotes(password: string, leadId: number, notes: string) {
-  await adminRpc("admin_update_lead_notes", { p_password: password, p_lead_id: leadId, p_notes: notes });
+export async function updateLeadNotes(session: string, leadId: number, notes: string) {
+  await adminRpc("admin_update_lead_notes", session, { p_lead_id: leadId, p_notes: notes });
 }
-export async function markLeadContacted(password: string, leadId: number): Promise<string> {
-  const response = await adminRpc("admin_mark_lead_contacted", { p_password: password, p_lead_id: leadId });
+export async function markLeadContacted(session: string, leadId: number): Promise<string> {
+  const response = await adminRpc("admin_mark_lead_contacted", session, { p_lead_id: leadId });
   return (await response.json()) as string;
 }
-export async function archiveLead(password: string, leadId: number, archived: boolean) {
-  await adminRpc("admin_archive_lead", { p_password: password, p_lead_id: leadId, p_archived: archived });
+export async function archiveLead(session: string, leadId: number, archived: boolean) {
+  await adminRpc("admin_archive_lead", session, { p_lead_id: leadId, p_archived: archived });
 }
-export async function deleteLead(password: string, leadId: number) {
-  await adminRpc("admin_delete_lead", { p_password: password, p_lead_id: leadId });
+export async function deleteLead(session: string, leadId: number) {
+  await adminRpc("admin_delete_lead", session, { p_lead_id: leadId });
 }
 export async function updateLeadCommercial(
-  password: string,
+  session: string,
   leadId: number,
   input: {
     contactName: string;
@@ -80,8 +70,7 @@ export async function updateLeadCommercial(
     proposalStatus: ProposalStatus;
   },
 ) {
-  await adminRpc("admin_update_lead_commercial", {
-    p_password: password,
+  await adminRpc("admin_update_lead_commercial", session, {
     p_lead_id: leadId,
     p_contact_name: input.contactName,
     p_phone: input.phone,

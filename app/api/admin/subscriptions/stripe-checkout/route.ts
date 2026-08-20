@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
+import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import { listBillingSubscriptions, setBillingSubscriptionStripe } from "@/lib/subscriptions";
 
 export async function POST(req: Request) {
   try {
+    const adminSession = await requireAdminSession();
+
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
       return NextResponse.json({ ok: false, error: "Stripe ist noch nicht konfiguriert." }, { status: 503 });
     }
 
     const body = await req.json();
-    const password = String(body.password || "");
     const subscriptionId = Number(body.subscriptionId);
-    if (!password || !Number.isSafeInteger(subscriptionId) || subscriptionId <= 0) {
+    if (!Number.isSafeInteger(subscriptionId) || subscriptionId <= 0) {
       return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
     }
 
-    const subscriptions = await listBillingSubscriptions(password);
+    const subscriptions = await listBillingSubscriptions(adminSession);
     const subscription = subscriptions.find((item) => item.id === subscriptionId);
     if (!subscription) return NextResponse.json({ ok: false, error: "Abo nicht gefunden." }, { status: 404 });
-    if (subscription.status === "cancelled")
+    if (subscription.status === "cancelled") {
       return NextResponse.json({ ok: false, error: "Storniertes Abo kann nicht aktiviert werden." }, { status: 400 });
+    }
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin;
     const params = new URLSearchParams();
@@ -45,22 +48,18 @@ export async function POST(req: Request) {
       cache: "no-store",
     });
 
-    const session = (await response.json()) as { id?: string; url?: string; error?: { message?: string } };
-    if (!response.ok || !session.url) {
-      console.error("WEBFORGE_STRIPE_CHECKOUT_ERROR", response.status, session.error?.message || session);
+    const checkout = (await response.json()) as { id?: string; url?: string; error?: { message?: string } };
+    if (!response.ok || !checkout.url) {
+      console.error("WEBFORGE_STRIPE_CHECKOUT_ERROR", response.status, checkout.error?.message || checkout);
       return NextResponse.json(
-        { ok: false, error: session.error?.message || "Stripe Checkout konnte nicht erstellt werden." },
+        { ok: false, error: checkout.error?.message || "Stripe Checkout konnte nicht erstellt werden." },
         { status: 502 },
       );
     }
 
-    await setBillingSubscriptionStripe(password, subscription.id, { checkoutUrl: session.url });
-    return NextResponse.json({ ok: true, url: session.url, sessionId: session.id });
+    await setBillingSubscriptionStripe(adminSession, subscription.id, { checkoutUrl: checkout.url });
+    return NextResponse.json({ ok: true, url: checkout.url, sessionId: checkout.id });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED")
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
-    console.error("WEBFORGE_STRIPE_CHECKOUT_REQUEST_ERROR", error);
-    return NextResponse.json({ ok: false, error: "Stripe Checkout konnte nicht erstellt werden." }, { status: 500 });
+    return adminErrorResponse(error, "Stripe Checkout konnte nicht erstellt werden.");
   }
 }

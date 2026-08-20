@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
 import type { BillingSubscription, BillingSubscriptionStatus } from "@/lib/subscriptions";
@@ -43,43 +44,44 @@ export default function SubscriptionsAdmin() {
   );
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("webforge_admin_password");
-    if (saved) {
-      setPassword(saved);
-      void loadAll(saved);
-    }
+    void adminSessionActive().then((active) => {
+      if (active) void loadAll();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function post(path: string, body: Record<string, unknown>, candidate = password) {
-    const response = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: candidate, ...body }),
-    });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.error || "Aktion fehlgeschlagen.");
-    return data;
+  async function post(path: string, body: Record<string, unknown> = {}) {
+    return adminFetch(path, body);
   }
 
-  async function loadAll(candidate = password) {
+  async function signIn() {
+    setError("");
+    try {
+      await adminLogin(password);
+      setPassword("");
+      await loadAll();
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+    }
+  }
+
+  async function loadAll() {
     setLoading(true);
     setError("");
     setNotice("");
     try {
       const [subsData, leadsData, projectsData] = await Promise.all([
-        post("/api/admin/subscriptions", { action: "list" }, candidate),
-        post("/api/admin/leads", {}, candidate),
-        post("/api/admin/projects", { action: "list" }, candidate),
+        post("/api/admin/subscriptions", { action: "list" }),
+        post("/api/admin/leads", {}),
+        post("/api/admin/projects", { action: "list" }),
       ]);
       setSubscriptions(subsData.subscriptions as BillingSubscription[]);
       setLeads(leadsData.leads as Lead[]);
       setProjects(projectsData.projects as CustomerProject[]);
       setAuthenticated(true);
-      setPassword(candidate);
-      sessionStorage.setItem("webforge_admin_password", candidate);
     } catch (err) {
       setAuthenticated(false);
-      sessionStorage.removeItem("webforge_admin_password");
       setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
@@ -189,7 +191,7 @@ export default function SubscriptionsAdmin() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void loadAll();
+                void signIn();
               }}
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >

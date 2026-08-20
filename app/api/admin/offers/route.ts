@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import { createOffer, deleteOffer, listOffers, updateOfferStatus, type OfferStatus } from "@/lib/offers";
 
 const allowedStatuses: OfferStatus[] = ["draft", "sent", "accepted", "rejected"];
@@ -6,17 +7,16 @@ type OfferItemInput = { description: string; quantity: number; unit: string; uni
 
 export async function POST(req: Request) {
   try {
+    const session = await requireAdminSession();
     const body = await req.json();
-    const password = String(body.password || "");
     const action = String(body.action || "list");
-    if (!password) return NextResponse.json({ ok: false, error: "Passwort fehlt." }, { status: 400 });
 
     if (action === "list") {
       const leadId = body.leadId == null ? undefined : Number(body.leadId);
       if (leadId !== undefined && (!Number.isSafeInteger(leadId) || leadId <= 0)) {
         return NextResponse.json({ ok: false, error: "Ungültiger Lead." }, { status: 400 });
       }
-      const offers = await listOffers(password, leadId);
+      const offers = await listOffers(session, leadId);
       return NextResponse.json({ ok: true, offers });
     }
 
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: "Angebotsdaten sind ungültig." }, { status: 400 });
       }
 
-      const offerId = await createOffer(password, {
+      const offerId = await createOffer(session, {
         leadId,
         title,
         discountPercent,
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       if (!Number.isSafeInteger(offerId) || offerId <= 0 || !allowedStatuses.includes(status)) {
         return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
       }
-      await updateOfferStatus(password, offerId, status);
+      await updateOfferStatus(session, offerId, status);
       return NextResponse.json({ ok: true });
     }
 
@@ -90,16 +90,12 @@ export async function POST(req: Request) {
       if (!Number.isSafeInteger(offerId) || offerId <= 0) {
         return NextResponse.json({ ok: false, error: "Ungültiges Angebot." }, { status: 400 });
       }
-      await deleteOffer(password, offerId);
+      await deleteOffer(session, offerId);
       return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED")
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
-    console.error("WEBFORGE_OFFERS_API_ERROR", error);
-    return NextResponse.json({ ok: false, error: "Angebot konnte nicht verarbeitet werden." }, { status: 500 });
+    return adminErrorResponse(error, "Angebot konnte nicht verarbeitet werden.");
   }
 }

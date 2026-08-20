@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
 import {
   createBillingSubscription,
   generateDueRecurringInvoices,
@@ -11,13 +12,12 @@ const statuses: BillingSubscriptionStatus[] = ["active", "paused", "past_due", "
 
 export async function POST(req: Request) {
   try {
+    const session = await requireAdminSession();
     const body = await req.json();
-    const password = String(body.password || "");
     const action = String(body.action || "list");
-    if (!password) return NextResponse.json({ ok: false, error: "Passwort fehlt." }, { status: 400 });
 
     if (action === "list") {
-      return NextResponse.json({ ok: true, subscriptions: await listBillingSubscriptions(password) });
+      return NextResponse.json({ ok: true, subscriptions: await listBillingSubscriptions(session) });
     }
 
     if (action === "create") {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       ) {
         return NextResponse.json({ ok: false, error: "Abo-Daten sind ungültig." }, { status: 400 });
       }
-      const id = await createBillingSubscription(password, {
+      const id = await createBillingSubscription(session, {
         leadId,
         projectId,
         name,
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       if (!Number.isSafeInteger(subscriptionId) || subscriptionId <= 0 || !statuses.includes(status)) {
         return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
       }
-      await setBillingSubscriptionStatus(password, subscriptionId, status);
+      await setBillingSubscriptionStatus(session, subscriptionId, status);
       return NextResponse.json({ ok: true });
     }
 
@@ -67,16 +67,12 @@ export async function POST(req: Request) {
       const asOf = body.asOf ? String(body.asOf) : undefined;
       if (asOf && !/^\d{4}-\d{2}-\d{2}$/.test(asOf))
         return NextResponse.json({ ok: false, error: "Datum ist ungültig." }, { status: 400 });
-      const generated = await generateDueRecurringInvoices(password, asOf);
+      const generated = await generateDueRecurringInvoices(session, asOf);
       return NextResponse.json({ ok: true, generated });
     }
 
     return NextResponse.json({ ok: false, error: "Unbekannte Aktion." }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN";
-    if (message === "UNAUTHORIZED")
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
-    console.error("WEBFORGE_SUBSCRIPTIONS_API_ERROR", error);
-    return NextResponse.json({ ok: false, error: "Abo konnte nicht verarbeitet werden." }, { status: 500 });
+    return adminErrorResponse(error, "Abo konnte nicht verarbeitet werden.");
   }
 }

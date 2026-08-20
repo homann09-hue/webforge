@@ -1,3 +1,4 @@
+import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type SubmissionReviewStatus = "new" | "reviewed" | "incorporated";
@@ -19,41 +20,31 @@ export type PortalSubmissionAdmin = {
   reviewed_note: string | null;
 };
 
-const SUPABASE_URL = "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nZGbQRfpyHgjTyZ9XJBKRg_OBKT8R1V";
-
-function headers() {
-  return {
-    apikey: SUPABASE_PUBLISHABLE_KEY,
-    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-    "Content-Type": "application/json",
-  };
-}
-
-export async function listAllSubmissions(password: string): Promise<PortalSubmissionAdmin[]> {
-  const response = await adminRpc("admin_list_all_submissions", { p_password: password });
+export async function listAllSubmissions(session: string): Promise<PortalSubmissionAdmin[]> {
+  const response = await adminRpc("admin_list_all_submissions", session);
   return (await response.json()) as PortalSubmissionAdmin[];
 }
 
 export async function setSubmissionReview(
-  password: string,
+  session: string,
   submissionId: number,
   status: SubmissionReviewStatus,
   note: string,
 ) {
-  await adminRpc("admin_set_submission_review", {
-    p_password: password,
+  await adminRpc("admin_set_submission_review", session, {
     p_submission_id: submissionId,
     p_status: status,
     p_note: note || null,
   });
 }
 
-export async function getSubmissionFileUrl(password: string, submissionId: number): Promise<string> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-portal-file-url`, {
+export async function getSubmissionFileUrl(session: string, submissionId: number): Promise<string> {
+  const response = await fetch(edgeFunctionUrl("admin-portal-file-url"), {
     method: "POST",
-    headers: headers(),
-    body: JSON.stringify({ password, submissionId }),
+    headers: supabaseHeaders(),
+    // The Edge Function still names the credential field "password";
+    // it accepts a session token in that field.
+    body: JSON.stringify({ password: session, submissionId }),
     cache: "no-store",
   });
   const data = await response.json().catch(() => ({}));

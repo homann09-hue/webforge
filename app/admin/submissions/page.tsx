@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
 import type { PortalSubmissionAdmin, SubmissionReviewStatus } from "@/lib/submissions";
 
 const statusLabels: Record<SubmissionReviewStatus, string> = {
@@ -45,38 +46,39 @@ export default function SubmissionsAdmin() {
   const incorporatedCount = submissions.filter((item) => item.review_status === "incorporated").length;
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("webforge_admin_password");
-    if (saved) {
-      setPassword(saved);
-      void load(saved);
-    }
+    void adminSessionActive().then((active) => {
+      if (active) void load();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function api(body: Record<string, unknown>, candidate = password) {
-    const response = await fetch("/api/admin/submissions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: candidate, ...body }),
-    });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.error || "Aktion fehlgeschlagen.");
-    return data;
+  async function api<T = Record<string, unknown>>(body: Record<string, unknown>) {
+    return adminFetch<T>("/api/admin/submissions", body);
   }
 
-  async function load(candidate = password) {
+  async function signIn() {
+    setError("");
+    try {
+      await adminLogin(password);
+      setPassword("");
+      await load();
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+    }
+  }
+
+  async function load() {
     setLoading(true);
     setError("");
     try {
-      const data = await api({ action: "list" }, candidate);
+      const data = await api({ action: "list" });
       const loaded = data.submissions as PortalSubmissionAdmin[];
       setSubmissions(loaded);
       setNotes(Object.fromEntries(loaded.map((item) => [item.id, item.reviewed_note || ""])));
       setAuthenticated(true);
-      setPassword(candidate);
-      sessionStorage.setItem("webforge_admin_password", candidate);
     } catch (err) {
       setAuthenticated(false);
-      sessionStorage.removeItem("webforge_admin_password");
       setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
@@ -111,7 +113,7 @@ export default function SubmissionsAdmin() {
     setSavingId(item.id);
     setError("");
     try {
-      const data = await api({ action: "file-url", submissionId: item.id });
+      const data = await api<{ url: string }>({ action: "file-url", submissionId: item.id });
       window.open(data.url, "_blank", "noopener,noreferrer");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Datei konnte nicht geöffnet werden.");
@@ -143,7 +145,7 @@ export default function SubmissionsAdmin() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void load();
+                void signIn();
               }}
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >

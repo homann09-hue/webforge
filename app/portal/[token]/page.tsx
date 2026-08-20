@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { PortalProject } from "@/lib/portal";
 import { portalUploadUrl } from "@/lib/portal";
 
@@ -25,13 +25,7 @@ export default function PortalPage({ params }: { params: Promise<{ token: string
   const [sending, setSending] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileLabel, setFileLabel] = useState("Datei");
-  useEffect(() => {
-    void params.then(({ token }) => {
-      setToken(token);
-      void load(token);
-    });
-  }, [params]);
-  async function load(t = token) {
+  const load = useCallback(async (t: string) => {
     const r = await fetch(`/api/portal/${t}`, { cache: "no-store" });
     const d = await r.json();
     if (!r.ok) {
@@ -40,7 +34,14 @@ export default function PortalPage({ params }: { params: Promise<{ token: string
     }
     setProject(d.project);
     setError("");
-  }
+  }, []);
+
+  useEffect(() => {
+    void params.then(({ token }) => {
+      setToken(token);
+      void load(token);
+    });
+  }, [params, load]);
   async function submit() {
     if (!label.trim() || !content.trim()) return;
     setSending(true);
@@ -57,7 +58,7 @@ export default function PortalPage({ params }: { params: Promise<{ token: string
     }
     setLabel("");
     setContent("");
-    await load();
+    await load(token);
   }
   async function upload() {
     if (!file) return;
@@ -75,7 +76,7 @@ export default function PortalPage({ params }: { params: Promise<{ token: string
     }
     setFile(null);
     setFileLabel("Datei");
-    await load();
+    await load(token);
   }
   if (error && !project)
     return (

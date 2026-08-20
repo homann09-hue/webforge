@@ -49,13 +49,13 @@ export type Invoice = {
   payments: InvoicePayment[];
 };
 
-export async function listInvoices(password: string): Promise<Invoice[]> {
-  const response = await adminRpc("admin_list_invoices", { p_password: password });
+export async function listInvoices(session: string): Promise<Invoice[]> {
+  const response = await adminRpc("admin_list_invoices", session);
   return (await response.json()) as Invoice[];
 }
 
 export async function createInvoice(
-  password: string,
+  session: string,
   input: {
     leadId: number;
     projectId?: number | null;
@@ -68,8 +68,7 @@ export async function createInvoice(
     items: { description: string; quantity: number; unit: string; unitPriceCents: number }[];
   },
 ) {
-  const response = await adminRpc("admin_create_invoice", {
-    p_password: password,
+  const response = await adminRpc("admin_create_invoice", session, {
     p_lead_id: input.leadId,
     p_project_id: input.projectId || null,
     p_invoice_type: input.invoiceType,
@@ -88,20 +87,19 @@ export async function createInvoice(
   return (await response.json()) as number;
 }
 
-export async function setInvoiceStatus(password: string, invoiceId: number, status: "draft" | "open" | "void") {
-  await adminRpc("admin_set_invoice_status", { p_password: password, p_invoice_id: invoiceId, p_status: status });
+export async function setInvoiceStatus(session: string, invoiceId: number, status: "draft" | "open" | "void") {
+  await adminRpc("admin_set_invoice_status", session, { p_invoice_id: invoiceId, p_status: status });
 }
 
 export async function addPayment(
-  password: string,
+  session: string,
   invoiceId: number,
   amountCents: number,
   method: PaymentMethod,
   reference: string,
   paidAt: string,
 ) {
-  await adminRpc("admin_add_payment", {
-    p_password: password,
+  await adminRpc("admin_add_payment", session, {
     p_invoice_id: invoiceId,
     p_amount_cents: amountCents,
     p_method: method,
@@ -110,6 +108,6 @@ export async function addPayment(
   });
 }
 
-export async function deleteInvoice(password: string, invoiceId: number) {
-  await adminRpc("admin_delete_invoice", { p_password: password, p_invoice_id: invoiceId });
+export async function deleteInvoice(session: string, invoiceId: number) {
+  await adminRpc("admin_delete_invoice", session, { p_invoice_id: invoiceId });
 }

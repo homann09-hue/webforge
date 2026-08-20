@@ -35,13 +35,13 @@ export type Offer = {
   gross_cents: number;
 };
 
-export async function listOffers(password: string, leadId?: number): Promise<Offer[]> {
-  const response = await adminRpc("admin_list_offers", { p_password: password, p_lead_id: leadId ?? null });
+export async function listOffers(session: string, leadId?: number): Promise<Offer[]> {
+  const response = await adminRpc("admin_list_offers", session, { p_lead_id: leadId ?? null });
   return (await response.json()) as Offer[];
 }
 
 export async function createOffer(
-  password: string,
+  session: string,
   input: {
     leadId: number;
     title: string;
@@ -52,8 +52,7 @@ export async function createOffer(
     items: Array<{ description: string; quantity: number; unit: string; unitPriceCents: number }>;
   },
 ): Promise<number> {
-  const response = await adminRpc("admin_create_offer", {
-    p_password: password,
+  const response = await adminRpc("admin_create_offer", session, {
     p_lead_id: input.leadId,
     p_title: input.title,
     p_discount_percent: input.discountPercent,
@@ -70,10 +69,10 @@ export async function createOffer(
   return (await response.json()) as number;
 }
 
-export async function updateOfferStatus(password: string, offerId: number, status: OfferStatus) {
-  await adminRpc("admin_update_offer_status", { p_password: password, p_offer_id: offerId, p_status: status });
+export async function updateOfferStatus(session: string, offerId: number, status: OfferStatus) {
+  await adminRpc("admin_update_offer_status", session, { p_offer_id: offerId, p_status: status });
 }
 
-export async function deleteOffer(password: string, offerId: number) {
-  await adminRpc("admin_delete_offer", { p_password: password, p_offer_id: offerId });
+export async function deleteOffer(session: string, offerId: number) {
+  await adminRpc("admin_delete_offer", session, { p_offer_id: offerId });
 }

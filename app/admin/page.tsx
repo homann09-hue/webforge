@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch, adminLogin, adminLogout, adminSessionActive } from "@/lib/admin-client";
 import { sites } from "@/lib/site-config";
 import type { Lead, LeadStatus, ProposalStatus } from "@/lib/leads";
 import type { Offer, OfferStatus } from "@/lib/offers";
@@ -109,31 +110,35 @@ export default function Admin() {
     .reduce((sum, offer) => sum + offer.gross_cents, 0);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("webforge_admin_password");
-    if (saved) {
-      setPassword(saved);
-      void loadWorkspace(saved);
-    }
+    void adminSessionActive().then((active) => {
+      if (active) void loadWorkspace();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function request(path: string, body: Record<string, unknown>, candidate = password) {
-    const response = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: candidate, ...body }),
-    });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.error || "Änderung fehlgeschlagen.");
-    return data;
+  async function request(path: string, body: Record<string, unknown> = {}) {
+    return adminFetch(path, body);
   }
 
-  async function loadWorkspace(candidate = password) {
+  async function signIn() {
+    setError("");
+    try {
+      await adminLogin(password);
+      setPassword("");
+      await loadWorkspace();
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+    }
+  }
+
+  async function loadWorkspace() {
     setLoading(true);
     setError("");
     try {
       const [leadData, offerData] = await Promise.all([
-        request("/api/admin/leads", {}, candidate),
-        request("/api/admin/offers", { action: "list" }, candidate),
+        request("/api/admin/leads", {}),
+        request("/api/admin/offers", { action: "list" }),
       ]);
       const loaded = leadData.leads as Lead[];
       setLeads(loaded);
@@ -142,11 +147,8 @@ export default function Admin() {
       setCommercial(Object.fromEntries(loaded.map((lead) => [lead.id, draftFromLead(lead)])));
       if (!offerLeadId && loaded[0]) setOfferLeadId(loaded[0].id);
       setAuthenticated(true);
-      setPassword(candidate);
-      sessionStorage.setItem("webforge_admin_password", candidate);
     } catch (err) {
       setAuthenticated(false);
-      sessionStorage.removeItem("webforge_admin_password");
       setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
@@ -334,7 +336,7 @@ export default function Admin() {
   }
 
   function logout() {
-    sessionStorage.removeItem("webforge_admin_password");
+    void adminLogout();
     setPassword("");
     setLeads([]);
     setOffers([]);
@@ -369,7 +371,7 @@ export default function Admin() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void loadWorkspace();
+                void signIn();
               }}
               style={{ display: "grid", gap: 12, maxWidth: 440 }}
             >

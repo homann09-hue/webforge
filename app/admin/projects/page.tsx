@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
 import type {
   CustomerProject,
   OnboardingStatus,
@@ -96,38 +97,39 @@ export default function ProjectsAdmin() {
   const waitingCount = projects.filter((project) => project.onboarding_status === "waiting_customer").length;
 
   useEffect(() => {
-    const saved = sessionStorage.getItem("webforge_admin_password");
-    if (saved) {
-      setPassword(saved);
-      void loadProjects(saved);
-    }
+    void adminSessionActive().then((active) => {
+      if (active) void loadProjects();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function api(body: Record<string, unknown>, candidate = password) {
-    const response = await fetch("/api/admin/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: candidate, ...body }),
-    });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.error || "Aktion fehlgeschlagen.");
-    return data;
+  async function api(body: Record<string, unknown>) {
+    return adminFetch("/api/admin/projects", body);
   }
 
-  async function loadProjects(candidate = password) {
+  async function signIn() {
+    setError("");
+    try {
+      await adminLogin(password);
+      setPassword("");
+      await loadProjects();
+    } catch (err) {
+      setAuthenticated(false);
+      setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
+    }
+  }
+
+  async function loadProjects() {
     setLoading(true);
     setError("");
     try {
-      const data = await api({ action: "list" }, candidate);
+      const data = await api({ action: "list" });
       const loaded = data.projects as CustomerProject[];
       setProjects(loaded);
       setDrafts(Object.fromEntries(loaded.map((project) => [project.id, draftFromProject(project)])));
       setAuthenticated(true);
-      setPassword(candidate);
-      sessionStorage.setItem("webforge_admin_password", candidate);
     } catch (err) {
       setAuthenticated(false);
-      sessionStorage.removeItem("webforge_admin_password");
       setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setLoading(false);
@@ -289,7 +291,7 @@ export default function ProjectsAdmin() {
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void loadProjects();
+                void signIn();
               }}
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >

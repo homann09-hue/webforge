@@ -23,13 +23,13 @@ export type BillingSubscription = {
   created_at: string;
 };
 
-export async function listBillingSubscriptions(password: string): Promise<BillingSubscription[]> {
-  const response = await adminRpc("admin_list_billing_subscriptions", { p_password: password });
+export async function listBillingSubscriptions(session: string): Promise<BillingSubscription[]> {
+  const response = await adminRpc("admin_list_billing_subscriptions", session);
   return (await response.json()) as BillingSubscription[];
 }
 
 export async function createBillingSubscription(
-  password: string,
+  session: string,
   input: {
     leadId: number;
     projectId?: number | null;
@@ -39,8 +39,7 @@ export async function createBillingSubscription(
     nextInvoiceDate: string;
   },
 ) {
-  const response = await adminRpc("admin_create_billing_subscription", {
-    p_password: password,
+  const response = await adminRpc("admin_create_billing_subscription", session, {
     p_lead_id: input.leadId,
     p_project_id: input.projectId || null,
     p_name: input.name,
@@ -52,32 +51,27 @@ export async function createBillingSubscription(
 }
 
 export async function setBillingSubscriptionStatus(
-  password: string,
+  session: string,
   subscriptionId: number,
   status: BillingSubscriptionStatus,
 ) {
-  await adminRpc("admin_set_billing_subscription_status", {
-    p_password: password,
+  await adminRpc("admin_set_billing_subscription_status", session, {
     p_subscription_id: subscriptionId,
     p_status: status,
   });
 }
 
-export async function generateDueRecurringInvoices(password: string, asOf?: string) {
-  const response = await adminRpc("admin_generate_due_recurring_invoices", {
-    p_password: password,
-    p_as_of: asOf || null,
-  });
+export async function generateDueRecurringInvoices(session: string, asOf?: string) {
+  const response = await adminRpc("admin_generate_due_recurring_invoices", session, { p_as_of: asOf || null });
   return (await response.json()) as { subscription_id: number; invoice_id: number; invoice_number: string }[];
 }
 
 export async function setBillingSubscriptionStripe(
-  password: string,
+  session: string,
   subscriptionId: number,
   input: { customerId?: string; stripeSubscriptionId?: string; priceId?: string; checkoutUrl?: string },
 ) {
-  await adminRpc("admin_set_billing_subscription_stripe", {
-    p_password: password,
+  await adminRpc("admin_set_billing_subscription_stripe", session, {
     p_subscription_id: subscriptionId,
     p_customer_id: input.customerId || "",
     p_subscription_stripe_id: input.stripeSubscriptionId || "",
