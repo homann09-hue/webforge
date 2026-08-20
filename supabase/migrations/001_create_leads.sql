@@ -1,3 +1,23 @@
+-- ---------------------------------------------------------------------------
+-- SUPERSEDED — DO NOT APPLY TO A LIVE DATABASE
+--
+-- This file no longer describes the production schema and is kept only for
+-- history. Two concrete divergences:
+--
+--   * leads.id is declared uuid here, while lib/leads.ts types Lead.id as a
+--     number, so production uses an integer key.
+--   * The columns the application actually reads (contact_name, phone,
+--     package_name, setup_price_cents, monthly_price_cents, proposal_status,
+--     archived_at, last_contacted_at, customer_since) are missing entirely.
+--
+-- The comment at the bottom is also out of date: the table is no longer
+-- reached with the service role key from Next.js, but through the
+-- `admin-gateway` Edge Function.
+--
+-- Replace this directory with a real dump:  supabase db pull
+-- See supabase/README.md for the full procedure.
+-- ---------------------------------------------------------------------------
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.leads (
