@@ -111,6 +111,21 @@ Beide brauchen einmalig `npm i -D playwright @axe-core/playwright && npx playwri
 install chromium`. Ohne das überspringen sie sich mit Hinweis, statt zu scheitern —
 deshalb sind sie nicht Teil von `npm run verify`.
 
+## Admin-Bereich testen
+
+```bash
+npm run test:e2e
+```
+
+Startet ein Mock der Supabase Edge Functions, baut die App dagegen, fährt sie
+hoch und spielt den kompletten Ablauf durch: Login mit falschem und richtigem
+Passwort, Leads laden, Status ändern, Preiseingabe in deutscher Schreibweise,
+Abmelden. Danach räumt es sich selbst auf.
+
+Der Mock ist absichtlich **strenger als die Produktion**: `admin-gateway`
+akzeptiert dort auch ein Klartextpasswort, der Mock nicht. Fällt die App je auf
+das alte Verhalten zurück, schlagen die Tests fehl statt still durchzulaufen.
+
 ## Barrierefreiheit
 
 Vertriebsseite, Demos, Admin und Portal erfüllen WCAG 2.1 AA, gemessen mit
