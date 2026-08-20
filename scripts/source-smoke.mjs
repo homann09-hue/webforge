@@ -27,7 +27,7 @@ for (const slug of ["handwerk", "gastro", "blumen"]) {
 }
 
 const envExample = await readFile(".env.example", "utf8");
-for (const name of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_SERVICE_ROLE_KEY"]) {
+for (const name of ["STRIPE_SECRET_KEY"]) {
   const line = envExample.split(/\r?\n/).find((value) => value.startsWith(`${name}=`));
   if (!line || line !== `${name}=`) throw new Error(`${name} must remain blank in .env.example`);
 }
@@ -74,6 +74,21 @@ for (const file of adminRoutes) {
   if (/\.password\b/.test(source) || /\bpassword\s*:/.test(source)) {
     throw new Error(`${file}: must not read the credential from the request body`);
   }
+}
+
+// There must be exactly one Stripe webhook, and it is the Edge Function.
+// A second implementation in Next.js would race it non-deterministically.
+try {
+  await access("app/api/stripe/webhook/route.ts");
+  throw new Error("app/api/stripe/webhook: the webhook lives in supabase/functions/stripe-webhook only");
+} catch (error) {
+  if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
+}
+
+// Both copies of the Stripe signature check must stay constant time.
+const edgeWebhook = await readFile("supabase/functions/stripe-webhook/index.ts", "utf8");
+if (!edgeWebhook.includes("timingSafeEqual")) {
+  throw new Error("supabase/functions/stripe-webhook: signature comparison must be constant time");
 }
 
 // The session cookie must stay httpOnly.
