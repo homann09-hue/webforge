@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminSessionActive } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
+import { invoicePrintHtml, openPrintWindow } from "@/lib/print-template";
 import type { Invoice, InvoiceStatus, InvoiceType, PaymentMethod } from "@/lib/billing";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
@@ -26,12 +27,6 @@ const methodLabels: Record<PaymentMethod, string> = {
 type ItemDraft = { description: string; quantity: string; unit: string; unitPrice: string };
 type PaymentDraft = { amount: string; method: PaymentMethod; reference: string; paidAt: string };
 
-function esc(value: string) {
-  return value.replace(
-    /[&<>"']/g,
-    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] || char,
-  );
-}
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -232,18 +227,9 @@ export default function InvoicesAdmin() {
   }
 
   function printInvoice(invoice: Invoice) {
-    const rows = invoice.items
-      .map(
-        (item) =>
-          `<tr><td>${item.position}</td><td>${esc(item.description)}</td><td>${item.quantity} ${esc(item.unit)}</td><td style="text-align:right">${formatMoney(item.unit_price_cents)}</td><td style="text-align:right">${formatMoney(item.line_total_cents)}</td></tr>`,
-      )
-      .join("");
-    const win = window.open("", "_blank", "width=900,height=1000");
-    if (!win) return;
-    win.document.write(
-      `<!doctype html><html><head><title>${esc(invoice.invoice_number)}</title><style>body{font-family:Arial,sans-serif;color:#111;padding:48px;max-width:850px;margin:auto}header{display:flex;justify-content:space-between;margin-bottom:48px}h1{font-size:34px;margin:0}table{width:100%;border-collapse:collapse;margin-top:28px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px;margin-top:24px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.gross{font-weight:700;font-size:18px}.muted{color:#666} @media print{button{display:none}}</style></head><body><header><div><h1>WebForge</h1><div class="muted">Webdesign & digitale Lösungen</div></div><div><strong>Rechnung ${esc(invoice.invoice_number)}</strong><br>Datum: ${new Date(invoice.issue_date + "T00:00:00").toLocaleDateString("de-DE")}<br>${invoice.due_date ? `Fällig: ${new Date(invoice.due_date + "T00:00:00").toLocaleDateString("de-DE")}` : ""}</div></header><section><strong>${esc(invoice.company)}</strong>${invoice.contact_name ? `<br>${esc(invoice.contact_name)}` : ""}<br>${esc(invoice.email)}</section><h2>${esc(invoice.title)}</h2><table><thead><tr><th>#</th><th>Leistung</th><th>Menge</th><th style="text-align:right">Einzelpreis</th><th style="text-align:right">Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Netto</span><span>${formatMoney(invoice.net_cents)}</span></div><div><span>MwSt. ${invoice.tax_percent}%</span><span>${formatMoney(invoice.tax_cents)}</span></div><div class="gross"><span>Gesamt</span><span>${formatMoney(invoice.gross_cents)}</span></div><div><span>Bezahlt</span><span>${formatMoney(invoice.paid_cents)}</span></div><div class="gross"><span>Offen</span><span>${formatMoney(invoice.balance_cents)}</span></div></div>${invoice.notes ? `<p style="margin-top:36px">${esc(invoice.notes)}</p>` : ""}<button onclick="window.print()" style="margin-top:40px;padding:12px 18px">Drucken / als PDF speichern</button></body></html>`,
-    );
-    win.document.close();
+    if (!openPrintWindow(invoicePrintHtml(invoice), invoice.invoice_number)) {
+      setError("Das Druckfenster wurde vom Browser blockiert. Bitte Pop-ups für diese Seite erlauben.");
+    }
   }
 
   if (!authenticated)

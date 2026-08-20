@@ -172,12 +172,12 @@ export default function PortalPage({ params }: { params: Promise<{ token: string
       </div>
       <div className="adminpanel">
         <h2>Datei hochladen</h2>
-        <p>Erlaubt: JPG, PNG, WebP, SVG, PDF, TXT · maximal 10 MB.</p>
+        <p>Erlaubt: JPG, PNG, WebP, PDF, TXT · maximal 10 MB.</p>
         <div style={{ display: "grid", gap: 10, maxWidth: 680 }}>
           <input value={fileLabel} onChange={(e) => setFileLabel(e.target.value)} placeholder="Bezeichnung" />
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/svg+xml,application/pdf,text/plain"
+            accept="image/jpeg,image/png,image/webp,application/pdf,text/plain"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
           <button className="button" disabled={!file || sending} onClick={() => void upload()}>

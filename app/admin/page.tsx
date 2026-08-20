@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminLogout, adminSessionActive } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
+import { offerPrintHtml, openPrintWindow } from "@/lib/print-template";
 import { sites } from "@/lib/site-config";
 import type { Lead, LeadStatus, ProposalStatus } from "@/lib/leads";
 import type { Offer, OfferStatus } from "@/lib/offers";
@@ -27,7 +28,6 @@ const offerStatusLabels: Record<OfferStatus, string> = {
   accepted: "Angenommen",
   rejected: "Abgelehnt",
 };
-const htmlEntities: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
 type CommercialDraft = {
   contactName: string;
@@ -48,9 +48,6 @@ function draftFromLead(lead: Lead): CommercialDraft {
     monthlyPrice: (lead.monthly_price_cents / 100).toFixed(2),
     proposalStatus: lead.proposal_status,
   };
-}
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (char) => htmlEntities[char] ?? char);
 }
 
 export default function Admin() {
@@ -328,19 +325,9 @@ export default function Admin() {
   }
 
   function printOffer(offer: Offer) {
-    const popup = window.open("", "_blank", "width=900,height=1100");
-    if (!popup) return;
-    const rows = offer.items
-      .map(
-        (item) =>
-          `<tr><td>${item.position}</td><td>${escapeHtml(item.description)}</td><td>${item.quantity} ${escapeHtml(item.unit)}</td><td>${formatMoney(item.unit_price_cents)}</td><td>${formatMoney(item.line_total_cents)}</td></tr>`,
-      )
-      .join("");
-    popup.document.write(
-      `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(offer.offer_number)}</title><style>body{font:15px Arial,sans-serif;color:#111;padding:48px;max-width:900px;margin:auto}header{display:flex;justify-content:space-between;gap:24px;margin-bottom:48px}h1{font-size:28px;margin:0}small{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}.totals{margin-left:auto;width:320px}.totals div{display:flex;justify-content:space-between;padding:6px 0}.total{font-size:20px;font-weight:700;border-top:2px solid #111;margin-top:8px;padding-top:12px!important}@media print{button{display:none}body{padding:20px}}</style></head><body><button onclick="window.print()">Als PDF drucken / speichern</button><header><div><h1>WebForge</h1><small>Professionelle Websites für Unternehmen</small></div><div><b>Angebot ${escapeHtml(offer.offer_number)}</b><br><small>${new Date(offer.created_at).toLocaleDateString("de-DE")}</small></div></header><h2>${escapeHtml(offer.title)}</h2><p><b>${escapeHtml(offer.company)}</b>${offer.contact_name ? `<br>${escapeHtml(offer.contact_name)}` : ""}<br>${escapeHtml(offer.email)}</p><table><thead><tr><th>Pos.</th><th>Leistung</th><th>Menge</th><th>Einzel</th><th>Gesamt</th></tr></thead><tbody>${rows}</tbody></table><div class="totals"><div><span>Zwischensumme</span><span>${formatMoney(offer.subtotal_cents)}</span></div><div><span>Rabatt (${offer.discount_percent}%)</span><span>− ${formatMoney(offer.discount_cents)}</span></div><div><span>Netto</span><span>${formatMoney(offer.net_cents)}</span></div><div><span>MwSt. (${offer.tax_percent}%)</span><span>${formatMoney(offer.tax_cents)}</span></div><div class="total"><span>Gesamt</span><span>${formatMoney(offer.gross_cents)}</span></div></div>${offer.valid_until ? `<p>Gültig bis: ${new Date(offer.valid_until).toLocaleDateString("de-DE")}</p>` : ""}${offer.notes ? `<p>${escapeHtml(offer.notes)}</p>` : ""}</body></html>`,
-    );
-    popup.document.close();
-    popup.focus();
+    if (!openPrintWindow(offerPrintHtml(offer), offer.offer_number)) {
+      setError("Das Druckfenster wurde vom Browser blockiert. Bitte Pop-ups für diese Seite erlauben.");
+    }
   }
 
   function logout() {
