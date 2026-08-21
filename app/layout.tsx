@@ -1,26 +1,21 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://webforge-virid.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ovara.de";
 
-const title = "WebForge — Websites, die verkaufen";
+const title = "Ovara — Technologie. Innovation. Zukunft.";
 const description =
-  "Moderne Websites für lokale Unternehmen. Schnell, hochwertig und ohne klassische Agenturpreise. " +
-  "Handwerk, Gastronomie und Einzelhandel — mit Live-Demos und transparenten Festpreisen.";
+  "Ovara entwickelt moderne Websites, Web-Apps, Mobile-Lösungen, Cloud-Systeme und KI-Automationen für Unternehmen.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: title, template: "%s — WebForge" },
+  title: { default: title, template: "%s — Ovara" },
   description,
-  // Deliberately no `alternates` here: Next.js inherits it into every child
-  // segment, so a canonical set on the root layout points the demos, the
-  // imprint and the privacy policy at the homepage — while sitemap.ts submits
-  // those very URLs. Each page sets its own.
   openGraph: {
     type: "website",
     locale: "de_DE",
     url: siteUrl,
-    siteName: "WebForge",
+    siteName: "Ovara",
     title,
     description,
   },
