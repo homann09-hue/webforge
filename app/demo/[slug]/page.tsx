@@ -6,6 +6,7 @@ import DemoBlumen from "@/components/demo-blumen";
 import DemoMotion from "@/components/demo-motion";
 import styles from "../demo.module.css";
 import motionStyles from "../demo-motion.module.css";
+import polishStyles from "../demo-polish.module.css";
 import { sites } from "@/lib/site-config";
 
 /**
@@ -50,7 +51,7 @@ export default async function DemoPage({ params }: { params: Promise<{ slug: str
   if (!content) notFound();
 
   return (
-    <div className={`${styles.demoScope} ${motionStyles.motionScope}`}>
+    <div className={`${styles.demoScope} ${motionStyles.motionScope} ${polishStyles.polishScope}`}>
       <DemoMotion />
       {content}
     </div>
