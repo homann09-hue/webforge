@@ -1,4 +1,4 @@
-import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
+import { backendFunctionFetch } from "@/lib/backend-transport";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
@@ -27,20 +27,19 @@ export async function createLead(input: {
   company: string;
   email: string;
   website?: string;
-  /** Real visitor address — the Edge Function keys its rate limit on it. */
+  /** Real visitor address — the backend keys its rate limit on it. */
   clientIp?: string | null;
 }) {
-  const response = await fetch(edgeFunctionUrl("lead-submit"), {
-    method: "POST",
-    headers: supabaseHeaders(),
-    body: JSON.stringify({
+  const response = await backendFunctionFetch(
+    "lead-submit",
+    {
       company: input.company,
       email: input.email,
       website: input.website || null,
       clientIp: input.clientIp || null,
-    }),
-    cache: "no-store",
-  });
+    },
+    { cache: "no-store" },
+  );
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(String(data?.error || "LEAD_SUBMIT_FAILED"));
