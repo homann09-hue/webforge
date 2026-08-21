@@ -21,23 +21,20 @@ sql = sql.replaceAll("'public', 'extensions', 'pg_temp'", "'public', 'pg_temp'")
 sql = sql.replaceAll("'public', 'private', 'extensions', 'pg_temp'", "'public', 'private', 'pg_temp'");
 sql = sql.replaceAll("'public', 'extensions'", "'public'");
 
-// Supabase Vault is not part of Neon. Remove the entire pg_dump function block,
-// including any following ALTER FUNCTION owner statement. We intentionally use
-// the next pg_dump section marker as the boundary instead of relying on the
-// function dollar-quote tag/semicolon layout, which varies by pg_dump version.
-const vaultStart = sql.indexOf("CREATE OR REPLACE FUNCTION public.internal_get_stripe_webhook_secret()");
-if (vaultStart !== -1) {
-  const nextSection = sql.indexOf("\n--\n-- Name:", vaultStart + 1);
-  if (nextSection !== -1) {
-    sql = sql.slice(0, vaultStart) + sql.slice(nextSection);
-  } else {
-    // Fallback for dumps without pg_dump section comments.
-    sql = sql.replace(
-      /CREATE OR REPLACE FUNCTION public\.internal_get_stripe_webhook_secret\(\)[\s\S]*?(?=CREATE OR REPLACE FUNCTION|$)/,
-      "",
-    );
-  }
-}
+// Supabase Vault is not part of Neon. pg_dump may quote identifiers, so match
+// both quoted and unquoted forms. Remove the complete CREATE FUNCTION block,
+// then remove any owner/grant statements that still reference the function.
+const vaultCreatePattern = /CREATE OR REPLACE FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\)\s+RETURNS\s+(?:"text"|text)[\s\S]*?\$function\$;\s*/m;
+sql = sql.replace(vaultCreatePattern, "");
+
+sql = sql.replace(
+  /^ALTER FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\) OWNER TO .*?;\s*$/gm,
+  "",
+);
+sql = sql.replace(
+  /^(?:REVOKE|GRANT) .*?FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\).*?;\s*$/gm,
+  "",
+);
 
 // The live database still carries the legacy SHA-256-only length constraint,
 // while the current password code supports bcrypt (60 chars) and legacy
@@ -57,9 +54,6 @@ const prelude = [
 
 sql = prelude + sql;
 
-fs.mkdirSync(path.dirname(output), { recursive: true });
-fs.writeFileSync(output, sql);
-
 const forbidden = [
   "vault.",
   "extensions.crypt",
@@ -78,6 +72,9 @@ if (functionCount !== 46) {
   console.error(`Unexpected Neon function count: ${functionCount} (expected 46)`);
   process.exit(3);
 }
+
+fs.mkdirSync(path.dirname(output), { recursive: true });
+fs.writeFileSync(output, sql);
 
 console.log(`Wrote ${output}`);
 console.log(`Functions retained: ${functionCount}`);
