@@ -4,6 +4,7 @@ out
 .env
 .env.local
 .vercel
+supabase/.temp
 *.log
 .DS_Store
 # TypeScript incremental build cache
