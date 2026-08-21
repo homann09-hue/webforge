@@ -13,6 +13,7 @@ const required = [
   "lib/money.ts",
   "app/admin/layout.tsx",
   "app/api/admin/session/route.ts",
+  "app/api/stripe/webhook/route.ts",
   "next.config.ts",
   "supabase/README.md",
 ];
@@ -20,20 +21,16 @@ for (const file of required) await access(file);
 
 const demoRouter = await readFile("app/demo/[slug]/page.tsx", "utf8");
 for (const slug of ["handwerk", "gastro", "blumen"]) {
-  // Tolerate any formatting of the object literal.
   if (!new RegExp(`slug\\s*:\\s*["']${slug}["']`).test(demoRouter)) {
     throw new Error(`Missing demo route: ${slug}`);
   }
 }
 
 const envExample = await readFile(".env.example", "utf8");
-for (const name of ["STRIPE_SECRET_KEY"]) {
+for (const name of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
   const line = envExample.split(/\r?\n/).find((value) => value.startsWith(`${name}=`));
   if (!line || line !== `${name}=`) throw new Error(`${name} must remain blank in .env.example`);
 }
-
-// --- Authentication invariants -------------------------------------------
-// These encode decisions that are easy to undo by accident.
 
 const adminPages = [
   "app/admin/page.tsx",
@@ -51,7 +48,6 @@ for (const file of adminPages) {
   }
 }
 
-// Admin route handlers must take the credential from the cookie, never the body.
 const adminRoutes = [
   "app/api/admin/leads/route.ts",
   "app/api/admin/leads/status/route.ts",
@@ -70,36 +66,23 @@ for (const file of adminRoutes) {
   if (!/await requireAdminSession\(\)/.test(source)) {
     throw new Error(`${file}: must call await requireAdminSession()`);
   }
-  // Any route that pulls a password out of a request body has regressed.
   if (/\.password\b/.test(source) || /\bpassword\s*:/.test(source)) {
     throw new Error(`${file}: must not read the credential from the request body`);
   }
 }
 
-// There must be exactly one Stripe webhook, and it is the Edge Function.
-// A second implementation in Next.js would race it non-deterministically.
-try {
-  await access("app/api/stripe/webhook/route.ts");
-  throw new Error("app/api/stripe/webhook: the webhook lives in supabase/functions/stripe-webhook only");
-} catch (error) {
-  if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
+// Stripe webhook now lives in Next.js/Vercel and must verify signatures through
+// the shared constant-time implementation before touching Neon.
+const stripeWebhook = await readFile("app/api/stripe/webhook/route.ts", "utf8");
+for (const invariant of ["verifyStripeSignature", "STRIPE_WEBHOOK_SECRET", "stripe_webhook_events"]) {
+  if (!stripeWebhook.includes(invariant)) throw new Error(`Stripe webhook missing invariant: ${invariant}`);
 }
 
-// Both copies of the Stripe signature check must stay constant time.
-const edgeWebhook = await readFile("supabase/functions/stripe-webhook/index.ts", "utf8");
-if (!edgeWebhook.includes("timingSafeEqual")) {
-  throw new Error("supabase/functions/stripe-webhook: signature comparison must be constant time");
-}
-
-// Logging out must revoke the token server side, not just drop the cookie.
 const sessionRoute = await readFile("app/api/admin/session/route.ts", "utf8");
 if (!sessionRoute.includes("revokeAdminSession")) {
   throw new Error("app/api/admin/session: DELETE must revoke the session server side");
 }
 
-// Accessibility invariants. The demo forms show their prompt as a placeholder,
-// which disappears as soon as the field is filled, so each control also needs a
-// real label (WCAG 3.3.2). Easy to drop when editing markup.
 const globals = await readFile("app/globals.css", "utf8");
 if (!globals.includes(".sr-only")) throw new Error("app/globals.css: .sr-only utility is required for form labels");
 
@@ -112,23 +95,18 @@ for (const file of ["components/demo-handwerk.tsx", "components/demo-gastro.tsx"
   }
 }
 
-// The session cookie must stay httpOnly.
 const sessionModule = await readFile("lib/admin-session.ts", "utf8");
 for (const flag of ["httpOnly: true", 'sameSite: "strict"']) {
   if (!sessionModule.includes(flag)) throw new Error(`lib/admin-session.ts: session cookie must set ${flag}`);
 }
 
-// The Stripe signature comparison must stay constant time.
 const stripeModule = await readFile("lib/stripe-signature.ts", "utf8");
 if (!stripeModule.includes("timingSafeEqual")) {
-  throw new Error("lib/stripe-signature.ts: signature comparison must be constant time");
+  throw new Error("lib/stripe-signature.ts: signature comparison must stay constant time");
 }
 
 console.log("Source smoke: routes, secret placeholders and auth invariants verified.");
 
-// Every browser script must resolve Chromium through the shared helper.
-// Three of them hardcoded a path that exists only in one dev container, so the
-// CI job they were added to could never have passed.
 for (const file of [
   "scripts/csp-check.mjs",
   "scripts/a11y-axe.mjs",
@@ -142,8 +120,6 @@ for (const file of [
   if (!source.includes("launchChromium")) {
     throw new Error(`${file}: must launch Chromium via scripts/lib/browser.mjs`);
   }
-  // A relative import that does not resolve fails only when the script runs,
-  // which is exactly when nobody is watching.
   const relative = source.match(/from "(\.[^"]*browser\.mjs)"/)?.[1];
   if (!relative) throw new Error(`${file}: no import of the browser helper found`);
   const resolved = new URL(relative, new URL(file, `file://${process.cwd()}/`)).pathname;
