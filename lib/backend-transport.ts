@@ -1,18 +1,27 @@
+import { neonBackendFunctionFetch } from "@/lib/neon-backend";
 import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
 
+const NEON_FUNCTIONS = new Set(["admin-login", "admin-logout", "lead-submit", "admin-gateway"]);
+
+function useNeonBackend(name: string): boolean {
+  return process.env.WEBFORGE_BACKEND === "neon" && NEON_FUNCTIONS.has(name);
+}
+
 /**
- * Temporary transport boundary for the Supabase -> Neon/Vercel migration.
+ * Provider-neutral backend transport used during the Supabase -> Neon migration.
  *
- * Application modules should call backendFunctionFetch() instead of importing
- * Supabase URL/header helpers directly. Phase 1 deliberately preserves the
- * production behavior; later phases can replace this implementation with
- * direct Vercel route handlers + Neon without touching every business module.
+ * Only functions explicitly listed in NEON_FUNCTIONS switch to Neon. Everything
+ * else keeps using Supabase until its storage/portal dependency has also moved.
  */
 export async function backendFunctionFetch(
   name: string,
   body: Record<string, unknown>,
   init: Omit<RequestInit, "method" | "headers" | "body"> = {},
 ): Promise<Response> {
+  if (useNeonBackend(name)) {
+    return neonBackendFunctionFetch(name, body);
+  }
+
   return fetch(edgeFunctionUrl(name), {
     ...init,
     method: "POST",
@@ -22,8 +31,8 @@ export async function backendFunctionFetch(
 }
 
 /**
- * Temporary raw endpoint escape hatch for browser multipart uploads.
- * This exists only until portal-upload moves to a native Next.js/Vercel route.
+ * Raw endpoint escape hatch for browser multipart uploads.
+ * Portal uploads remain on Supabase Storage until the Vercel Blob phase.
  */
 export function backendFunctionUrl(name: string): string {
   return edgeFunctionUrl(name);
