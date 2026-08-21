@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getNeonSql } from "@/lib/neon-db";
 import { edgeFunctionUrl, SUPABASE_PUBLISHABLE_KEY } from "@/lib/supabase-env";
@@ -55,6 +55,11 @@ export async function POST(req: Request) {
     try {
       await sql`select public.portal_register_file(${token}, ${label}, ${blob.url}, ${file.name})`;
     } catch (error) {
+      try {
+        await del(blob.url);
+      } catch (cleanupError) {
+        console.error("WEBFORGE_PORTAL_BLOB_CLEANUP_FAILED", cleanupError);
+      }
       console.error("WEBFORGE_PORTAL_BLOB_REGISTER_FAILED", error);
       throw error;
     }
