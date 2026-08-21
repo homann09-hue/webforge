@@ -21,20 +21,47 @@ sql = sql.replaceAll("'public', 'extensions', 'pg_temp'", "'public', 'pg_temp'")
 sql = sql.replaceAll("'public', 'private', 'extensions', 'pg_temp'", "'public', 'private', 'pg_temp'");
 sql = sql.replaceAll("'public', 'extensions'", "'public'");
 
-// Supabase Vault is not part of Neon. pg_dump may quote identifiers, so match
-// both quoted and unquoted forms. Remove the complete CREATE FUNCTION block,
-// then remove any owner/grant statements that still reference the function.
-const vaultCreatePattern = /CREATE OR REPLACE FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\)\s+RETURNS\s+(?:"text"|text)[\s\S]*?\$function\$;\s*/m;
-sql = sql.replace(vaultCreatePattern, "");
+// Supabase Vault is not part of Neon. pg_dump emits the CREATE FUNCTION inside
+// a named section and may quote identifiers. Remove that complete section by
+// locating the function name rather than depending on its exact SQL layout.
+const vaultName = "internal_get_stripe_webhook_secret";
+const vaultNameIndex = sql.indexOf(vaultName);
+if (vaultNameIndex !== -1) {
+  const createStart = sql.lastIndexOf("CREATE OR REPLACE FUNCTION", vaultNameIndex);
+  if (createStart === -1) {
+    console.error("Found Vault function name but could not locate its CREATE FUNCTION statement");
+    process.exit(2);
+  }
 
-sql = sql.replace(
-  /^ALTER FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\) OWNER TO .*?;\s*$/gm,
-  "",
-);
-sql = sql.replace(
-  /^(?:REVOKE|GRANT) .*?FUNCTION\s+(?:"public"\.|public\.)(?:"internal_get_stripe_webhook_secret"|internal_get_stripe_webhook_secret)\(\).*?;\s*$/gm,
-  "",
-);
+  const nextSection = sql.indexOf("\n--\n-- Name:", vaultNameIndex + vaultName.length);
+  if (nextSection !== -1) {
+    sql = sql.slice(0, createStart) + sql.slice(nextSection);
+  } else {
+    // Fallback: stop at the next CREATE FUNCTION if section markers are absent.
+    const nextFunction = sql.indexOf("CREATE OR REPLACE FUNCTION", vaultNameIndex + vaultName.length);
+    sql = sql.slice(0, createStart) + (nextFunction === -1 ? "" : sql.slice(nextFunction));
+  }
+}
+
+// pg_dump ACL/owner sections can appear much later than the CREATE FUNCTION
+// section. Remove every remaining line that references the removed function,
+// plus the immediately preceding pg_dump comment block when present.
+const lines = sql.split("\n");
+const filtered = [];
+for (let i = 0; i < lines.length; i += 1) {
+  if (!lines[i].includes(vaultName)) {
+    filtered.push(lines[i]);
+    continue;
+  }
+
+  // Remove the standard three-line pg_dump section header already copied to
+  // the output: "--", "-- Name: ...", "--".
+  while (filtered.length && filtered.at(-1) === "") filtered.pop();
+  if (filtered.at(-1) === "--") filtered.pop();
+  if (filtered.at(-1)?.startsWith("-- Name:")) filtered.pop();
+  if (filtered.at(-1) === "--") filtered.pop();
+}
+sql = filtered.join("\n");
 
 // The live database still carries the legacy SHA-256-only length constraint,
 // while the current password code supports bcrypt (60 chars) and legacy
@@ -59,7 +86,7 @@ const forbidden = [
   "extensions.crypt",
   "extensions.gen_salt",
   "extensions.digest",
-  "internal_get_stripe_webhook_secret",
+  vaultName,
 ];
 const leftovers = forbidden.filter((needle) => sql.includes(needle));
 if (leftovers.length) {
