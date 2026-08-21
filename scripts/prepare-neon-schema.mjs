@@ -11,19 +11,13 @@ if (!fs.existsSync(input)) {
 
 let sql = fs.readFileSync(input, "utf8");
 
-// Neon uses pgcrypto in a normal schema; Supabase installs it under `extensions`.
 sql = sql.replaceAll("extensions.crypt", "crypt");
 sql = sql.replaceAll("extensions.gen_salt", "gen_salt");
 sql = sql.replaceAll("extensions.digest", "digest");
-
-// Remove the Supabase-only `extensions` schema from function search paths.
 sql = sql.replaceAll("'public', 'extensions', 'pg_temp'", "'public', 'pg_temp'");
 sql = sql.replaceAll("'public', 'private', 'extensions', 'pg_temp'", "'public', 'private', 'pg_temp'");
 sql = sql.replaceAll("'public', 'extensions'", "'public'");
 
-// Supabase Vault is not part of Neon. pg_dump emits the CREATE FUNCTION inside
-// a named section and may quote identifiers. Remove that complete section by
-// locating the function name rather than depending on its exact SQL layout.
 const vaultName = "internal_get_stripe_webhook_secret";
 const vaultNameIndex = sql.indexOf(vaultName);
 if (vaultNameIndex !== -1) {
@@ -32,20 +26,15 @@ if (vaultNameIndex !== -1) {
     console.error("Found Vault function name but could not locate its CREATE FUNCTION statement");
     process.exit(2);
   }
-
   const nextSection = sql.indexOf("\n--\n-- Name:", vaultNameIndex + vaultName.length);
   if (nextSection !== -1) {
     sql = sql.slice(0, createStart) + sql.slice(nextSection);
   } else {
-    // Fallback: stop at the next CREATE FUNCTION if section markers are absent.
     const nextFunction = sql.indexOf("CREATE OR REPLACE FUNCTION", vaultNameIndex + vaultName.length);
     sql = sql.slice(0, createStart) + (nextFunction === -1 ? "" : sql.slice(nextFunction));
   }
 }
 
-// pg_dump ACL/owner sections can appear much later than the CREATE FUNCTION
-// section. Remove every remaining line that references the removed function,
-// plus the immediately preceding pg_dump comment block when present.
 const lines = sql.split("\n");
 const filtered = [];
 for (let i = 0; i < lines.length; i += 1) {
@@ -53,9 +42,6 @@ for (let i = 0; i < lines.length; i += 1) {
     filtered.push(lines[i]);
     continue;
   }
-
-  // Remove the standard three-line pg_dump section header already copied to
-  // the output: "--", "-- Name: ...", "--".
   while (filtered.length && filtered.at(-1) === "") filtered.pop();
   if (filtered.at(-1) === "--") filtered.pop();
   if (filtered.at(-1)?.startsWith("-- Name:")) filtered.pop();
@@ -63,22 +49,53 @@ for (let i = 0; i < lines.length; i += 1) {
 }
 sql = filtered.join("\n");
 
-// The live database still carries the legacy SHA-256-only length constraint,
-// while the current password code supports bcrypt (60 chars) and legacy
-// SHA-256 (64 chars). Make the portable Neon schema accept both formats.
+// Supabase ownership and ACL statements reference roles that do not exist in Neon.
+// The connected Neon role should own imported objects, and WebForge will access
+// the database server-side via DATABASE_URL rather than Supabase Data API roles.
+sql = sql.replace(/^ALTER\s+.+?\s+OWNER TO\s+.+?;\s*$/gm, "");
+
+const supabaseRoles = [
+  "postgres",
+  "supabase_admin",
+  "service_role",
+  "anon",
+  "authenticated",
+  "authenticator",
+  "dashboard_user",
+  "pgbouncer",
+  "supabase_auth_admin",
+  "supabase_storage_admin",
+  "supabase_functions_admin",
+  "supabase_read_only_user",
+];
+const roleAlternation = supabaseRoles.map((r) => `\\"?${r}\\"?`).join("|");
+const aclPattern = new RegExp(
+  `^(?:GRANT|REVOKE)\\b.*(?:TO|FROM)\\s+(?:${roleAlternation}).*;\\s*$`,
+  "gm",
+);
+sql = sql.replace(aclPattern, "");
+const defaultPrivilegesPattern = new RegExp(
+  `^ALTER DEFAULT PRIVILEGES FOR ROLE\\s+(?:${roleAlternation}).*;\\s*$`,
+  "gm",
+);
+sql = sql.replace(defaultPrivilegesPattern, "");
+const setRolePattern = new RegExp(
+  `^(?:SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\s*;\\s*$`,
+  "gm",
+);
+sql = sql.replace(setRolePattern, "");
+
 sql = sql.replace(
   /CHECK \(char_length\(password_hash\) = 64\)/g,
   "CHECK (char_length(password_hash) IN (60, 64))",
 );
 
-// Ensure pgcrypto is available before any functions using digest/crypt/gen_salt.
 const prelude = [
   "-- Generated from the WebForge Supabase production schema.",
   "-- Neon compatibility adjustments are applied by scripts/prepare-neon-schema.mjs.",
   "CREATE EXTENSION IF NOT EXISTS pgcrypto;",
   "",
 ].join("\n");
-
 sql = prelude + sql;
 
 const forbidden = [
@@ -94,6 +111,15 @@ if (leftovers.length) {
   process.exit(2);
 }
 
+const missingRoleResidue = new RegExp(
+  `(?:OWNER TO|(?:GRANT|REVOKE)\\b.*(?:TO|FROM)|ALTER DEFAULT PRIVILEGES FOR ROLE|SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\b`,
+  "i",
+);
+if (missingRoleResidue.test(sql)) {
+  console.error("Neon schema still contains Supabase role ownership/ACL statements");
+  process.exit(4);
+}
+
 const functionCount = (sql.match(/CREATE OR REPLACE FUNCTION/g) || []).length;
 if (functionCount !== 46) {
   console.error(`Unexpected Neon function count: ${functionCount} (expected 46)`);
@@ -106,3 +132,4 @@ fs.writeFileSync(output, sql);
 console.log(`Wrote ${output}`);
 console.log(`Functions retained: ${functionCount}`);
 console.log("Supabase Vault function removed: yes");
+console.log("Supabase ownership/ACL statements removed: yes");
