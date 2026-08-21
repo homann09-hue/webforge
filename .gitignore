@@ -9,3 +9,9 @@ supabase/.temp
 .DS_Store
 # TypeScript incremental build cache
 *.tsbuildinfo
+.env*
+
+migration-backup/
+.agents/
+.claude/
+skills-lock.json

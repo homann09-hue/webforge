@@ -14,8 +14,8 @@ let sql = fs.readFileSync(input, "utf8");
 // Supabase data dumps may try to disable triggers/FKs globally by setting
 // session_replication_role=replica. Neon-managed roles are not superusers and
 // cannot change this parameter, so remove those SET/RESET statements.
-sql = sql.replace(/^SET\s+session_replication_role\s*=\s*[^;]+;\s*$/gmi, "");
-sql = sql.replace(/^RESET\s+session_replication_role\s*;\s*$/gmi, "");
+sql = sql.replace(/^SET\s+session_replication_role\s*=\s*[^;]+;\s*$/gim, "");
+sql = sql.replace(/^RESET\s+session_replication_role\s*;\s*$/gim, "");
 
 // Remove role/session authorization statements that refer to Supabase roles.
 const supabaseRoles = [
@@ -33,10 +33,7 @@ const supabaseRoles = [
   "supabase_read_only_user",
 ];
 const roleAlternation = supabaseRoles.map((r) => `\\"?${r}\\"?`).join("|");
-const setRolePattern = new RegExp(
-  `^(?:SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\s*;\\s*$`,
-  "gmi",
-);
+const setRolePattern = new RegExp(`^(?:SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\s*;\\s*$`, "gmi");
 sql = sql.replace(setRolePattern, "");
 
 // Hard fail if forbidden privilege-changing statements survived.

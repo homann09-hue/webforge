@@ -113,7 +113,9 @@ export default function DemoMotion() {
   return (
     <aside className={styles.bar} aria-label="WebForge Demo Navigation">
       <Link href="/">← WebForge</Link>
-      <span><i /> Live Demo</span>
+      <span>
+        <i /> Live Demo
+      </span>
     </aside>
   );
 }

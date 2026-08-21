@@ -22,7 +22,10 @@ export async function POST(req: Request) {
       },
       body: form,
     });
-    return new NextResponse(response.body, { status: response.status, headers: { "Content-Type": "application/json" } });
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -34,7 +37,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Ungültige Anfrage." }, { status: 400 });
     }
     if (file.size <= 0 || file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ ok: false, error: "Datei muss zwischen 1 Byte und 10 MB groß sein." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Datei muss zwischen 1 Byte und 10 MB groß sein." },
+        { status: 400 },
+      );
     }
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "upload";
@@ -47,7 +53,8 @@ export async function POST(req: Request) {
     const sql = getNeonSql();
     const projectRows = await sql`select public.portal_get_project(${token}) as project`;
     const project = projectRows[0]?.project as { project_id?: number } | undefined;
-    if (!project?.project_id) return NextResponse.json({ ok: false, error: "Portal-Link ungültig oder abgelaufen." }, { status: 401 });
+    if (!project?.project_id)
+      return NextResponse.json({ ok: false, error: "Portal-Link ungültig oder abgelaufen." }, { status: 401 });
 
     const pathname = `portal/${project.project_id}/${crypto.randomUUID()}-${safeName}`;
     const blob = await put(pathname, file, { access: "private", contentType: file.type });

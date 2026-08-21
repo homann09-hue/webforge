@@ -69,35 +69,23 @@ const supabaseRoles = [
   "supabase_read_only_user",
 ];
 const roleAlternation = supabaseRoles.map((r) => `\\"?${r}\\"?`).join("|");
-const aclPattern = new RegExp(
-  `^(?:GRANT|REVOKE)\\b.*(?:TO|FROM)\\s+(?:${roleAlternation}).*;\\s*$`,
-  "gm",
-);
+const aclPattern = new RegExp(`^(?:GRANT|REVOKE)\\b.*(?:TO|FROM)\\s+(?:${roleAlternation}).*;\\s*$`, "gm");
 sql = sql.replace(aclPattern, "");
 const defaultPrivilegesPattern = new RegExp(
   `^ALTER DEFAULT PRIVILEGES FOR ROLE\\s+(?:${roleAlternation}).*;\\s*$`,
   "gm",
 );
 sql = sql.replace(defaultPrivilegesPattern, "");
-const setRolePattern = new RegExp(
-  `^(?:SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\s*;\\s*$`,
-  "gm",
-);
+const setRolePattern = new RegExp(`^(?:SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\s*;\\s*$`, "gm");
 sql = sql.replace(setRolePattern, "");
 
 // Supabase policies may explicitly target anon/authenticated. Those roles do not
 // exist in Neon, and WebForge's Neon connection is server-only, so remove those
 // policy statements instead of recreating Supabase's Data API authorization model.
-const policyRolePattern = new RegExp(
-  `CREATE POLICY[\\s\\S]*?\\bTO\\s+(?:${roleAlternation})\\b[\\s\\S]*?;\\s*`,
-  "gi",
-);
+const policyRolePattern = new RegExp(`CREATE POLICY[\\s\\S]*?\\bTO\\s+(?:${roleAlternation})\\b[\\s\\S]*?;\\s*`, "gi");
 sql = sql.replace(policyRolePattern, "");
 
-sql = sql.replace(
-  /CHECK \(char_length\(password_hash\) = 64\)/g,
-  "CHECK (char_length(password_hash) IN (60, 64))",
-);
+sql = sql.replace(/CHECK \(char_length\(password_hash\) = 64\)/g, "CHECK (char_length(password_hash) IN (60, 64))");
 
 const prelude = [
   "-- Generated from the WebForge Supabase production schema.",
@@ -107,13 +95,7 @@ const prelude = [
 ].join("\n");
 sql = prelude + sql;
 
-const forbidden = [
-  "vault.",
-  "extensions.crypt",
-  "extensions.gen_salt",
-  "extensions.digest",
-  vaultName,
-];
+const forbidden = ["vault.", "extensions.crypt", "extensions.gen_salt", "extensions.digest", vaultName];
 const leftovers = forbidden.filter((needle) => sql.includes(needle));
 if (leftovers.length) {
   console.error(`Neon schema still contains Supabase-only references: ${leftovers.join(", ")}`);
