@@ -46,9 +46,10 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 function errorResponse(error: unknown): Response {
   const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-
   if (message.includes("rate_limited")) return jsonResponse({ ok: false, error: "rate_limited" }, 429);
-  if (message.includes("unauthorized")) return jsonResponse({ ok: false, error: "unauthorized" }, 401);
+  if (message.includes("unauthorized") || message.includes("invalid_portal_token")) {
+    return jsonResponse({ ok: false, error: "unauthorized" }, 401);
+  }
   if (
     message.includes("invalid_") ||
     message.includes("not_found") ||
@@ -57,7 +58,6 @@ function errorResponse(error: unknown): Response {
   ) {
     return jsonResponse({ ok: false, error: "invalid_request" }, 400);
   }
-
   console.error("WEBFORGE_NEON_BACKEND_FAILED", error);
   return jsonResponse({ ok: false, error: "backend_failed" }, 500);
 }
@@ -79,17 +79,9 @@ async function writeAuditLog(name: string, args: Record<string, unknown>): Promi
     const metadata = { keys: Object.keys(args), status: args.p_status ?? null };
     await sql`
       insert into public.admin_audit_log(action, entity_type, entity_id, actor, metadata)
-      values (
-        ${name},
-        ${entityType(name)},
-        ${idEntry ? String(idEntry[1]) : null},
-        'admin',
-        ${JSON.stringify(metadata)}::jsonb
-      )
+      values (${name}, ${entityType(name)}, ${idEntry ? String(idEntry[1]) : null}, 'admin', ${JSON.stringify(metadata)}::jsonb)
     `;
   } catch (error) {
-    // Match the old Edge Function behavior: an audit write must not turn a
-    // successful business operation into a failed request.
     console.error("WEBFORGE_NEON_AUDIT_LOG_FAILED", error);
   }
 }
@@ -126,14 +118,34 @@ async function leadSubmit(body: Record<string, unknown>): Promise<Response> {
     const clientIp = typeof body.clientIp === "string" ? body.clientIp : null;
     const sql = getNeonSql();
     const rows = await sql`
-      select public.internal_submit_lead(
-        ${company},
-        ${email},
-        ${website},
-        ${clientIp}::inet
-      ) as id
+      select public.internal_submit_lead(${company}, ${email}, ${website}, ${clientIp}::inet) as id
     `;
     return jsonResponse({ ok: true, id: Number(rows[0]?.id) }, 201);
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+async function portalGateway(body: Record<string, unknown>): Promise<Response> {
+  const action = typeof body.action === "string" ? body.action : "";
+  const token = typeof body.token === "string" ? body.token : "";
+  if (token.length < 40 || token.length > 128) return jsonResponse({ ok: false, error: "invalid_portal_token" }, 401);
+
+  try {
+    const sql = getNeonSql();
+    if (action === "get") {
+      const rows = await sql`select public.portal_get_project(${token}) as project`;
+      return jsonResponse({ ok: true, project: rows[0]?.project ?? null });
+    }
+    if (action === "submit") {
+      const kind = typeof body.kind === "string" ? body.kind : "";
+      const label = typeof body.label === "string" ? body.label : "";
+      const content = typeof body.content === "string" ? body.content : "";
+      if (kind !== "text" && kind !== "link") return jsonResponse({ ok: false, error: "invalid_submission" }, 400);
+      const rows = await sql`select public.portal_submit(${token}, ${kind}, ${label}, ${content}) as id`;
+      return jsonResponse({ ok: true, id: rows[0]?.id ?? null }, 201);
+    }
+    return jsonResponse({ ok: false, error: "invalid_action" }, 400);
   } catch (error) {
     return errorResponse(error);
   }
@@ -148,7 +160,6 @@ async function adminGateway(body: Record<string, unknown>): Promise<Response> {
       : {};
 
   if (!ADMIN_FUNCTIONS.has(name)) return jsonResponse({ ok: false, error: "invalid_request" }, 400);
-
   const entries = Object.entries(args);
   for (const [key] of entries) {
     if (!/^p_[a-z0-9_]+$/.test(key)) return jsonResponse({ ok: false, error: "invalid_request" }, 400);
@@ -158,13 +169,11 @@ async function adminGateway(body: Record<string, unknown>): Promise<Response> {
     const sql = getNeonSql();
     const values = [credential, ...entries.map(([, value]) => value)];
     const named = ["p_password => $1", ...entries.map(([key], index) => `${key} => $${index + 2}`)].join(", ");
-
     if (TABLE_FUNCTIONS.has(name)) {
       const rows = await sql.query(`select * from public.${name}(${named})`, values);
       await writeAuditLog(name, args);
       return jsonResponse(rows);
     }
-
     const rows = await sql.query(`select public.${name}(${named}) as result`, values);
     await writeAuditLog(name, args);
     return jsonResponse(rows[0]?.result ?? null);
@@ -181,6 +190,8 @@ export async function neonBackendFunctionFetch(name: string, body: Record<string
       return adminLogout(body);
     case "lead-submit":
       return leadSubmit(body);
+    case "portal-gateway":
+      return portalGateway(body);
     case "admin-gateway":
       return adminGateway(body);
     default:
