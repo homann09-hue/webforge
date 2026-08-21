@@ -1,4 +1,4 @@
-import { backendFunctionFetch, backendFunctionUrl } from "@/lib/backend-transport";
+import { backendFunctionFetch } from "@/lib/backend-transport";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type PortalTask = {
@@ -61,4 +61,4 @@ export async function rotatePortalToken(session: string, projectId: number) {
 export async function disablePortal(session: string, projectId: number) {
   await adminRpc("admin_disable_project_portal", session, { p_project_id: projectId });
 }
-export const portalUploadUrl = backendFunctionUrl("portal-upload");
+export const portalUploadUrl = "/api/portal/upload";
