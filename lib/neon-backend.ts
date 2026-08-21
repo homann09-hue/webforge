@@ -40,7 +40,7 @@ const TABLE_FUNCTIONS = new Set(["admin_list_leads", "admin_project_tasks"]);
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
@@ -60,6 +60,38 @@ function errorResponse(error: unknown): Response {
 
   console.error("WEBFORGE_NEON_BACKEND_FAILED", error);
   return jsonResponse({ ok: false, error: "backend_failed" }, 500);
+}
+
+function entityType(name: string): string {
+  if (name.includes("lead")) return "lead";
+  if (name.includes("offer")) return "offer";
+  if (name.includes("project")) return "project";
+  if (name.includes("invoice") || name.includes("payment")) return "billing";
+  if (name.includes("subscription")) return "subscription";
+  if (name.includes("submission")) return "submission";
+  return "admin";
+}
+
+async function writeAuditLog(name: string, args: Record<string, unknown>): Promise<void> {
+  try {
+    const sql = getNeonSql();
+    const idEntry = Object.entries(args).find(([key, value]) => key.endsWith("_id") && value != null);
+    const metadata = { keys: Object.keys(args), status: args.p_status ?? null };
+    await sql`
+      insert into public.admin_audit_log(action, entity_type, entity_id, actor, metadata)
+      values (
+        ${name},
+        ${entityType(name)},
+        ${idEntry ? String(idEntry[1]) : null},
+        'admin',
+        ${JSON.stringify(metadata)}::jsonb
+      )
+    `;
+  } catch (error) {
+    // Match the old Edge Function behavior: an audit write must not turn a
+    // successful business operation into a failed request.
+    console.error("WEBFORGE_NEON_AUDIT_LOG_FAILED", error);
+  }
 }
 
 async function adminLogin(body: Record<string, unknown>): Promise<Response> {
@@ -110,9 +142,10 @@ async function leadSubmit(body: Record<string, unknown>): Promise<Response> {
 async function adminGateway(body: Record<string, unknown>): Promise<Response> {
   const credential = typeof body.password === "string" ? body.password : "";
   const name = typeof body.function === "string" ? body.function : "";
-  const args = body.args && typeof body.args === "object" && !Array.isArray(body.args)
-    ? (body.args as Record<string, unknown>)
-    : {};
+  const args =
+    body.args && typeof body.args === "object" && !Array.isArray(body.args)
+      ? (body.args as Record<string, unknown>)
+      : {};
 
   if (!ADMIN_FUNCTIONS.has(name)) return jsonResponse({ ok: false, error: "invalid_request" }, 400);
 
@@ -128,10 +161,12 @@ async function adminGateway(body: Record<string, unknown>): Promise<Response> {
 
     if (TABLE_FUNCTIONS.has(name)) {
       const rows = await sql.query(`select * from public.${name}(${named})`, values);
+      await writeAuditLog(name, args);
       return jsonResponse(rows);
     }
 
     const rows = await sql.query(`select public.${name}(${named}) as result`, values);
+    await writeAuditLog(name, args);
     return jsonResponse(rows[0]?.result ?? null);
   } catch (error) {
     return errorResponse(error);
