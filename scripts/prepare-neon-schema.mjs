@@ -21,13 +21,23 @@ sql = sql.replaceAll("'public', 'extensions', 'pg_temp'", "'public', 'pg_temp'")
 sql = sql.replaceAll("'public', 'private', 'extensions', 'pg_temp'", "'public', 'private', 'pg_temp'");
 sql = sql.replaceAll("'public', 'extensions'", "'public'");
 
-// Supabase Vault is not part of Neon. The Stripe webhook will read its signing
-// secret from Vercel environment variables, so this compatibility function is
-// intentionally omitted from the Neon schema.
-sql = sql.replace(
-  /CREATE OR REPLACE FUNCTION public\.internal_get_stripe_webhook_secret\(\)[\s\S]*?\$function\$;\s*/,
-  "",
-);
+// Supabase Vault is not part of Neon. Remove the entire pg_dump function block,
+// including any following ALTER FUNCTION owner statement. We intentionally use
+// the next pg_dump section marker as the boundary instead of relying on the
+// function dollar-quote tag/semicolon layout, which varies by pg_dump version.
+const vaultStart = sql.indexOf("CREATE OR REPLACE FUNCTION public.internal_get_stripe_webhook_secret()");
+if (vaultStart !== -1) {
+  const nextSection = sql.indexOf("\n--\n-- Name:", vaultStart + 1);
+  if (nextSection !== -1) {
+    sql = sql.slice(0, vaultStart) + sql.slice(nextSection);
+  } else {
+    // Fallback for dumps without pg_dump section comments.
+    sql = sql.replace(
+      /CREATE OR REPLACE FUNCTION public\.internal_get_stripe_webhook_secret\(\)[\s\S]*?(?=CREATE OR REPLACE FUNCTION|$)/,
+      "",
+    );
+  }
+}
 
 // The live database still carries the legacy SHA-256-only length constraint,
 // while the current password code supports bcrypt (60 chars) and legacy
@@ -50,7 +60,13 @@ sql = prelude + sql;
 fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, sql);
 
-const forbidden = ["vault.", "extensions.crypt", "extensions.gen_salt", "extensions.digest"];
+const forbidden = [
+  "vault.",
+  "extensions.crypt",
+  "extensions.gen_salt",
+  "extensions.digest",
+  "internal_get_stripe_webhook_secret",
+];
 const leftovers = forbidden.filter((needle) => sql.includes(needle));
 if (leftovers.length) {
   console.error(`Neon schema still contains Supabase-only references: ${leftovers.join(", ")}`);
@@ -58,6 +74,11 @@ if (leftovers.length) {
 }
 
 const functionCount = (sql.match(/CREATE OR REPLACE FUNCTION/g) || []).length;
+if (functionCount !== 46) {
+  console.error(`Unexpected Neon function count: ${functionCount} (expected 46)`);
+  process.exit(3);
+}
+
 console.log(`Wrote ${output}`);
 console.log(`Functions retained: ${functionCount}`);
 console.log("Supabase Vault function removed: yes");
