@@ -39,6 +39,10 @@ export async function setSubmissionReview(
 }
 
 export async function getSubmissionFileUrl(session: string, submissionId: number): Promise<string> {
+  if (process.env.WEBFORGE_BACKEND === "neon") {
+    return `/api/admin/submissions/file/${submissionId}`;
+  }
+
   const response = await backendFunctionFetch(
     "admin-portal-file-url",
     { password: session, submissionId },
