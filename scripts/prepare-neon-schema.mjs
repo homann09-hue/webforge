@@ -85,6 +85,15 @@ const setRolePattern = new RegExp(
 );
 sql = sql.replace(setRolePattern, "");
 
+// Supabase policies may explicitly target anon/authenticated. Those roles do not
+// exist in Neon, and WebForge's Neon connection is server-only, so remove those
+// policy statements instead of recreating Supabase's Data API authorization model.
+const policyRolePattern = new RegExp(
+  `CREATE POLICY[\\s\\S]*?\\bTO\\s+(?:${roleAlternation})\\b[\\s\\S]*?;\\s*`,
+  "gi",
+);
+sql = sql.replace(policyRolePattern, "");
+
 sql = sql.replace(
   /CHECK \(char_length\(password_hash\) = 64\)/g,
   "CHECK (char_length(password_hash) IN (60, 64))",
@@ -112,11 +121,11 @@ if (leftovers.length) {
 }
 
 const missingRoleResidue = new RegExp(
-  `(?:OWNER TO|(?:GRANT|REVOKE)\\b.*(?:TO|FROM)|ALTER DEFAULT PRIVILEGES FOR ROLE|SET ROLE|SET SESSION AUTHORIZATION)\\s+(?:${roleAlternation})\\b`,
+  `(?:OWNER TO|(?:GRANT|REVOKE)\\b.*(?:TO|FROM)|ALTER DEFAULT PRIVILEGES FOR ROLE|SET ROLE|SET SESSION AUTHORIZATION|CREATE POLICY[\\s\\S]*?\\bTO)\\s+(?:${roleAlternation})\\b`,
   "i",
 );
 if (missingRoleResidue.test(sql)) {
-  console.error("Neon schema still contains Supabase role ownership/ACL statements");
+  console.error("Neon schema still contains Supabase role ownership/ACL/policy statements");
   process.exit(4);
 }
 
@@ -132,4 +141,4 @@ fs.writeFileSync(output, sql);
 console.log(`Wrote ${output}`);
 console.log(`Functions retained: ${functionCount}`);
 console.log("Supabase Vault function removed: yes");
-console.log("Supabase ownership/ACL statements removed: yes");
+console.log("Supabase ownership/ACL/policy statements removed: yes");
