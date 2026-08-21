@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 type Cleanup = () => void;
@@ -108,5 +109,10 @@ export default function DemoMotion() {
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
 
-  return null;
+  return (
+    <aside className="demo-showcase-bar" aria-label="WebForge Demo Navigation">
+      <Link href="/">← WebForge</Link>
+      <span><i /> Live Demo</span>
+    </aside>
+  );
 }
