@@ -3,7 +3,7 @@ import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
 
 const NEON_FUNCTIONS = new Set(["admin-login", "admin-logout", "lead-submit", "admin-gateway"]);
 
-function useNeonBackend(name: string): boolean {
+function shouldUseNeonBackend(name: string): boolean {
   return process.env.WEBFORGE_BACKEND === "neon" && NEON_FUNCTIONS.has(name);
 }
 
@@ -18,7 +18,7 @@ export async function backendFunctionFetch(
   body: Record<string, unknown>,
   init: Omit<RequestInit, "method" | "headers" | "body"> = {},
 ): Promise<Response> {
-  if (useNeonBackend(name)) {
+  if (shouldUseNeonBackend(name)) {
     return neonBackendFunctionFetch(name, body);
   }
 
