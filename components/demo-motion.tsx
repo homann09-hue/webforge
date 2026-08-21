@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import styles from "./demo-showcase-bar.module.css";
 
 type Cleanup = () => void;
 
@@ -110,7 +111,7 @@ export default function DemoMotion() {
   }, []);
 
   return (
-    <aside className="demo-showcase-bar" aria-label="WebForge Demo Navigation">
+    <aside className={styles.bar} aria-label="WebForge Demo Navigation">
       <Link href="/">← WebForge</Link>
       <span><i /> Live Demo</span>
     </aside>
