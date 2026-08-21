@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "security:smoke": "node scripts/security-smoke.mjs",
     "source:smoke": "node scripts/source-smoke.mjs",
+    "neon:smoke": "node scripts/neon-smoke.mjs",
     "verify": "npm run format:check && npm run security:smoke && npm run source:smoke && npm run lint && npm run test && npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -22,6 +23,7 @@
     "test:browser:setup": "npm i --no-save playwright @axe-core/playwright && npx playwright install chromium"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "next": "15.5.21",
     "react": "19.1.1",
     "react-dom": "19.1.1"
