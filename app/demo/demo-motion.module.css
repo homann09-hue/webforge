@@ -1,0 +1,537 @@
+.motionScope {
+  --demo-scroll: 0;
+  --demo-mx: 50vw;
+  --demo-my: 30vh;
+  --demo-tilt-x: 0deg;
+  --demo-tilt-y: 0deg;
+  position: relative;
+  overflow: clip;
+}
+
+.motionScope::before {
+  content: "";
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  z-index: 999;
+  pointer-events: none;
+  transform: scaleX(var(--demo-scroll));
+  transform-origin: left;
+  background: linear-gradient(90deg, #d9ff43, #77e8ff, #b28cff);
+  box-shadow: 0 0 16px rgba(217, 255, 67, 0.25);
+}
+
+.motionScope::after {
+  content: "";
+  position: fixed;
+  width: 460px;
+  height: 460px;
+  left: var(--demo-mx);
+  top: var(--demo-my);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.32;
+  filter: blur(22px);
+  background: radial-gradient(circle, rgba(217, 255, 67, 0.13), rgba(119, 232, 255, 0.045) 38%, transparent 70%);
+  transition: opacity 0.25s ease;
+}
+
+.motionScope :global(.demo) {
+  --card-x: 50%;
+  --card-y: 50%;
+  position: relative;
+  isolation: isolate;
+}
+
+.motionScope :global(.demo-nav) {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease, backdrop-filter 0.28s ease;
+}
+
+.motionScope :global(.demo[data-scrolled="true"] .demo-nav) {
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.08);
+}
+
+.motionScope :global(.craft-demo[data-scrolled="true"] .demo-nav) {
+  background: rgba(243, 241, 234, 0.86);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.motionScope :global(.gastro-demo[data-scrolled="true"] .demo-nav) {
+  background: rgba(255, 248, 241, 0.9);
+  border-bottom: 1px solid rgba(180, 78, 42, 0.12);
+}
+
+.motionScope :global(.flower-demo[data-scrolled="true"] .demo-nav) {
+  background: rgba(248, 244, 239, 0.9);
+  border-bottom: 1px solid rgba(92, 89, 76, 0.09);
+}
+
+.motionScope :global(.demo-logo span),
+.motionScope :global(.demo-pill),
+.motionScope :global(.demo-primary),
+.motionScope :global(.flower-primary),
+.motionScope :global(.flower-cta),
+.motionScope :global(.cart-button) {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.motionScope :global(.demo-logo:hover span) {
+  transform: rotate(-7deg) scale(1.06);
+}
+
+.motionScope :global(.demo-pill:hover),
+.motionScope :global(.demo-primary:hover),
+.motionScope :global(.flower-primary:hover),
+.motionScope :global(.flower-cta:hover),
+.motionScope :global(.cart-button:hover) {
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+}
+
+.motionScope :global(.craft-hero > div:first-child),
+.motionScope :global(.gastro-hero > div:first-child),
+.motionScope :global(.flower-hero > div:first-child) {
+  animation: demoHeroCopy 0.85s cubic-bezier(.2,.75,.25,1) both;
+}
+
+.motionScope :global(.craft-visual),
+.motionScope :global(.pizza-stage),
+.motionScope :global(.flower-visual) {
+  transform: perspective(1200px) rotateX(var(--demo-tilt-y)) rotateY(var(--demo-tilt-x));
+  transform-style: preserve-3d;
+  transition: transform 0.22s ease-out, box-shadow 0.3s ease;
+  will-change: transform;
+  animation: demoHeroVisual 0.95s 0.08s cubic-bezier(.2,.75,.25,1) both;
+}
+
+.motionScope :global(.craft-visual:hover),
+.motionScope :global(.pizza-stage:hover),
+.motionScope :global(.flower-visual:hover) {
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.18);
+}
+
+.motionScope :global([data-demo-reveal="pending"]) {
+  opacity: 0;
+  transform: translateY(34px) scale(0.988);
+}
+
+.motionScope :global([data-demo-reveal="visible"]) {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.75s cubic-bezier(.2,.75,.25,1), transform 0.75s cubic-bezier(.2,.75,.25,1);
+}
+
+.motionScope :global(.craft-service-grid article),
+.motionScope :global(.project-card),
+.motionScope :global(.process-grid article),
+.motionScope :global(.food-grid article),
+.motionScope :global(.info-grid article),
+.motionScope :global(.bouquet-grid article),
+.motionScope :global(.occasion-grid article) {
+  --card-rx: 0deg;
+  --card-ry: 0deg;
+  position: relative;
+  transform: perspective(1000px) rotateX(var(--card-rx)) rotateY(var(--card-ry));
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease-out, box-shadow 0.28s ease, border-color 0.28s ease;
+  animation-delay: var(--demo-delay, 0ms);
+}
+
+.motionScope :global(.craft-service-grid article)::after,
+.motionScope :global(.project-card)::after,
+.motionScope :global(.food-grid article)::after,
+.motionScope :global(.info-grid article)::after,
+.motionScope :global(.bouquet-grid article)::after,
+.motionScope :global(.occasion-grid article)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(circle at var(--card-x) var(--card-y), rgba(255, 255, 255, 0.2), transparent 34%);
+  transition: opacity 0.25s ease;
+}
+
+.motionScope :global(.craft-service-grid article:hover)::after,
+.motionScope :global(.project-card:hover)::after,
+.motionScope :global(.food-grid article:hover)::after,
+.motionScope :global(.info-grid article:hover)::after,
+.motionScope :global(.bouquet-grid article:hover)::after,
+.motionScope :global(.occasion-grid article:hover)::after {
+  opacity: 0.65;
+}
+
+/* Handwerk — industrieller, technischer und räumlicher. */
+.motionScope :global(.craft-visual)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 88%);
+}
+
+.motionScope :global(.craft-visual)::after {
+  content: "";
+  position: absolute;
+  width: 58%;
+  aspect-ratio: 1;
+  right: -18%;
+  top: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,255,67,.2), transparent 66%);
+  filter: blur(18px);
+  animation: craftGlow 6s ease-in-out infinite;
+}
+
+.motionScope :global(.craft-roof) {
+  z-index: 2;
+  transform-origin: 50% 80%;
+  animation: craftRoof 7s ease-in-out infinite;
+  box-shadow: 0 32px 60px rgba(0, 0, 0, 0.28);
+}
+
+.motionScope :global(.floating-card) {
+  z-index: 5;
+  transform: translateZ(45px);
+  animation: demoFloat 5s ease-in-out infinite;
+}
+
+.motionScope :global(.craft-trust > div) {
+  overflow: hidden;
+}
+
+.motionScope :global(.craft-service-grid article:hover) {
+  transform: perspective(1000px) rotateX(var(--card-rx)) rotateY(var(--card-ry)) translateY(-5px);
+  box-shadow: 0 24px 65px rgba(28, 31, 25, 0.12);
+}
+
+.motionScope :global(.project-photo) {
+  position: relative;
+  overflow: hidden;
+  background-size: 140% 140%;
+  animation: projectPan 12s ease-in-out infinite alternate;
+}
+
+.motionScope :global(.project-photo)::before,
+.motionScope :global(.project-photo)::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.motionScope :global(.project-photo)::before {
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0 48%, rgba(255,255,255,.06) 49%, transparent 50% 100%);
+  background-size: 32px 32px;
+}
+
+.motionScope :global(.project-photo)::after {
+  inset: auto 8% 12% 8%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d9ff43, transparent);
+  box-shadow: 0 0 18px rgba(217,255,67,.32);
+}
+
+/* Gastro — schnelle, appetitliche Bewegung, ohne Shop-UX zu stören. */
+.motionScope :global(.pizza-stage) {
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 35px 90px rgba(82,29,16,.18);
+}
+
+.motionScope :global(.pizza-stage)::before,
+.motionScope :global(.pizza-stage)::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.motionScope :global(.pizza-stage)::before {
+  width: 72%;
+  height: 72%;
+  border: 1px solid rgba(255, 186, 113, 0.14);
+  box-shadow: 0 0 0 38px rgba(255,186,113,.025), 0 0 0 76px rgba(255,186,113,.018);
+  animation: gastroOrbit 9s linear infinite;
+}
+
+.motionScope :global(.pizza-stage)::after {
+  width: 220px;
+  height: 220px;
+  right: -50px;
+  top: -40px;
+  background: radial-gradient(circle, rgba(235,82,31,.35), transparent 68%);
+  filter: blur(20px);
+}
+
+.motionScope :global(.pizza-disc) {
+  z-index: 2;
+  transform: translateZ(48px);
+  box-shadow: 0 40px 80px rgba(0,0,0,.26), inset 0 0 0 3px rgba(255,255,255,.07);
+  animation: pizzaFloat 7s ease-in-out infinite;
+}
+
+.motionScope :global(.pizza-note) {
+  z-index: 4;
+  animation: demoFloat 4.7s -1.4s ease-in-out infinite;
+}
+
+.motionScope :global(.gastro-marquee > div) {
+  width: max-content;
+  animation: demoMarquee 28s linear infinite;
+}
+
+.motionScope :global(.food-grid article) {
+  overflow: hidden;
+}
+
+.motionScope :global(.food-grid article:hover) {
+  transform: perspective(1000px) rotateX(var(--card-rx)) rotateY(var(--card-ry)) translateY(-6px);
+  box-shadow: 0 28px 70px rgba(101, 44, 27, 0.13);
+}
+
+.motionScope :global(.food-visual) {
+  overflow: hidden;
+  position: relative;
+  background-size: 125% 125%;
+  transition: transform 0.45s cubic-bezier(.2,.75,.25,1), background-position 0.7s ease;
+}
+
+.motionScope :global(.food-grid article:hover .food-visual) {
+  transform: scale(1.035);
+  background-position: 60% 42%;
+}
+
+.motionScope :global(.food-buy button) {
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.motionScope :global(.food-buy button:hover) {
+  transform: rotate(90deg) scale(1.08);
+  box-shadow: 0 9px 22px rgba(219,60,17,.24);
+}
+
+.motionScope :global(.modal-backdrop) {
+  animation: modalFade .2s ease both;
+}
+
+.motionScope :global(.food-modal),
+.motionScope :global(.checkout-modal) {
+  animation: modalRise .32s cubic-bezier(.2,.75,.25,1) both;
+}
+
+.motionScope :global(.cart-drawer) {
+  animation: drawerIn .34s cubic-bezier(.2,.75,.25,1) both;
+}
+
+/* Blumen — weich, editorial und organisch. */
+.motionScope :global(.flower-visual) {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.motionScope :global(.flower-visual)::before {
+  content: "";
+  position: absolute;
+  inset: 10% 14%;
+  border-radius: 48% 52% 58% 42%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.56), transparent 22%), linear-gradient(135deg, rgba(224,167,179,.5), rgba(133,157,118,.32));
+  filter: blur(28px);
+  animation: flowerMorph 9s ease-in-out infinite alternate;
+}
+
+.motionScope :global(.petal) {
+  z-index: 2;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.motionScope :global(.p-a) { animation: petalA 8s ease-in-out infinite; }
+.motionScope :global(.p-b) { animation: petalB 10s -2s ease-in-out infinite; }
+.motionScope :global(.p-c) { animation: petalC 9s -4s ease-in-out infinite; }
+
+.motionScope :global(.flower-card) {
+  z-index: 5;
+  transform: translateZ(42px);
+  animation: demoFloat 5.4s ease-in-out infinite;
+}
+
+.motionScope :global(.flower-note > div) {
+  position: relative;
+}
+
+.motionScope :global(.bouquet-grid article) {
+  overflow: hidden;
+}
+
+.motionScope :global(.bouquet-grid article:hover) {
+  transform: perspective(1000px) rotateX(var(--card-rx)) rotateY(var(--card-ry)) translateY(-7px);
+  box-shadow: 0 28px 70px rgba(83, 69, 54, 0.12);
+}
+
+.motionScope :global(.bouquet-img) {
+  position: relative;
+  overflow: hidden;
+  background-size: 130% 130%;
+  transition: transform .55s cubic-bezier(.2,.75,.25,1), background-position .65s ease;
+}
+
+.motionScope :global(.bouquet-img)::before {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  border-radius: 44% 56% 47% 53%;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow: 0 0 0 24px rgba(255,255,255,.06);
+  animation: flowerMorph 8s ease-in-out infinite alternate;
+}
+
+.motionScope :global(.bouquet-grid article:hover .bouquet-img) {
+  transform: scale(1.04);
+  background-position: 58% 40%;
+}
+
+.motionScope :global(.occasion-grid article:hover) {
+  transform: perspective(1000px) rotateX(var(--card-rx)) rotateY(var(--card-ry)) translateY(-5px);
+}
+
+.motionScope :global(.atelier-photo) {
+  position: relative;
+  overflow: hidden;
+  background-size: 120% 120%;
+  animation: projectPan 14s ease-in-out infinite alternate;
+}
+
+.motionScope :global(.atelier-photo)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 28%, rgba(255,255,255,.16) 47%, transparent 66%);
+  transform: translateX(-120%);
+  animation: atelierShine 7s 1.4s ease-in-out infinite;
+}
+
+@keyframes demoHeroCopy {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes demoHeroVisual {
+  from { opacity: 0; transform: perspective(1200px) rotateX(4deg) rotateY(-6deg) translateY(24px) scale(.975); }
+  to { opacity: 1; transform: perspective(1200px) rotateX(var(--demo-tilt-y)) rotateY(var(--demo-tilt-x)) translateY(0) scale(1); }
+}
+
+@keyframes demoFloat {
+  0%,100% { transform: translateZ(42px) translateY(0); }
+  50% { transform: translateZ(42px) translateY(-9px); }
+}
+
+@keyframes craftRoof {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.012); }
+}
+
+@keyframes craftGlow {
+  0%,100% { transform: scale(.9); opacity: .55; }
+  50% { transform: scale(1.13); opacity: 1; }
+}
+
+@keyframes projectPan {
+  from { background-position: 35% 45%; }
+  to { background-position: 65% 58%; }
+}
+
+@keyframes gastroOrbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pizzaFloat {
+  0%,100% { transform: translateZ(48px) rotate(-2deg) translateY(0); }
+  50% { transform: translateZ(48px) rotate(2deg) translateY(-10px); }
+}
+
+@keyframes demoMarquee {
+  to { transform: translateX(-50%); }
+}
+
+@keyframes modalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(22px) scale(.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes drawerIn {
+  from { transform: translateX(105%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes flowerMorph {
+  0% { border-radius: 44% 56% 47% 53%; transform: rotate(-4deg) scale(.96); }
+  50% { border-radius: 58% 42% 59% 41%; transform: rotate(5deg) scale(1.04); }
+  100% { border-radius: 48% 52% 41% 59%; transform: rotate(-1deg) scale(1); }
+}
+
+@keyframes petalA {
+  0%,100% { transform: translate3d(0,0,0) rotate(-7deg); }
+  50% { transform: translate3d(12px,-18px,24px) rotate(6deg); }
+}
+
+@keyframes petalB {
+  0%,100% { transform: translate3d(0,0,0) rotate(4deg); }
+  50% { transform: translate3d(-16px,12px,18px) rotate(-7deg); }
+}
+
+@keyframes petalC {
+  0%,100% { transform: translate3d(0,0,0) rotate(-2deg); }
+  50% { transform: translate3d(10px,14px,30px) rotate(8deg); }
+}
+
+@keyframes atelierShine {
+  0%, 65% { transform: translateX(-120%); }
+  84%, 100% { transform: translateX(120%); }
+}
+
+@media (max-width: 900px) {
+  .motionScope::after { display: none; }
+  .motionScope :global(.demo-nav) { position: relative; }
+  .motionScope :global(.craft-visual),
+  .motionScope :global(.pizza-stage),
+  .motionScope :global(.flower-visual) {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionScope *,
+  .motionScope *::before,
+  .motionScope *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+  .motionScope::after { display: none; }
+  .motionScope :global([data-demo-reveal]) { opacity: 1; transform: none; }
+}
