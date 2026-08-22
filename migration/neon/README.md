@@ -35,4 +35,5 @@ Supabase files are retained only as migration and rollback history.
 - browser E2E passes
 - multi-user schema and admin authorization bridge applied to and accepted against the production Neon database
 - first owner account provisioned through the interactive hidden-password script
+- one-time password reset link verified with automatic owner session creation
 - latest `main` deployed and smoke-tested on the commercial production host

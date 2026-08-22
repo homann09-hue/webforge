@@ -20,6 +20,7 @@ for (const [path, label] of [
   ["lib/authorization.ts", "Rollen-/Berechtigungsmodell"],
   ["migration/neon/001_multi_user_auth.sql", "Multi-User Neon-Migration"],
   ["migration/neon/002_multi_user_admin_bridge.sql", "Multi-User Adminbrücke"],
+  ["migration/neon/003_password_reset_links.sql", "Einmal-Passwort-Reset"],
   ["app/api/stripe/webhook/route.ts", "Stripe Webhook Route"],
   ["lib/company.ts", "öffentliche Firmendaten"],
   ["app/impressum/page.tsx", "Impressum"],

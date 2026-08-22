@@ -19,10 +19,13 @@ const required = [
   "lib/money.ts",
   "app/admin/layout.tsx",
   "app/api/admin/session/route.ts",
+  "app/api/admin/password-reset/route.ts",
   "app/api/stripe/webhook/route.ts",
   "migration/neon/001_multi_user_auth.sql",
   "migration/neon/002_multi_user_admin_bridge.sql",
+  "migration/neon/003_password_reset_links.sql",
   "scripts/provision-neon-user.mjs",
+  "scripts/open-password-reset.mjs",
   "next.config.ts",
 ];
 for (const file of required) await access(file);
@@ -169,6 +172,13 @@ for (const invariant of [
 ]) {
   if (!provisionUserScript.includes(invariant)) {
     throw new Error(`Owner provisioning must self-verify securely: ${invariant}`);
+  }
+}
+
+const passwordResetRoute = await readFile("app/api/admin/password-reset/route.ts", "utf8");
+for (const invariant of ["internal_user_complete_password_reset", "setAdminCookie", '"Cache-Control": "no-store"']) {
+  if (!passwordResetRoute.includes(invariant)) {
+    throw new Error(`Password reset route missing invariant: ${invariant}`);
   }
 }
 

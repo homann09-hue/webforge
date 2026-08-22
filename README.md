@@ -151,6 +151,8 @@ node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --c
 node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --confirm
 node scripts/apply-neon-migration.mjs migration/neon/002_multi_user_admin_bridge.sql --check
 node scripts/apply-neon-migration.mjs migration/neon/002_multi_user_admin_bridge.sql --confirm
+node scripts/apply-neon-migration.mjs migration/neon/003_password_reset_links.sql --check
+node scripts/apply-neon-migration.mjs migration/neon/003_password_reset_links.sql --confirm
 ```
 
 Der Read-only-Modus `--check` prüft den Produktionsstand ohne Schemaänderung. Der Schreibmodus `--confirm` führt die
@@ -163,6 +165,14 @@ Shell-History oder Umgebungsdatei:
 
 ```bash
 vercel env run -e production -- npm run neon:user-provision -- --email name@example.de --name "Vorname Nachname" --role owner
+```
+
+Falls eine direkte Passworteingabe nicht zuverlässig funktioniert, öffnet der
+folgende Befehl einen einmaligen, 15 Minuten gültigen Browser-Reset. Nach dem
+Speichern wird die Owner-Sitzung automatisch gesetzt:
+
+```bash
+vercel env run -e production -- npm run neon:password-reset-open -- name@example.de
 ```
 
 ## Kleinunternehmer nach § 19 UStG

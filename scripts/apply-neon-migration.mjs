@@ -57,6 +57,23 @@ async function verifyMultiUserAdminBridge() {
   console.log("Multi-User-Adminbrücke verifiziert.");
 }
 
+async function verifyPasswordResetLinks() {
+  const { rows } = await pool.query(`
+    select to_regclass('private.user_password_resets') is not null as reset_table,
+           pg_get_functiondef(to_regprocedure('public.internal_user_complete_password_reset(text,text)')) as reset_definition
+  `);
+  const definition = rows[0]?.reset_definition || "";
+  if (
+    !rows[0]?.reset_table ||
+    !definition.includes("private.user_password_resets") ||
+    !definition.includes("private.user_sessions") ||
+    !definition.includes("gen_salt('bf', 12)")
+  ) {
+    throw new Error("Einmal-Passwort-Reset ist unvollständig.");
+  }
+  console.log("Einmal-Passwort-Reset verifiziert.");
+}
+
 try {
   if (checkOnly) {
     console.log(`Prüfe Migration ohne Schreibzugriff: ${migration}`);
@@ -74,6 +91,9 @@ try {
   }
   if (migration.endsWith("002_multi_user_admin_bridge.sql")) {
     await verifyMultiUserAdminBridge();
+  }
+  if (migration.endsWith("003_password_reset_links.sql")) {
+    await verifyPasswordResetLinks();
   }
 } catch (error) {
   console.error(
