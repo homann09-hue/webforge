@@ -3,9 +3,15 @@ import { access, readFile } from "node:fs/promises";
 const required = [
   "app/page.tsx",
   "app/demo/[slug]/page.tsx",
+  "app/sites/[slug]/page.tsx",
   "components/demo-handwerk.tsx",
   "components/demo-gastro.tsx",
   "components/demo-blumen.tsx",
+  "components/customer-site.tsx",
+  "lib/site-config.ts",
+  "lib/site-engine.ts",
+  "lib/onboarding.ts",
+  "lib/authorization.ts",
   "lib/admin-rpc.ts",
   "lib/admin-session.ts",
   "lib/admin-client.ts",
@@ -14,16 +20,24 @@ const required = [
   "app/admin/layout.tsx",
   "app/api/admin/session/route.ts",
   "app/api/stripe/webhook/route.ts",
+  "migration/neon/001_multi_user_auth.sql",
   "next.config.ts",
-  "supabase/README.md",
 ];
 for (const file of required) await access(file);
 
 const demoRouter = await readFile("app/demo/[slug]/page.tsx", "utf8");
+if (!demoRouter.includes("siteConfigs.map") || !demoRouter.includes("getSiteConfig")) {
+  throw new Error("Demo router must be driven by the central SiteConfig registry");
+}
+
+const siteConfigSource = await readFile("lib/site-config.ts", "utf8");
 for (const slug of ["handwerk", "gastro", "blumen"]) {
-  if (!new RegExp(`slug\\s*:\\s*["']${slug}["']`).test(demoRouter)) {
-    throw new Error(`Missing demo route: ${slug}`);
+  if (!new RegExp(`\\b${slug}:\\s*{`).test(siteConfigSource)) {
+    throw new Error(`Missing demo SiteConfig: ${slug}`);
   }
+}
+for (const invariant of ["SITE_MODULES", "validateSiteRegistry", "getSiteConfig", "hasSiteModule"]) {
+  if (!siteConfigSource.includes(invariant)) throw new Error(`SiteConfig engine missing invariant: ${invariant}`);
 }
 
 const envExample = await readFile(".env.example", "utf8");
@@ -92,8 +106,6 @@ for (const file of adminRoutes) {
   }
 }
 
-// Stripe webhook now lives in Next.js/Vercel and must verify signatures through
-// the shared constant-time implementation before touching Neon.
 const stripeWebhook = await readFile("app/api/stripe/webhook/route.ts", "utf8");
 for (const invariant of ["verifyStripeSignature", "STRIPE_WEBHOOK_SECRET", "stripe_webhook_events"]) {
   if (!stripeWebhook.includes(invariant)) throw new Error(`Stripe webhook missing invariant: ${invariant}`);
@@ -126,7 +138,17 @@ if (!stripeModule.includes("timingSafeEqual")) {
   throw new Error("lib/stripe-signature.ts: signature comparison must stay constant time");
 }
 
-console.log("Source smoke: routes, secret placeholders and auth invariants verified.");
+const onboardingModule = await readFile("lib/onboarding.ts", "utf8");
+for (const invariant of ["canStartBuild", "canLaunch", "launch-approved", "offer-accepted"]) {
+  if (!onboardingModule.includes(invariant)) throw new Error(`Onboarding workflow missing invariant: ${invariant}`);
+}
+
+const authorizationModule = await readFile("lib/authorization.ts", "utf8");
+for (const role of ["owner", "admin", "staff", "customer"]) {
+  if (!authorizationModule.includes(`"${role}"`)) throw new Error(`Authorization role missing: ${role}`);
+}
+
+console.log("Source smoke: routes, site engine, onboarding, secrets and auth invariants verified.");
 
 for (const file of [
   "scripts/csp-check.mjs",
