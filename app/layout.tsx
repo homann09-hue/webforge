@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./a11y-overrides.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://webforge-virid.vercel.app";
 
