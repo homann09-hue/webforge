@@ -95,7 +95,8 @@ async function processEvent(event: { id: string; type: string; data: { object: R
     if (stripeSubId) {
       const stripeStatus = typeof object.status === "string" ? object.status : "";
       const status =
-        event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(stripeStatus)
+        event.type === "customer.subscription.deleted" ||
+        ["canceled", "unpaid", "incomplete_expired"].includes(stripeStatus)
           ? "cancelled"
           : ["past_due", "incomplete"].includes(stripeStatus)
             ? "past_due"
