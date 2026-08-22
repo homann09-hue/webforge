@@ -1,5 +1,4 @@
-/* Accessibility color corrections verified by the browser axe gate.
- * Kept separate from the design modules so the fixes are easy to audit. */
+/* Accessibility color and interaction corrections verified by browser gates. */
 
 /* Main-page realistic showcase: small metadata on white cards. */
 [class*="showcase-lab_realisticInfo"] small,
@@ -16,9 +15,21 @@
 [class*="home-experience_demoSection"] [class*="home-experience_visualUi"] small {
   color: #555d65 !important;
 }
-/* The contact section uses the bright accent as its background. */
 [class*="home-experience_contact"] [class*="home-experience_eyebrow"] {
   color: #26310f !important;
+}
+
+/* WCAG 2.5.8: links and controls used by the public showcase keep a minimum
+   24px hit target without changing their visual design. */
+[data-home] a,
+[class*="demo-experience_"] a {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+[data-home] input {
+  min-width: 24px;
+  min-height: 24px;
 }
 
 /* Handwerk: darker muted copy on the warm light surface, lighter copy in dark sections. */
@@ -59,7 +70,6 @@
   opacity: 1 !important;
   color: #ffffff !important;
 }
-/* Contact section uses the orange accent as its background. */
 [class*="demo-experience_gastro"] [class*="demo-experience_contact"] [class*="demo-experience_kicker"],
 [class*="demo-experience_gastro"] [class*="demo-experience_contactGrid"] > div > p {
   color: #ffffff !important;
@@ -69,8 +79,6 @@
 [class*="demo-experience_flower"] [class*="darkSection"] {
   --muted: #c4b2bb !important;
 }
-/* The generic tool is white even when placed inside a dark section, so its
-   textual half needs the theme's dark ink instead of inherited white. */
 [class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] {
   color: #281c24 !important;
 }
@@ -79,4 +87,9 @@
 }
 [class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] p {
   color: #67535f !important;
+}
+[class*="demo-experience_swatch"]:focus-visible {
+  outline: 3px solid #111111 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px #ffffff !important;
 }
