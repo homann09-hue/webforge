@@ -19,20 +19,23 @@ export async function checkNeonConnection(): Promise<{
   adminConfig: number;
 }> {
   const sql = getNeonSql();
-  const rows = await sql`
+  const result = await sql`
     select
       current_database()::text as database,
       (select count(*)::int from public.leads) as leads,
       (select count(*)::int from public.admin_config) as admin_config
   `;
 
-  const row = rows[0] as { database: string; leads: number; admin_config: number } | undefined;
+  const row =
+    Array.isArray(result) && result.length > 0 && result[0] && typeof result[0] === "object"
+      ? (result[0] as Record<string, unknown>)
+      : undefined;
   if (!row) throw new Error("Neon health query returned no rows");
 
   return {
     ok: true,
-    database: row.database,
-    leads: Number(row.leads),
-    adminConfig: Number(row.admin_config),
+    database: String(row.database ?? ""),
+    leads: Number(row.leads ?? 0),
+    adminConfig: Number(row.admin_config ?? 0),
   };
 }
