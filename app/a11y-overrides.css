@@ -7,23 +7,53 @@
   color: #5b636c !important;
 }
 
+/* Main-page light demo section: all small supporting copy must clear AA. */
+[class*="home-experience_demoSection"] [class*="home-experience_eyebrow"],
+[class*="home-experience_demoSection"] [class*="home-experience_sectionHead"] p {
+  color: #5e666e !important;
+}
+[class*="home-experience_demoSection"] [class*="home-experience_demoMeta"],
+[class*="home-experience_demoSection"] [class*="home-experience_visualUi"] small {
+  color: #555d65 !important;
+}
+
 /* Handwerk: darker muted copy on the warm light surface, lighter copy in dark sections. */
 [class*="demo-experience_craft"] {
   --muted: #595f56 !important;
 }
 [class*="demo-experience_craft"] [class*="darkSection"] {
-  --muted: #b4bbb0 !important;
+  --muted: #bfc7bc !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_card"] {
+  background: #1a1f1a !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_card"] small,
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_cardNumber"] {
+  color: #cbd2c7 !important;
 }
 
-/* Gastro: white CTAs need a darker orange; dark sections need light secondary copy. */
+/* Gastro: white CTAs need a darker orange; active-state metadata must not be translucent. */
 [class*="demo-experience_gastro"] {
   --accent: #d93618 !important;
 }
 [class*="demo-experience_gastro"] [class*="darkSection"] {
   --muted: #c2afa6 !important;
 }
+[class*="demo-experience_gastro"] [data-active="true"] small {
+  opacity: 1 !important;
+  color: #ffffff !important;
+}
 
 /* Floristik: secondary text on dark sections must stay readable. */
 [class*="demo-experience_flower"] [class*="darkSection"] {
   --muted: #c4b2bb !important;
+}
+/* The generic tool is white even when placed inside a dark section, so its
+   textual half needs the theme's dark ink instead of inherited white. */
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] {
+  color: #281c24 !important;
+}
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] [class*="demo-experience_kicker"] {
+  color: #281c24 !important;
 }
