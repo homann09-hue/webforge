@@ -1,4 +1,3 @@
-import { backendFunctionFetch } from "@/lib/backend-transport";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type SubmissionReviewStatus = "new" | "reviewed" | "incorporated";
@@ -38,23 +37,6 @@ export async function setSubmissionReview(
   });
 }
 
-export async function getSubmissionFileUrl(session: string, submissionId: number): Promise<string> {
-  if (process.env.WEBFORGE_BACKEND === "neon") {
-    return `/api/admin/submissions/file/${submissionId}`;
-  }
-
-  const response = await backendFunctionFetch(
-    "admin-portal-file-url",
-    { password: session, submissionId },
-    { cache: "no-store" },
-  );
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data?.ok || !data?.url) {
-    if (response.status === 401 || response.status === 403) throw new Error("UNAUTHORIZED");
-    if (response.status === 429) throw new Error("RATE_LIMITED");
-    if (response.status === 404) throw new Error("FILE_NOT_FOUND");
-    if (response.status === 400) throw new Error("INVALID_REQUEST");
-    throw new Error("FILE_URL_FAILED");
-  }
-  return String(data.url);
+export async function getSubmissionFileUrl(_session: string, submissionId: number): Promise<string> {
+  return `/api/admin/submissions/file/${submissionId}`;
 }
