@@ -25,7 +25,8 @@ WebForge ist ein Website- und Kundenprojekt-System für kleine und mittelständi
 - zentrale Customer Site Engine
 - deterministische Kunden-Onboarding-Gates
 - Rollen-/Berechtigungsmodell für `owner`, `admin`, `staff`, `customer`
-- additive Neon-Migration für Multi-User-Accounts und Sessions
+- Multi-User-Accounts, sichere Sitzungen und Admin-Autorisierungsbrücke in Production
+- erstes aktives Owner-Konto sicher provisioniert
 - vollständiger automatisierter Geschäftsflow-Test:
   - Lead
   - Angebot
@@ -46,11 +47,10 @@ WebForge ist ein Website- und Kundenprojekt-System für kleine und mittelständi
 
 1. **Kommerziell zulässiges Hosting sicherstellen.**
    Vercels Hobby-Plan darf nach den aktuellen Vercel-Nutzungsbedingungen nur persönlich bzw. nicht-kommerziell genutzt werden. Vor bezahltem WebForge-Betrieb ist daher mindestens ein für kommerzielle Nutzung zulässiger Vercel-Tarif (z. B. Pro) oder ein anderes geeignetes Hosting-Setup erforderlich.
-2. **Multi-User-Adminbrücke kontrolliert auf Neon anwenden und ersten Owner anlegen.**
-   Das Basisschema ist in Production aktiv; bis zur vollständigen Abnahme bleibt der bestehende Shared-Admin-Login als Fallback erhalten.
-3. **Neuesten `main`-Stand in Production deployen und Smoke-Test durchführen.**
-4. **Rechtstexte vor dem echten Marktstart fachlich/juristisch prüfen lassen.**
-5. **Ersten echten Referenzkunden ausliefern.**
+2. **Stripe-Serverzugang für interne Abo-Checkouts hinterlegen.**
+   `STRIPE_SECRET_KEY` muss sicher in der Vercel-Production-Umgebung gesetzt und der interne Checkout anschließend getestet werden. Die öffentlichen Stripe-Zahlungslinks sind davon unabhängig.
+3. **Rechtstexte vor dem echten Marktstart fachlich/juristisch prüfen lassen.**
+4. **Ersten echten Referenzkunden ausliefern.**
 
 ## Architektur
 
