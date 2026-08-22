@@ -1,170 +1,237 @@
 # WebForge
 
-Verkaufbares Website-System für lokale Unternehmen.
+WebForge ist ein verkaufbares Website- und Kundenprojekt-System für kleine und mittelständische Unternehmen.
 
-## Ziel
+Das Produkt kombiniert eine eigene Vertriebsseite mit CRM, Angeboten, Projekten, Kundenportal, Datei-Uploads, Rechnungen und einer wiederverwendbaren Customer Site Engine. Ziel ist nicht, jede Kundenwebsite neu zu programmieren, sondern Branchen-Defaults, Module, Theme und Kundendaten zentral zu konfigurieren.
 
-WebForge kombiniert eine eigene Vertriebsseite mit einem Verwaltungssystem für
-Kundenprojekte. Kundenwebsites sollen später primär über Konfiguration, Inhalte
-und Branchenmodule individualisiert werden, statt jedes Projekt neu zu
-entwickeln.
+## Produktpositionierung
+
+**Websites, die mehr können.**
+
+WebForge baut moderne Websites und ergänzt sie bei Bedarf um praktische Geschäftsfunktionen wie:
+
+- Anfrageformulare und Lead-Erfassung
+- Kostenrechner und Konfiguratoren
+- Speisekarte, Warenkorb und Bestellstatus
+- Kundenbereiche und Projektstatus
+- Datei-Uploads
+- Angebote, Rechnungen und Zahlungen
+- Termin- und Workflow-Module
 
 ## Aktueller Stand
 
-**Fertig:**
+### Fertig
 
-- Vertriebsseite mit Paketen (Starter / Business / Pro) und Lead-Formular
-- Drei vollständige Branchen-Demos: Handwerk, Lieferdienst, Blumenladen
-- CRM: Leads, Status, Notizen, Archiv, kommerzielle Daten
+- Vertriebsseite mit Paketen und Lead-Formular
+- drei vollständige Branchen-Demos: Handwerk, Lieferdienst, Blumenladen
+- realistische, als KI-generiert gekennzeichnete Demo-Bilder
+- CRM für Leads, Status, Notizen und kommerzielle Daten
 - Angebote mit Positionen, Rabatt, MwSt. und Druckansicht
-- Projekte mit Onboarding-Checkliste und Aufgaben
+- Projekte mit Onboarding-Feldern und Aufgaben
 - Kundenportal mit rotierbaren Token-Links und Datei-Upload
 - Rechnungen mit Positionen, Zahlungen und Salden
-- Abos mit wiederkehrenden Rechnungen, Stripe Checkout und Webhook
+- Billing-/Abo-Datenmodell und Stripe-Signaturprüfung
+- Neon PostgreSQL als Produktionsdatenbank
+- Vercel Blob für private Portal-Dateien
+- Vercel für App/Hosting
+- serverseitige Admin-Sessions mit httpOnly-Cookie und serverseitigem Widerruf
+- Audit-Logging und Login-Rate-Limit
+- CSP-/Security-Härtung
+- zentrale, typisierte Customer Site Engine in `lib/site-config.ts` und `lib/site-engine.ts`
+- deterministische Kunden-Onboarding-Gates in `lib/onboarding.ts`
 
-**Noch offen:**
+### Noch offen vor skalierbarem Verkauf
 
-- Das Template-/Konfigurationssystem für Kundenseiten. `lib/site-config.ts` ist
-  bislang nur eine Namensliste; die Demos sind fest verdrahtete Komponenten.
-- Echte Benutzerkonten. Der Admin-Bereich hat ein einziges geteiltes Passwort
-  und keine Rollen. Ein Audit-Log gibt es (`admin_audit_log`, geschrieben von
-  `admin-gateway`), es unterscheidet aber keine Personen.
-- Die plpgsql-Funktionsrümpfe fehlen noch im Repo — ein `supabase db pull`
-  holt sie. Siehe [`supabase/README.md`](supabase/README.md).
+- echte Firmendaten in `lib/company.ts` und final geprüfte Rechtstexte
+- Multi-User-Accounts und Rollen statt eines geteilten Admin-Passworts
+- bestehende Demos schrittweise vollständig auf datengetriebene Module umstellen; die Site Engine ist die neue Grundlage
+- vollständiger Produktions-Abnahmelauf für Lead → Angebot → Projekt → Portal → Rechnung
+- erster echter Referenzkunde
+- finaler Production-Deploy des jeweils neuesten `main`, falls Vercel-Limits einen Git-Deploy verzögern
 
-## Technik
+## Architektur
 
-Next.js 15 (App Router) · React 19 · TypeScript · Supabase (Postgres, Edge
-Functions, Storage) · Stripe · Vercel
+```text
+Browser
+  ↓
+Next.js 15 App Router / Route Handler
+  ↓
+Serverseitige Validierung + Admin-/Portal-Authentifizierung
+  ↓
+Neon PostgreSQL
 
-Datenfluss: Browser → Next Route Handler (Validierung) → Supabase Edge Function
-(Authentifizierung) → Postgres RPC. Der Stripe-Webhook ist selbst eine Edge
-Function und wird von Stripe direkt aufgerufen — die Next.js-Anwendung braucht
-deshalb keinen Service-Role-Key.
+Private Dateien
+Browser → geschützte Next.js Route → Vercel Blob
+```
+
+### Stack
+
+- Next.js 15.5
+- React 19
+- TypeScript
+- Neon PostgreSQL
+- `@neondatabase/serverless`
+- Vercel
+- Vercel Blob
+- Vitest
+
+Legacy-Supabase-Material kann im Repository noch als Migrations-/Rollback-Historie vorhanden sein, ist aber **nicht mehr die aktive Produktionsarchitektur**.
+
+## Customer Site Engine
+
+`lib/site-config.ts` definiert die kanonische SiteConfig:
+
+```text
+SiteConfig
+├── Firma / Branche / Slug
+├── SEO
+├── Kontakt
+├── Theme
+└── Module
+    ├── Leistungen
+    ├── Referenzen
+    ├── Kostenrechner
+    ├── Speisekarte
+    ├── Warenkorb
+    ├── Bestellstatus
+    ├── Sortiment
+    ├── Konfigurator
+    ├── Kundenportal
+    ├── Datei-Upload
+    └── Terminbuchung
+```
+
+`lib/site-engine.ts` liefert Branchen-Defaults und erzeugt daraus neue Kundenkonfigurationen. Ein neuer Kunde soll dadurch primär über Daten und Module konfiguriert werden, nicht über eine neu geschriebene Seite.
+
+## Kunden-Onboarding
+
+Der kanonische Ablauf ist in `lib/onboarding.ts` definiert:
+
+```text
+Anfrage qualifiziert
+→ Angebot angenommen
+→ Startzahlung bestätigt
+→ Firmendaten vorhanden
+→ Inhalte vorhanden
+→ rechtliche Kundendaten vorhanden
+→ Website konfiguriert
+→ Kundenprüfung
+→ Livegang freigegeben
+→ Live
+```
+
+Ein Projekt darf nicht allein aufgrund eines manuellen Statuswechsels als start- oder launchbereit gelten. Die Onboarding-Gates sind testbar und bilden die Grundlage für weitere Admin-Automation.
 
 ## Lokal starten
 
 ```bash
 npm install
-cp .env.example .env.local   # Werte eintragen; ohne Stripe-Keys laufen alle
-                             # Nicht-Zahlungsfunktionen normal
+cp .env.example .env.local
 npm run dev
 ```
 
-## Vor dem Deployment
+Für die Neon-Funktionen wird `DATABASE_URL` benötigt. Nicht-Zahlungsfunktionen können ohne Stripe-Schlüssel entwickelt werden.
+
+## Verifikation
+
+Vor jedem Merge bzw. Production-Deploy:
 
 ```bash
 npm run verify
 ```
 
-Führt der Reihe nach aus: Formatprüfung → Secret-Scan → Struktur-Smoke-Test →
-ESLint → Tests → Build. Genau das läuft auch in CI.
+`verify` führt aus:
 
-Weitere Skripte:
+1. Prettier-Check
+2. Secret-Scan
+3. Source-Smoke-Test
+4. ESLint
+5. Vitest
+6. Next.js Production-Build
 
-| Befehl                   | Zweck                             |
-| ------------------------ | --------------------------------- |
-| `npm run format`         | Prettier über das ganze Repo      |
-| `npm run test`           | Vitest einmalig                   |
-| `npm run security:smoke` | sucht committete Secrets          |
-| `npm run source:smoke`   | prüft Routen und Auth-Invarianten |
-
-## Bevor die Seite verkauft
-
-`lib/company.ts` enthält Platzhalter (`TODO`). Solange diese nicht gefüllt sind:
-
-- zeigen Impressum und Datenschutz einen Warnhinweis,
-- ersetzt die Preissektion die Stripe-Checkout-Links durch Links zum
-  Kontaktformular.
-
-Das ist Absicht: Zahlungen auf einer Seite ohne vollständiges Impressum nach
-§ 5 DDG sind in Deutschland abmahnfähig. Nach dem Ausfüllen schalten sich die
-Links automatisch frei. Die Rechtstexte sind ein fundierter Entwurf und
-ersetzen keine Rechtsberatung — vor dem Livegang prüfen lassen.
-
-## Authentifizierung
-
-Der Admin-Bereich tauscht das geteilte Passwort serverseitig gegen ein
-kurzlebiges Session-Token, das in einem httpOnly-Cookie liegt
-(`SameSite=Strict`, `Secure` in Produktion). JavaScript im Browser kommt an das
-Token nicht heran.
-
-Alle `/api/admin/*`-Routen lesen die Berechtigung ausschließlich aus dem Cookie
-und nie aus dem Request-Body — ein Aufrufer kann also keine mitliefern.
-
-Abmelden widerruft das Token serverseitig, nicht nur im Browser. Das Passwort
-liegt als bcrypt-Hash (Kosten 12), Loginversuche sind auf 20 pro Minute
-begrenzt.
-
-`/admin` und `/portal` bekommen eine Nonce-basierte CSP aus `middleware.ts` —
-dort läuft kein Inline-Skript ohne Nonce. Die statischen Seiten behalten die
-CSP aus `next.config.ts`, weil sich eine Nonce nicht in eine vorgerenderte
-Seite backen lässt.
+Zusätzliche Browser-Gates:
 
 ```bash
-npm run build && (npm start &) && sleep 5
 npm run test:csp
 npm run test:a11y
+npm run test:e2e
 ```
 
-Einmalige Einrichtung:
+Browser-Abhängigkeiten einmalig:
 
 ```bash
 npm run test:browser:setup
 ```
 
-Ohne diese Werkzeuge überspringen sich die Prüfungen mit einem deutlichen
-Hinweis — lokal mit Exit-Code 0, **unter `CI=true` mit einem Fehlschlag**, damit
-eine kaputte Installation nicht wie ein bestandener Lauf aussieht. Sie sind
-nicht Teil von `npm run verify` (das braucht keinen Browser), laufen aber in CI
-in einem eigenen Job.
+## Security
 
-## Admin-Bereich testen
+- Admin-Passwort wird nicht im Browser gespeichert
+- Server tauscht Login gegen kurzlebiges Session-Token
+- Token liegt in einem `httpOnly`, `SameSite=Strict` Cookie
+- Logout widerruft die Session serverseitig
+- Admin-Routen akzeptieren keine Session aus dem Request-Body
+- Login ist rate-limited
+- private Dateien werden nur nach Admin-/Portal-Prüfung ausgeliefert
+- Stripe-Signaturen werden vor Verarbeitung geprüft
+- CSP schützt Admin und Portal zusätzlich
+- Secret-Scan prüft nur Git-getrackte Dateien
 
-```bash
-npm run test:e2e
+## Rechtliches Verkaufs-Gate
+
+`lib/company.ts` enthält absichtlich öffentliche Firmendaten. Solange Pflichtfelder dort `TODO` sind, gilt der Verkauf als nicht freigegeben und Checkout-Links bleiben gesperrt.
+
+Vor öffentlichem Verkauf müssen mindestens korrekt eingetragen und geprüft sein:
+
+- rechtlicher Unternehmensname
+- vertretungsberechtigte Person
+- ladungsfähige Anschrift
+- E-Mail und Telefon
+- ggf. USt-ID / Registerdaten
+- Impressum
+- Datenschutzerklärung
+- Vertrags-/Leistungsbedingungen passend zum tatsächlichen Geschäftsmodell
+
+Die im Projekt enthaltenen Rechtstexte sind technische Vorlagen und ersetzen keine Rechtsberatung.
+
+## Deployment
+
+Production läuft über Vercel. Datenbank und Storage werden nicht bei jedem Deployment neu erstellt.
+
+Empfohlener Flow:
+
+```text
+Feature Branch
+→ genau ein Preview-Deploy
+→ Verify + Browser-Gates
+→ PR
+→ Merge nach main
+→ genau ein Production-Deploy
+→ Smoke-Test
 ```
 
-Startet ein Mock der Supabase Edge Functions, baut die App dagegen, fährt sie
-hoch und spielt den kompletten Ablauf durch: Login mit falschem und richtigem
-Passwort, Leads laden, Status ändern, Preiseingabe in deutscher Schreibweise,
-Abmelden. Danach räumt es sich selbst auf.
+Viele unnötige Commits/Deploys sind zu vermeiden, da Vercel-Tarife Deployment-Limits haben können.
 
-Der Mock ist absichtlich **strenger als die Produktion**: `admin-gateway`
-akzeptiert dort auch ein Klartextpasswort, der Mock nicht. Fällt die App je auf
-das alte Verhalten zurück, schlagen die Tests fehl statt still durchzulaufen.
+## Marktreife-Definition
 
-## Barrierefreiheit
+WebForge ist für öffentliche Skalierung erst dann freigegeben, wenn diese Gates grün sind:
 
-Vertriebsseite, Demos, Admin und Portal erfüllen WCAG 2.1 AA, gemessen mit
-axe-core plus einem zweiten Skript für das, was Regelmaschinen nicht prüfen
-können: sichtbarer Fokus, Umbruch bei 200 % Zoom, Zielgrößen,
-Überschriftenhierarchie.
+- Legal vollständig
+- neuester `main` erfolgreich in Production
+- `npm run verify` grün
+- Browser-/Accessibility-Gates grün
+- Customer Site Engine für Neukunden nutzbar
+- Kunden-Onboarding deterministisch
+- Multi-User/Rollen für Team-Betrieb
+- vollständiger Auftragstest von Lead bis Rechnung
+- mindestens ein echter Referenzkunde
 
-Das ist kein Kür-Thema: seit dem **Barrierefreiheitsstärkungsgesetz (BFSG,
-28.06.2025)** sind viele elektronische Geschäftsangebote in Deutschland dazu
-verpflichtet. Wer Websites verkauft, sollte die eigene erst recht im Griff
-haben — und kann es als Verkaufsargument nutzen.
+## Aktuelle Priorität
 
-Zwei Einschränkungen: automatisierte Prüfung deckt etwa ein Drittel der
-Kriterien ab, und ein echter Screenreader-Test (NVDA, VoiceOver) ersetzt sie
-nicht. Kleinstunternehmen sind unter Umständen ausgenommen — das ist eine
-Rechtsfrage, keine technische.
+Nicht weitere Demo-Branchen bauen. Priorität ist die Produktisierung:
 
-## Umgebungsvariablen
-
-Siehe `.env.example`. `NEXT_PUBLIC_SUPABASE_URL` und
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` sind optional und fallen auf das
-Produktionsprojekt zurück — setzen Sie sie, um eine Staging-Instanz zu betreiben.
-
-## Nächste Meilensteine
-
-1. Firmendaten in `lib/company.ts` eintragen und Rechtstexte prüfen lassen
-2. `admin-portal-file-url` deployen und Migrationen 002/003 anwenden
-   (`supabase/README.md`)
-3. Stripe-Webhook-Endpunkt auf die Edge Function zeigen lassen
-4. Admin-Login manuell gegen die Live-Instanz testen
-5. `supabase db pull` für die verifizierten Funktionsrümpfe
-6. Echte Benutzerkonten statt geteiltem Passwort
-7. Kunden-Template und zentrale Konfiguration
-8. Gastronomie- und Handwerker-Module
+1. Customer Site Engine vervollständigen
+2. Onboarding und Abnahme automatisieren
+3. Multi-User/Rollen
+4. Legal-Gate schließen
+5. echten Pilotkunden ausliefern
+6. danach laufendes Wartungs-/Hostingmodell skalieren
