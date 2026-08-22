@@ -44,6 +44,16 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+function firstRow(result: unknown): Record<string, unknown> | undefined {
+  return Array.isArray(result) && result.length > 0 && result[0] && typeof result[0] === "object"
+    ? (result[0] as Record<string, unknown>)
+    : undefined;
+}
+
+function rowArray(result: unknown): Record<string, unknown>[] {
+  return Array.isArray(result) ? (result as Record<string, unknown>[]) : [];
+}
+
 function errorResponse(error: unknown): Response {
   const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   if (message.includes("rate_limited")) return jsonResponse({ ok: false, error: "rate_limited" }, 429);
@@ -90,8 +100,8 @@ async function adminLogin(body: Record<string, unknown>): Promise<Response> {
   try {
     const password = typeof body.password === "string" ? body.password : "";
     const sql = getNeonSql();
-    const rows = await sql`select public.internal_admin_create_session(${password}) as token`;
-    const token = rows[0]?.token;
+    const result = await sql`select public.internal_admin_create_session(${password}) as token`;
+    const token = firstRow(result)?.token;
     if (typeof token !== "string") return jsonResponse({ ok: false }, 401);
     return jsonResponse({ ok: true, token, expiresIn: 60 * 60 * 8 });
   } catch (error) {
@@ -117,10 +127,10 @@ async function leadSubmit(body: Record<string, unknown>): Promise<Response> {
     const website = typeof body.website === "string" ? body.website : null;
     const clientIp = typeof body.clientIp === "string" ? body.clientIp : null;
     const sql = getNeonSql();
-    const rows = await sql`
+    const result = await sql`
       select public.internal_submit_lead(${company}, ${email}, ${website}, ${clientIp}::inet) as id
     `;
-    return jsonResponse({ ok: true, id: Number(rows[0]?.id) }, 201);
+    return jsonResponse({ ok: true, id: Number(firstRow(result)?.id) }, 201);
   } catch (error) {
     return errorResponse(error);
   }
@@ -134,16 +144,16 @@ async function portalGateway(body: Record<string, unknown>): Promise<Response> {
   try {
     const sql = getNeonSql();
     if (action === "get") {
-      const rows = await sql`select public.portal_get_project(${token}) as project`;
-      return jsonResponse({ ok: true, project: rows[0]?.project ?? null });
+      const result = await sql`select public.portal_get_project(${token}) as project`;
+      return jsonResponse({ ok: true, project: firstRow(result)?.project ?? null });
     }
     if (action === "submit") {
       const kind = typeof body.kind === "string" ? body.kind : "";
       const label = typeof body.label === "string" ? body.label : "";
       const content = typeof body.content === "string" ? body.content : "";
       if (kind !== "text" && kind !== "link") return jsonResponse({ ok: false, error: "invalid_submission" }, 400);
-      const rows = await sql`select public.portal_submit(${token}, ${kind}, ${label}, ${content}) as id`;
-      return jsonResponse({ ok: true, id: rows[0]?.id ?? null }, 201);
+      const result = await sql`select public.portal_submit(${token}, ${kind}, ${label}, ${content}) as id`;
+      return jsonResponse({ ok: true, id: firstRow(result)?.id ?? null }, 201);
     }
     return jsonResponse({ ok: false, error: "invalid_action" }, 400);
   } catch (error) {
@@ -170,13 +180,13 @@ async function adminGateway(body: Record<string, unknown>): Promise<Response> {
     const values = [credential, ...entries.map(([, value]) => value)];
     const named = ["p_password => $1", ...entries.map(([key], index) => `${key} => $${index + 2}`)].join(", ");
     if (TABLE_FUNCTIONS.has(name)) {
-      const rows = await sql.query(`select * from public.${name}(${named})`, values);
+      const result = await sql.query(`select * from public.${name}(${named})`, values);
       await writeAuditLog(name, args);
-      return jsonResponse(rows);
+      return jsonResponse(rowArray(result));
     }
-    const rows = await sql.query(`select public.${name}(${named}) as result`, values);
+    const result = await sql.query(`select public.${name}(${named}) as result`, values);
     await writeAuditLog(name, args);
-    return jsonResponse(rows[0]?.result ?? null);
+    return jsonResponse(firstRow(result)?.result ?? null);
   } catch (error) {
     return errorResponse(error);
   }
