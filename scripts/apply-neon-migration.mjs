@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import process from "node:process";
-import { neon } from "@neondatabase/serverless";
+import { Pool } from "@neondatabase/serverless";
 
 const migration = process.argv[2];
 const confirmed = process.argv.includes("--confirm");
@@ -27,29 +27,30 @@ if (!source.trim()) {
   process.exit(2);
 }
 
-const sql = neon(databaseUrl);
+const pool = new Pool({ connectionString: databaseUrl });
 
 console.log(`Wende Migration an: ${migration}`);
 try {
-  await sql.query(source);
+  await pool.query(source);
   console.log("Migration erfolgreich ausgeführt.");
+
+  if (migration.endsWith("001_multi_user_auth.sql")) {
+    const { rows } = await pool.query(`
+      select
+        to_regclass('private.admin_users') is not null as admin_users,
+        to_regclass('private.user_sessions') is not null as user_sessions,
+        to_regprocedure('public.internal_user_session_lookup(text)') is not null as session_lookup,
+        to_regprocedure('public.internal_user_create_session(text,text)') is not null as create_session
+    `);
+    const row = rows[0];
+    if (!row || !row.admin_users || !row.user_sessions || !row.session_lookup || !row.create_session) {
+      throw new Error("Multi-User-Verifikation ist unvollständig.");
+    }
+    console.log("Multi-User-Schema verifiziert.");
+  }
 } catch (error) {
   console.error("Migration fehlgeschlagen:", error instanceof Error ? error.message : error);
-  process.exit(1);
-}
-
-if (migration.endsWith("001_multi_user_auth.sql")) {
-  const rows = await sql`
-    select
-      to_regclass('private.admin_users') is not null as admin_users,
-      to_regclass('private.user_sessions') is not null as user_sessions,
-      to_regprocedure('public.internal_user_session_lookup(text)') is not null as session_lookup,
-      to_regprocedure('public.internal_user_create_session(text,text)') is not null as create_session
-  `;
-  const row = Array.isArray(rows) ? rows[0] : null;
-  if (!row || !row.admin_users || !row.user_sessions || !row.session_lookup || !row.create_session) {
-    console.error("Migration lief, aber die Multi-User-Verifikation ist unvollständig.");
-    process.exit(1);
-  }
-  console.log("Multi-User-Schema verifiziert.");
+  process.exitCode = 1;
+} finally {
+  await pool.end();
 }
