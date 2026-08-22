@@ -88,6 +88,7 @@
 [class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] p {
   color: #67535f !important;
 }
+[class*="demo-experience_swatch"]:focus,
 [class*="demo-experience_swatch"]:focus-visible {
   outline: 3px solid #111111 !important;
   outline-offset: 3px !important;
