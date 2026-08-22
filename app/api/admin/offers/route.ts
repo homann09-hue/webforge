@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isBookableLine } from "@/lib/money";
 
 import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
+import { company } from "@/lib/company";
 import { createOffer, deleteOffer, listOffers, updateOfferStatus, type OfferStatus } from "@/lib/offers";
 
 const allowedStatuses: OfferStatus[] = ["draft", "sent", "accepted", "rejected"];
@@ -26,7 +27,8 @@ export async function POST(req: Request) {
       const leadId = Number(body.leadId);
       const title = String(body.title || "").trim();
       const discountPercent = Number(body.discountPercent ?? 0);
-      const taxPercent = Number(body.taxPercent ?? 19);
+      const requestedTaxPercent = Number(body.taxPercent ?? 19);
+      const taxPercent = company.smallBusiness ? 0 : requestedTaxPercent;
       const validUntil = String(body.validUntil || "").trim();
       const notes = String(body.notes || "").trim();
       const rawItems: unknown[] = Array.isArray(body.items) ? body.items : [];
