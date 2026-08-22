@@ -1,0 +1,34 @@
+name: Temporary Privacy Formatter
+
+on:
+  push:
+    branches: [market-readiness-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: market-readiness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write app/datenschutz/page.tsx
+      - name: Commit privacy formatting
+        run: |
+          if git diff --quiet -- app/datenschutz/page.tsx; then
+            echo "No formatting changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- app/datenschutz/page.tsx
+          git commit -m "Format privacy policy"
+          git push origin HEAD:market-readiness-v1
