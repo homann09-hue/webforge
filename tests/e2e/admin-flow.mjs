@@ -84,7 +84,11 @@ const storage = await page.evaluate(() => ({
   session: Object.keys(sessionStorage).length,
   local: Object.keys(localStorage).length,
 }));
-check("Kein Token in sessionStorage/localStorage", storage.session === 0 && storage.local === 0, JSON.stringify(storage));
+check(
+  "Kein Token in sessionStorage/localStorage",
+  storage.session === 0 && storage.local === 0,
+  JSON.stringify(storage),
+);
 
 // 3. Lead data and write path
 const bodyText = (await page.textContent("body")) || "";
@@ -147,7 +151,11 @@ check("Angebot wird angenommen", acceptOffer.status === 200 && acceptOffer.body.
 
 const projectList = await appPost("/api/admin/projects", { action: "list" });
 const project = projectList.body.projects?.find((item) => item.offer_id === offerId);
-check("Angenommenes Angebot erzeugt Projekt", projectList.status === 200 && Boolean(project), project?.project_number || "kein Projekt");
+check(
+  "Angenommenes Angebot erzeugt Projekt",
+  projectList.status === 200 && Boolean(project),
+  project?.project_number || "kein Projekt",
+);
 const projectId = Number(project?.id);
 
 // 5. Onboarding and task gate
@@ -178,7 +186,10 @@ if (projectId > 0) {
   check("Projekt-Checklistenpunkt wird gespeichert", taskSave.status === 200 && Number.isInteger(taskSave.body.id));
 
   const tasks = await appPost("/api/admin/projects", { action: "tasks", projectId });
-  check("Projekt-Checkliste ist lesbar", tasks.status === 200 && tasks.body.tasks?.some((task) => task.title === "Finale Inhalte prüfen"));
+  check(
+    "Projekt-Checkliste ist lesbar",
+    tasks.status === 200 && tasks.body.tasks?.some((task) => task.title === "Finale Inhalte prüfen"),
+  );
 }
 
 // 6. Customer portal
@@ -188,7 +199,10 @@ check("Portal-Link wird erzeugt", rotatePortal.status === 200 && portalToken.sta
 
 if (portalToken) {
   const portal = await appGet(`/api/portal/${portalToken}`);
-  check("Kundenportal ist mit Token erreichbar", portal.status === 200 && portal.body.project?.project_id === projectId);
+  check(
+    "Kundenportal ist mit Token erreichbar",
+    portal.status === 200 && portal.body.project?.project_id === projectId,
+  );
 
   const submission = await appPost(`/api/portal/${portalToken}`, {
     kind: "text",
@@ -220,7 +234,11 @@ check("Rechnung wird offen gestellt", openInvoice.status === 200 && openInvoice.
 const invoiceListBeforePayment = await appPost("/api/admin/invoices", { action: "list" });
 const invoiceBeforePayment = invoiceListBeforePayment.body.invoices?.find((item) => item.id === invoiceId);
 const grossCents = Number(invoiceBeforePayment?.gross_cents);
-check("Rechnung berechnet 19 Prozent MwSt korrekt", grossCents === 148631, `gross=${grossCents}`);
+check(
+  "Kleinunternehmer-Regel erzwingt 0 Prozent Umsatzsteuer",
+  grossCents === 124900 && Number(invoiceBeforePayment?.tax_percent) === 0,
+  `gross=${grossCents}, tax=${invoiceBeforePayment?.tax_percent}`,
+);
 
 const payment = await appPost("/api/admin/invoices", {
   action: "payment",
@@ -250,7 +268,11 @@ if (await logoutButton.count()) {
   await logoutButton.click();
   await page.waitForTimeout(900);
   const after = (await context.cookies()).find((cookie) => cookie.name === "webforge_admin_session")?.value;
-  check("Abmelden loescht das Cookie", !after || after !== before, `vorher=${Boolean(before)}, nachher=${Boolean(after)}`);
+  check(
+    "Abmelden loescht das Cookie",
+    !after || after !== before,
+    `vorher=${Boolean(before)}, nachher=${Boolean(after)}`,
+  );
 
   const state = await mockState();
   const revoked = state.sessions.filter((item) => item.revoked).length;
@@ -268,9 +290,18 @@ check(
   `${finalState.calls.length} Aufrufe geprueft${badCredentials.length ? `, ${badCredentials.length} falsch` : ""}`,
 );
 
-check("Geschaeftsflow hat Angebot", finalState.offers.some((offer) => offer.id === offerId && offer.status === "accepted"));
-check("Geschaeftsflow hat Projekt", finalState.projects.some((item) => item.id === projectId));
-check("Geschaeftsflow hat bezahlte Rechnung", finalState.invoices.some((item) => item.id === invoiceId && item.status === "paid"));
+check(
+  "Geschaeftsflow hat Angebot",
+  finalState.offers.some((offer) => offer.id === offerId && offer.status === "accepted"),
+);
+check(
+  "Geschaeftsflow hat Projekt",
+  finalState.projects.some((item) => item.id === projectId),
+);
+check(
+  "Geschaeftsflow hat bezahlte Rechnung",
+  finalState.invoices.some((item) => item.id === invoiceId && item.status === "paid"),
+);
 
 await browser.close();
 console.log(failures === 0 ? "\nAdmin- und Auftragsflow vollstaendig bestanden." : `\n${failures} Befund(e).`);

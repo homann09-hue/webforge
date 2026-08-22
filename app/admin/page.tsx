@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminLogout, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import { offerPrintHtml, openPrintWindow } from "@/lib/print-template";
+import { company } from "@/lib/company";
 import { sites } from "@/lib/site-config";
 import type { Lead, LeadStatus, ProposalStatus } from "@/lib/leads";
 import type { Offer, OfferStatus } from "@/lib/offers";
@@ -67,7 +68,7 @@ export default function Admin() {
   const [offerLeadId, setOfferLeadId] = useState<number | null>(null);
   const [offerTitle, setOfferTitle] = useState("Website-Paket");
   const [offerDiscount, setOfferDiscount] = useState("0");
-  const [offerTax, setOfferTax] = useState("19");
+  const [offerTax, setOfferTax] = useState(company.smallBusiness ? "0" : "19");
   const [offerValidUntil, setOfferValidUntil] = useState("");
   const [offerNotes, setOfferNotes] = useState("");
   const [offerItems, setOfferItems] = useState<OfferItemDraft[]>([
@@ -269,7 +270,7 @@ export default function Admin() {
         return { description: item.description.trim(), quantity, unit: item.unit.trim() || "Stk.", unitPriceCents };
       });
       const discountPercent = parsePercent(offerDiscount, 0);
-      const taxPercent = parsePercent(offerTax, 19);
+      const taxPercent = parsePercent(offerTax, company.smallBusiness ? 0 : 19);
       if (discountPercent === null || taxPercent === null) {
         throw new Error("Rabatt und Steuersatz müssen zwischen 0 und 100 liegen.");
       }
@@ -285,7 +286,7 @@ export default function Admin() {
       });
       setOfferTitle("Website-Paket");
       setOfferDiscount("0");
-      setOfferTax("19");
+      setOfferTax(company.smallBusiness ? "0" : "19");
       setOfferValidUntil("");
       setOfferNotes("");
       setOfferItems([{ description: "Webdesign & Umsetzung", quantity: "1", unit: "Pauschal", unitPrice: "699" }]);

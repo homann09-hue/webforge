@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/lib/admin-client";
 import { formatMoney, parseAmountToCents, parsePercent, parseQuantity } from "@/lib/money";
 import { invoicePrintHtml, openPrintWindow } from "@/lib/print-template";
+import { company } from "@/lib/company";
 import type { Invoice, InvoiceStatus, InvoiceType, PaymentMethod } from "@/lib/billing";
 import type { Lead } from "@/lib/leads";
 import type { CustomerProject } from "@/lib/projects";
@@ -56,7 +57,7 @@ export default function InvoicesAdmin() {
   const [title, setTitle] = useState("Website-Erstellung");
   const [issueDate, setIssueDate] = useState(today());
   const [dueDate, setDueDate] = useState(addDays(today(), 14));
-  const [taxPercent, setTaxPercent] = useState("19");
+  const [taxPercent, setTaxPercent] = useState(company.smallBusiness ? "0" : "19");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<ItemDraft[]>([newItem()]);
   const [payments, setPayments] = useState<Record<number, PaymentDraft>>({});
@@ -153,7 +154,7 @@ export default function InvoicesAdmin() {
         }
         return { description: item.description.trim(), quantity, unit: item.unit.trim() || "Stk.", unitPriceCents };
       });
-      const tax = parsePercent(taxPercent, 19);
+      const tax = parsePercent(taxPercent, company.smallBusiness ? 0 : 19);
       if (tax === null) throw new Error("Der Steuersatz muss zwischen 0 und 100 liegen.");
       await post("/api/admin/invoices", {
         action: "create",
