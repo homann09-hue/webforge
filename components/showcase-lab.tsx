@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import styles from "./showcase-lab.module.css";
 
 const archetypes = [
@@ -9,21 +9,33 @@ const archetypes = [
     label: "Dienstleister",
     title: "Website für Dienstleistungen",
     accent: "#c8ff4f",
-    copy: "Leistungen · Vertrauen · Anfrage",
+    copy: "Leistungen zeigen, Vertrauen schaffen und Anfragen einfacher machen.",
+    photoClass: styles.photoService,
+    badge: "HANDWERK / DIENSTLEISTUNG",
+    headline: "Zuverlässige Arbeit. Klar erklärt.",
+    meta: "Referenzen · Leistungen · Anfrage",
   },
   {
     id: "commerce",
     label: "Verkauf",
     title: "Website mit Bestellsystem",
     accent: "#ff6b42",
-    copy: "Produkte · Warenkorb · Bestellung",
+    copy: "Produkte zeigen, Auswahl vereinfachen und Bestellungen direkt annehmen.",
+    photoClass: styles.photoCommerce,
+    badge: "GASTRO / VERKAUF",
+    headline: "Direkt bestellen. Ohne Umwege.",
+    meta: "Speisekarte · Warenkorb · Bestellung",
   },
   {
     id: "portal",
     label: "Kundenbereich",
-    title: "Geschützter Kundenbereich",
+    title: "Website mit Kundenbereich",
     accent: "#84a7ff",
-    copy: "Projekte · Dateien · aktueller Stand",
+    copy: "Projekte, Dateien und aktuelle Informationen an einem Ort bereitstellen.",
+    photoClass: styles.photoPortal,
+    badge: "KUNDENBEREICH / SERVICE",
+    headline: "Alles Wichtige für Kunden an einem Ort.",
+    meta: "Projekte · Dateien · aktueller Stand",
   },
 ];
 
@@ -33,7 +45,6 @@ export default function ShowcaseLab() {
   const [automation, setAutomation] = useState(true);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const current = archetypes[type];
-  const score = useMemo(() => 78 + (motion ? 8 : 0) + (automation ? 9 : 0), [motion, automation]);
 
   return (
     <div className={styles.lab} style={{ "--lab-accent": current.accent } as React.CSSProperties}>
@@ -70,11 +81,6 @@ export default function ShowcaseLab() {
             </button>
           </div>
         </div>
-        <div className={styles.score}>
-          <small>BEISPIEL-WERT</small>
-          <strong>{score}</strong>
-          <span>/100</span>
-        </div>
       </div>
 
       <div className={styles.previewWrap} data-device={device} data-motion={motion}>
@@ -88,33 +94,33 @@ export default function ShowcaseLab() {
             </div>
             <b>Anfragen ↗</b>
           </div>
-          <div className={styles.previewHero}>
-            <small>BEISPIEL / {current.label.toUpperCase()}</small>
-            <h3>{current.title}</h3>
-            <p>{current.copy}</p>
-            <button type="button">Mehr ansehen ↗</button>
+
+          <div className={`${styles.realisticHero} ${current.photoClass}`}>
+            <div className={styles.photoShade} />
+            <div className={styles.photoCopy}>
+              <small>{current.badge}</small>
+              <h3>{current.headline}</h3>
+              <p>{current.copy}</p>
+              <button type="button">Mehr ansehen ↗</button>
+            </div>
+            <div className={styles.photoMeta}>{current.meta}</div>
           </div>
-          <div className={styles.previewGrid}>
+
+          <div className={styles.realisticInfo}>
             <article>
-              <small>ABLAUF</small>
-              <b>01 → 04</b>
-              <span>klarer Weg für Kunden</span>
-            </article>
-            <article className={styles.visualCard}>
-              <div className={styles.orb} />
-              <small>{motion ? "BEWEGUNGEN AN" : "OHNE BEWEGUNG"}</small>
+              <small>KUNDENWEG</small>
+              <b>Einfach und verständlich</b>
+              <span>Besucher erkennen schnell, was angeboten wird und was sie als Nächstes tun können.</span>
             </article>
             <article>
-              <small>AUTOMATIK</small>
-              <b>{automation ? "AN" : "AUS"}</b>
-              <span>{automation ? "Abläufe können automatisch weitergehen" : "Schritte werden manuell erledigt"}</span>
+              <small>{automation ? "AUTOMATISCHE ABLÄUFE" : "MANUELLE ABLÄUFE"}</small>
+              <b>{automation ? "Weniger Arbeit im Alltag" : "Klassisch und direkt"}</b>
+              <span>
+                {automation
+                  ? "Anfragen und Informationen können automatisch weitergegeben werden."
+                  : "Alle Schritte können auch ganz normal manuell bearbeitet werden."}
+              </span>
             </article>
-          </div>
-          <div className={styles.ticker}>
-            <span>DESIGN</span>
-            <i /> <span>ANFRAGEN</span>
-            <i /> <span>BESTELLUNGEN</span>
-            <i /> <span>KUNDENBEREICH</span>
           </div>
         </div>
       </div>
