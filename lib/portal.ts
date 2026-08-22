@@ -1,4 +1,4 @@
-import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
+import { backendFunctionFetch } from "@/lib/backend-transport";
 import { adminRpc } from "@/lib/admin-rpc";
 
 export type PortalTask = {
@@ -39,12 +39,7 @@ export type PortalProject = {
   submissions: PortalSubmission[];
 };
 async function portalGateway(body: Record<string, unknown>) {
-  const r = await fetch(edgeFunctionUrl("portal-gateway"), {
-    method: "POST",
-    headers: supabaseHeaders(),
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
+  const r = await backendFunctionFetch("portal-gateway", body, { cache: "no-store" });
   const data = await r.json().catch(() => ({}));
   if (!r.ok || !data?.ok)
     throw new Error(
@@ -66,4 +61,4 @@ export async function rotatePortalToken(session: string, projectId: number) {
 export async function disablePortal(session: string, projectId: number) {
   await adminRpc("admin_disable_project_portal", session, { p_project_id: projectId });
 }
-export const portalUploadUrl = edgeFunctionUrl("portal-upload");
+export const portalUploadUrl = "/api/portal/upload";

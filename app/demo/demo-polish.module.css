@@ -3,7 +3,13 @@
 }
 
 .polishScope :global(.demo) {
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -18,13 +24,13 @@
 
 .polishScope :global(.demo-nav > div) {
   font-size: 12px;
-  letter-spacing: .01em;
+  letter-spacing: 0.01em;
 }
 
 .polishScope :global(.demo-nav > div a) {
   position: relative;
-  opacity: .72;
-  transition: opacity .2s ease;
+  opacity: 0.72;
+  transition: opacity 0.2s ease;
 }
 
 .polishScope :global(.demo-nav > div a:hover) {
@@ -39,8 +45,8 @@
   bottom: -7px;
   height: 1px;
   background: currentColor;
-  opacity: .55;
-  transition: right .22s ease;
+  opacity: 0.55;
+  transition: right 0.22s ease;
 }
 
 .polishScope :global(.demo-nav > div a:hover)::after {
@@ -48,13 +54,13 @@
 }
 
 .polishScope :global(.demo-logo) {
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   font-weight: 900;
 }
 
 .polishScope :global(.demo-logo span) {
   border-radius: 11px;
-  box-shadow: inset 0 1px rgba(255,255,255,.1);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .polishScope :global(.demo-pill),
@@ -66,7 +72,7 @@
   min-height: 44px;
   padding-inline: 18px;
   font-size: 12px;
-  letter-spacing: -.01em;
+  letter-spacing: -0.01em;
 }
 
 .polishScope :global(.demo-section) {
@@ -75,14 +81,14 @@
 
 .polishScope :global(.demo-section-head) {
   gap: 80px;
-  grid-template-columns: 1.28fr .72fr;
+  grid-template-columns: 1.28fr 0.72fr;
 }
 
 .polishScope :global(.demo-section-head h2),
 .polishScope :global(.demo-section > h2) {
   font-size: clamp(48px, 5.6vw, 76px);
-  line-height: .94;
-  letter-spacing: -.064em;
+  line-height: 0.94;
+  letter-spacing: -0.064em;
 }
 
 .polishScope :global(.demo-section-head p) {
@@ -91,17 +97,16 @@
 }
 
 .polishScope :global(.demo-kicker) {
-  letter-spacing: .19em;
+  letter-spacing: 0.19em;
   font-size: 9px;
 }
 
 /* Handwerk: architecture / precision / trust */
 .polishScope :global(.craft-demo) {
-  --paper: #eeeDE7;
+  --paper: #eeede7;
   background:
-    linear-gradient(rgba(17,22,17,.027) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17,22,17,.027) 1px, transparent 1px),
-    #efeee8;
+    linear-gradient(rgba(17, 22, 17, 0.027) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 22, 17, 0.027) 1px, transparent 1px), #efeee8;
   background-size: 48px 48px;
   color: #10130f;
 }
@@ -114,7 +119,7 @@
 
 .polishScope :global(.craft-copy h1) {
   font-size: clamp(66px, 7.8vw, 108px);
-  line-height: .86;
+  line-height: 0.86;
   max-width: 820px;
 }
 
@@ -128,7 +133,7 @@
 }
 
 .polishScope :global(.craft-facts) {
-  border-top: 1px solid rgba(18,23,17,.12);
+  border-top: 1px solid rgba(18, 23, 17, 0.12);
   padding-top: 20px;
   max-width: 620px;
 }
@@ -137,7 +142,7 @@
   height: 600px;
   border-radius: 34px 34px 92px 34px;
   background: linear-gradient(145deg, #151a14, #262e22 58%, #11150f);
-  box-shadow: 0 34px 80px rgba(28,34,25,.2);
+  box-shadow: 0 34px 80px rgba(28, 34, 25, 0.2);
 }
 
 .polishScope :global(.craft-roof) {
@@ -147,8 +152,8 @@
 
 .polishScope :global(.floating-card) {
   min-width: 245px;
-  border: 1px solid rgba(15,20,14,.06);
-  box-shadow: 0 22px 60px rgba(0,0,0,.25);
+  border: 1px solid rgba(15, 20, 14, 0.06);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
 }
 
 .polishScope :global(.craft-trust) {
@@ -167,10 +172,10 @@
 .polishScope :global(.craft-service-grid article) {
   min-height: 310px;
   padding: 32px;
-  border: 1px solid rgba(18,23,17,.07);
+  border: 1px solid rgba(18, 23, 17, 0.07);
   border-radius: 24px;
-  background: rgba(255,255,255,.74);
-  box-shadow: 0 16px 42px rgba(38,42,35,.04);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 16px 42px rgba(38, 42, 35, 0.04);
   backdrop-filter: blur(8px);
 }
 
@@ -188,7 +193,7 @@
 
 .polishScope :global(.craft-service-grid h3) {
   font-size: 30px;
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
 }
 
 .polishScope :global(.craft-projects) {
@@ -201,7 +206,7 @@
 }
 
 .polishScope :global(.project-card) {
-  border: 1px solid rgba(255,255,255,.07);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   background: #171c15;
   border-radius: 26px;
 }
@@ -217,26 +222,25 @@
 
 .polishScope :global(.craft-contact form) {
   border-radius: 26px;
-  box-shadow: 0 34px 90px rgba(0,0,0,.24);
+  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.24);
 }
 
 /* Gastro: editorial food brand / fast commerce */
 .polishScope :global(.gastro-demo) {
   --paper: #fff4e9;
   background:
-    radial-gradient(circle at 86% 8%, rgba(230,74,30,.1), transparent 24%),
-    radial-gradient(circle at 8% 34%, rgba(255,190,111,.12), transparent 21%),
-    #fff6ed;
+    radial-gradient(circle at 86% 8%, rgba(230, 74, 30, 0.1), transparent 24%),
+    radial-gradient(circle at 8% 34%, rgba(255, 190, 111, 0.12), transparent 21%), #fff6ed;
   color: #2a130e;
 }
 
 .polishScope :global(.gastro-nav) {
-  border-bottom-color: rgba(132,58,34,.1);
+  border-bottom-color: rgba(132, 58, 34, 0.1);
 }
 
 .polishScope :global(.gastro-logo span) {
   background: #e64b1e;
-  box-shadow: 0 8px 22px rgba(230,75,30,.24);
+  box-shadow: 0 8px 22px rgba(230, 75, 30, 0.24);
 }
 
 .polishScope :global(.gastro-hero) {
@@ -247,8 +251,8 @@
 
 .polishScope :global(.gastro-hero h1) {
   font-size: clamp(78px, 9.6vw, 132px);
-  line-height: .78;
-  letter-spacing: -.08em;
+  line-height: 0.78;
+  letter-spacing: -0.08em;
 }
 
 .polishScope :global(.gastro-hero h1 em) {
@@ -257,7 +261,7 @@
 
 .polishScope :global(.gastro-primary) {
   background: #e64b1e;
-  box-shadow: 0 12px 30px rgba(230,75,30,.18);
+  box-shadow: 0 12px 30px rgba(230, 75, 30, 0.18);
 }
 
 .polishScope :global(.pizza-stage) {
@@ -279,7 +283,7 @@
 
 .polishScope :global(.gastro-marquee > div) {
   padding-block: 15px;
-  letter-spacing: .13em;
+  letter-spacing: 0.13em;
   font-size: 10px;
 }
 
@@ -289,9 +293,9 @@
 
 .polishScope :global(.food-grid article) {
   border-radius: 24px;
-  border-color: rgba(116,62,43,.1);
-  background: rgba(255,255,255,.72);
-  box-shadow: 0 14px 44px rgba(100,47,30,.05);
+  border-color: rgba(116, 62, 43, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 44px rgba(100, 47, 30, 0.05);
 }
 
 .polishScope :global(.food-visual) {
@@ -304,7 +308,7 @@
 
 .polishScope :global(.food-copy h3) {
   font-size: 25px;
-  letter-spacing: -.035em;
+  letter-spacing: -0.035em;
 }
 
 .polishScope :global(.food-buy button) {
@@ -331,32 +335,31 @@
 
 .polishScope :global(.info-grid article) {
   border-radius: 22px;
-  background: rgba(255,255,255,.7);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .polishScope :global(.cart-drawer) {
-  box-shadow: -40px 0 100px rgba(42,17,10,.18);
+  box-shadow: -40px 0 100px rgba(42, 17, 10, 0.18);
 }
 
 .polishScope :global(.food-modal),
 .polishScope :global(.checkout-modal) {
   border-radius: 28px;
-  box-shadow: 0 35px 100px rgba(48,17,9,.24);
+  box-shadow: 0 35px 100px rgba(48, 17, 9, 0.24);
 }
 
 /* Blumen: editorial / tactile / premium retail */
 .polishScope :global(.flower-demo) {
   --paper: #f7f2ec;
   background:
-    radial-gradient(circle at 90% 7%, rgba(191,139,150,.13), transparent 26%),
-    radial-gradient(circle at 9% 25%, rgba(121,145,104,.1), transparent 22%),
-    #f8f4ef;
+    radial-gradient(circle at 90% 7%, rgba(191, 139, 150, 0.13), transparent 26%),
+    radial-gradient(circle at 9% 25%, rgba(121, 145, 104, 0.1), transparent 22%), #f8f4ef;
   color: #24221e;
 }
 
 .polishScope :global(.flower-logo span) {
   background: #6f8062;
-  box-shadow: 0 8px 24px rgba(92,112,78,.18);
+  box-shadow: 0 8px 24px rgba(92, 112, 78, 0.18);
 }
 
 .polishScope :global(.flower-hero) {
@@ -375,8 +378,8 @@
 
 .polishScope :global(.flower-copy h1) {
   font-size: clamp(68px, 8.2vw, 114px);
-  line-height: .86;
-  letter-spacing: -.065em;
+  line-height: 0.86;
+  letter-spacing: -0.065em;
 }
 
 .polishScope :global(.flower-copy h1 em) {
@@ -387,7 +390,7 @@
   height: 590px;
   border-radius: 48% 52% 28px 28px;
   background: linear-gradient(145deg, #d9c2c4, #abbda1 54%, #718866);
-  box-shadow: 0 34px 90px rgba(87,76,64,.14);
+  box-shadow: 0 34px 90px rgba(87, 76, 64, 0.14);
 }
 
 .polishScope :global(.flower-primary),
@@ -410,10 +413,10 @@
 }
 
 .polishScope :global(.bouquet-grid article) {
-  border: 1px solid rgba(74,69,59,.07);
+  border: 1px solid rgba(74, 69, 59, 0.07);
   border-radius: 26px;
-  background: rgba(255,255,255,.64);
-  box-shadow: 0 14px 42px rgba(74,67,57,.045);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 14px 42px rgba(74, 67, 57, 0.045);
 }
 
 .polishScope :global(.bouquet-img) {
@@ -447,8 +450,8 @@
 
 .polishScope :global(.occasion-grid article) {
   border-radius: 24px;
-  background: rgba(255,255,255,.58);
-  border: 1px solid rgba(77,68,56,.07);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(77, 68, 56, 0.07);
 }
 
 .polishScope :global(.flower-atelier) {
@@ -457,7 +460,7 @@
 
 .polishScope :global(.atelier-photo) {
   border-radius: 32px 32px 100px 32px;
-  box-shadow: 0 32px 80px rgba(78,69,58,.13);
+  box-shadow: 0 32px 80px rgba(78, 69, 58, 0.13);
 }
 
 .polishScope :global(.flower-contact) {
@@ -468,7 +471,7 @@
 
 .polishScope :global(.flower-contact form) {
   border-radius: 26px;
-  box-shadow: 0 34px 90px rgba(35,43,31,.18);
+  box-shadow: 0 34px 90px rgba(35, 43, 31, 0.18);
 }
 
 @media (max-width: 900px) {

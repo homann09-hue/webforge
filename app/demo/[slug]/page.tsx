@@ -46,7 +46,13 @@ export function generateStaticParams() {
 export default async function DemoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const content =
-    slug === "handwerk" ? <DemoHandwerk /> : slug === "gastro" ? <DemoGastro /> : slug === "blumen" ? <DemoBlumen /> : null;
+    slug === "handwerk" ? (
+      <DemoHandwerk />
+    ) : slug === "gastro" ? (
+      <DemoGastro />
+    ) : slug === "blumen" ? (
+      <DemoBlumen />
+    ) : null;
 
   if (!content) notFound();
 

@@ -1,19 +1,22 @@
-import { edgeFunctionUrl, supabaseHeaders } from "@/lib/supabase-env";
+import { backendFunctionFetch } from "@/lib/backend-transport";
 
 /**
- * Calls an admin RPC through the Supabase `admin-gateway` Edge Function.
+ * Calls an admin RPC through the current backend transport.
  *
  * `credential` is the caller's admin session token (see lib/admin-session.ts).
  * It is never read from the request body: route handlers take it from the
  * httpOnly session cookie, so a token cannot be injected by a caller.
+ *
+ * During the Neon migration the transport still targets the Supabase
+ * `admin-gateway`. Keeping that detail behind backend-transport.ts means the
+ * business modules no longer need to know which backend provider is active.
  */
 export async function adminRpc(name: string, credential: string, args: Record<string, unknown> = {}) {
-  const response = await fetch(edgeFunctionUrl("admin-gateway"), {
-    method: "POST",
-    headers: supabaseHeaders(),
-    body: JSON.stringify({ password: credential, function: name, args }),
-    cache: "no-store",
-  });
+  const response = await backendFunctionFetch(
+    "admin-gateway",
+    { password: credential, function: name, args },
+    { cache: "no-store" },
+  );
 
   if (!response.ok) {
     const detail = await response.text();
