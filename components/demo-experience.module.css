@@ -1,7 +1,5 @@
-:root {
-  --demo-radius: 28px;
-}
 .demo {
+  --demo-radius: 28px;
   --ink: #0b0d10;
   --muted: #67707b;
   --line: rgba(10, 14, 18, 0.12);
@@ -105,7 +103,6 @@
 .footer strong { color: var(--ink); font-size: 16px; }
 .footerLinks { display: flex; gap: 18px; }
 
-/* Craft */
 .craft { --paper: #f2f0e8; --ink: #10120f; --muted: #6b7067; --accent: #d7ff52; }
 .craftStage { background: radial-gradient(circle at 68% 26%, #93a26d 0 9%, transparent 10%), linear-gradient(145deg,#46513a,#151b14 74%); }
 .roofShape { position: absolute; inset: 14% -16% -18% 13%; background: repeating-linear-gradient(120deg, rgba(255,255,255,.04) 0 18px, rgba(0,0,0,.08) 18px 36px), linear-gradient(150deg,#87916f,#2e3628); clip-path: polygon(50% 0,100% 43%,84% 100%,7% 100%,0 45%); filter: drop-shadow(0 28px 30px rgba(0,0,0,.35)); }
@@ -113,7 +110,6 @@
 .projectVisual { min-height: 300px; border-radius: 22px; margin-bottom: 20px; background: linear-gradient(155deg,#d8d0bd,#747e67 55%,#273026); position: relative; overflow:hidden; }
 .projectVisual::after { content:""; position:absolute; left:12%; right:12%; bottom:-2%; height:62%; background:#252c23; clip-path:polygon(50% 0,100% 50%,88% 100%,9% 100%,0 50%); }
 
-/* Gastro */
 .gastro { --paper: #f7efe5; --ink: #211611; --muted: #7b665d; --accent: #ff4a25; }
 .gastro .solidButton { color: white; }
 .gastroStage { background: radial-gradient(circle at 50% 47%, #f7b559 0 8%, #e9662c 9% 16%, #f0c96f 17% 29%, #8f2c1d 30% 33%, transparent 34%), radial-gradient(circle at 50% 50%, #6c1d12 0 33%, #240e09 34% 100%); }
@@ -154,7 +150,6 @@
 .kitchenStep small { display:block; opacity:.7; }
 .kitchenStep b { display:block; margin-top:14px; font-size:18px; }
 
-/* Flower */
 .flower { --paper: #f7f0f3; --ink: #281c24; --muted: #7c6874; --accent: #d8ff64; }
 .flowerStage { background:radial-gradient(circle at 35% 35%,#ff9db8 0 11%,transparent 12%),radial-gradient(circle at 62% 28%,#ffc04d 0 9%,transparent 10%),radial-gradient(circle at 60% 60%,#b771a8 0 13%,transparent 14%),radial-gradient(circle at 38% 68%,#ff6c80 0 12%,transparent 13%),linear-gradient(145deg,#72576b,#2c1e29); }
 .flowerStage::before { content:""; position:absolute; inset:9%; border:1px solid rgba(255,255,255,.25); border-radius:48% 52% 42% 58%; transform:rotate(12deg); }
