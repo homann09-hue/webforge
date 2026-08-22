@@ -16,6 +16,10 @@
 [class*="home-experience_demoSection"] [class*="home-experience_visualUi"] small {
   color: #555d65 !important;
 }
+/* The contact section uses the bright accent as its background. */
+[class*="home-experience_contact"] [class*="home-experience_eyebrow"] {
+  color: #26310f !important;
+}
 
 /* Handwerk: darker muted copy on the warm light surface, lighter copy in dark sections. */
 [class*="demo-experience_craft"] {
@@ -33,14 +37,25 @@
   color: #cbd2c7 !important;
 }
 
-/* Gastro: white CTAs need a darker orange; active-state metadata must not be translucent. */
+/* Gastro: white CTAs need a darker orange. Inactive kitchen cards are light,
+   so they need dark text even when the whole block sits inside a dark section. */
 [class*="demo-experience_gastro"] {
   --accent: #d93618 !important;
 }
 [class*="demo-experience_gastro"] [class*="darkSection"] {
   --muted: #c2afa6 !important;
 }
-[class*="demo-experience_gastro"] [data-active="true"] small {
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"] {
+  color: #211611 !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"] small {
+  opacity: 1 !important;
+  color: #5f514a !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"][data-active="true"] {
+  color: #ffffff !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"][data-active="true"] small {
   opacity: 1 !important;
   color: #ffffff !important;
 }
@@ -56,4 +71,7 @@
 }
 [class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] [class*="demo-experience_kicker"] {
   color: #281c24 !important;
+}
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] p {
+  color: #67535f !important;
 }
