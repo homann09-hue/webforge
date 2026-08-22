@@ -18,7 +18,7 @@ async function e2eBackendFunctionFetch(
   body: Record<string, unknown>,
   init: Omit<RequestInit, "method" | "headers" | "body">,
 ): Promise<Response> {
-  const target = new URL(`/functions/v1/${name}`, baseUrl);
+  const target = new URL(`/backend/${name}`, baseUrl);
   return fetch(target, {
     ...init,
     method: "POST",
