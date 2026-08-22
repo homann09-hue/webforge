@@ -146,10 +146,13 @@ migration/neon/001_multi_user_auth.sql
 Kontrollierter Migrationsrunner:
 
 ```bash
+node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --check
 node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --confirm
 ```
 
-Der Runner verlangt `DATABASE_URL_UNPOOLED` oder `DATABASE_URL` und verifiziert das Multi-User-Schema nach der Ausführung.
+Der Read-only-Modus `--check` prüft den Produktionsstand ohne Schemaänderung. Der Schreibmodus `--confirm` führt die
+additive Migration aus und verifiziert das Multi-User-Schema anschließend. Beide Modi verlangen
+`DATABASE_URL_UNPOOLED` oder `DATABASE_URL`.
 
 ## Kleinunternehmer nach § 19 UStG
 
