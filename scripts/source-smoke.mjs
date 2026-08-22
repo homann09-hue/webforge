@@ -32,6 +32,27 @@ for (const name of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
   if (!line || line !== `${name}=`) throw new Error(`${name} must remain blank in .env.example`);
 }
 
+const noSupabaseRuntimeFiles = [
+  ".env.example",
+  "next.config.ts",
+  "lib/backend-transport.ts",
+  "lib/submissions.ts",
+  "app/api/portal/upload/route.ts",
+];
+const forbiddenSupabaseRuntimePatterns = [
+  /supabase-env/,
+  /NEXT_PUBLIC_SUPABASE/,
+  /WEBFORGE_BACKEND/,
+  /supabase\.co/,
+  /functions\/v1/,
+];
+for (const file of noSupabaseRuntimeFiles) {
+  const source = await readFile(file, "utf8");
+  for (const pattern of forbiddenSupabaseRuntimePatterns) {
+    if (pattern.test(source)) throw new Error(`${file}: obsolete Supabase runtime dependency detected (${pattern})`);
+  }
+}
+
 const adminPages = [
   "app/admin/page.tsx",
   "app/admin/invoices/page.tsx",
