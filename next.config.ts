@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-
 const isDev = process.env.NODE_ENV === "development";
 
 /**
@@ -17,7 +15,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${supabaseOrigin}`,
+  "connect-src 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
