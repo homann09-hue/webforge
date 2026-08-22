@@ -100,9 +100,9 @@ export default function Datenschutz() {
       <h2>5. Zahlungsabwicklung</h2>
       <p>
         Für die Abwicklung von Zahlungen können wir Stripe einsetzen (Stripe Payments Europe Ltd., 1 Grand Canal Street
-        Lower, Grand Canal Dock, Dublin, Irland). Wenn Sie einen Zahlungsvorgang starten, werden die dafür erforderlichen
-        Daten an Stripe übermittelt und dort im Rahmen der Zahlungsabwicklung verarbeitet. Vollständige Zahlungsdaten wie
-        Kartennummern erhalten wir nicht.
+        Lower, Grand Canal Dock, Dublin, Irland). Wenn Sie einen Zahlungsvorgang starten, werden die dafür
+        erforderlichen Daten an Stripe übermittelt und dort im Rahmen der Zahlungsabwicklung verarbeitet. Vollständige
+        Zahlungsdaten wie Kartennummern erhalten wir nicht.
       </p>
       <p>
         Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Weitere Informationen finden Sie in der Datenschutzerklärung von
@@ -110,7 +110,9 @@ export default function Datenschutz() {
       </p>
 
       <h2>6. Eingesetzte technische Dienstleister</h2>
-      <p>Zur Bereitstellung dieser Website und der zugehörigen Systeme setzen wir insbesondere folgende Anbieter ein:</p>
+      <p>
+        Zur Bereitstellung dieser Website und der zugehörigen Systeme setzen wir insbesondere folgende Anbieter ein:
+      </p>
       <ul>
         <li>
           <strong>Vercel Inc.</strong> (USA) — Hosting, Auslieferung der Website, serverseitige Funktionen und
@@ -121,7 +123,8 @@ export default function Datenschutz() {
           Rechnungsdaten.
         </li>
         <li>
-          <strong>Stripe Payments Europe Ltd.</strong> (Dublin, Irland) — optionale Zahlungsabwicklung, siehe Abschnitt 5.
+          <strong>Stripe Payments Europe Ltd.</strong> (Dublin, Irland) — optionale Zahlungsabwicklung, siehe Abschnitt
+          5.
         </li>
       </ul>
       <p>
