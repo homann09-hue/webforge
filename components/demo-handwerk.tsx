@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import styles from "./demo-experience.module.css";
 
@@ -11,10 +12,19 @@ const services = [
 ];
 
 const projects = [
-  ["Hildesheim", "Einfamilienhaus", "180 m²", "Komplette Dachsanierung"],
-  ["Sarstedt", "Moderner Anbau", "86 m²", "Flachdach mit Entwässerung"],
-  ["Alfeld", "Sturmschaden", "24h", "Sicherung und Reparatur"],
+  ["Hildesheim", "Einfamilienhaus", "180 m²", "Komplette Dachsanierung", "50% 0%"],
+  ["Sarstedt", "Moderner Anbau", "86 m²", "Dachdetails und Eindeckung", "100% 50%"],
+  ["Alfeld", "Sturmschaden", "24h", "Sicherung und Reparatur", "100% 0%"],
 ];
+
+function photo(position: string): CSSProperties {
+  return {
+    backgroundImage: "url('/demo/ai-demo-sprite.webp')",
+    backgroundSize: "300% 300%",
+    backgroundPosition: position,
+    backgroundRepeat: "no-repeat",
+  };
+}
 
 export default function DemoHandwerk() {
   const [area, setArea] = useState(140);
@@ -67,12 +77,11 @@ export default function DemoHandwerk() {
             <div className={styles.fact}><b>48h</b><span>Rückmeldung</span></div>
           </div>
         </div>
-        <div className={`${styles.stage} ${styles.craftStage}`}>
+        <div className={styles.stage} style={photo("100% 0%") }>
           <div className={styles.stageTop}>
             <span>NORDWERK / AKTUELLES PROJEKT</span>
             <span className={styles.live}><i />Baustelle aktiv</span>
           </div>
-          <div className={styles.roofShape} />
           <div className={styles.craftBadge}>MEISTER<br />BETRIEB<br />18+ JAHRE</div>
           <div className={styles.stageCard}>
             <div><small>AKTUELLES PROJEKT</small><b>Komplettsanierung · Bad Salzdetfurth</b></div>
@@ -109,13 +118,17 @@ export default function DemoHandwerk() {
             <small>/ 02 REFERENZEN</small>
             <div>
               <h2>Sehen, was bereits gemacht wurde.</h2>
-              <p>Beispiele helfen Kunden schneller einzuschätzen, ob der Betrieb zu ihrem eigenen Projekt passt.</p>
+              <p>Realistische Beispielbilder zeigen sofort, wie Referenzen auf einer Kundenseite wirken können.</p>
             </div>
           </div>
           <div className={styles.grid3}>
-            {projects.map(([place, type, size, label], index) => (
+            {projects.map(([place, type, size, label, position]) => (
               <article className={styles.card} key={place}>
-                <div className={styles.projectVisual} style={{ filter: `hue-rotate(${index * 12}deg)` }} />
+                <div
+                  style={{ ...photo(position), minHeight: 300, borderRadius: 22, marginBottom: 20, backgroundColor: "#222" }}
+                  role="img"
+                  aria-label={`${type} – KI-generiertes Beispielbild`}
+                />
                 <small>{label}</small>
                 <h3>{type}</h3>
                 <p>{place} · {size}</p>
@@ -156,23 +169,17 @@ export default function DemoHandwerk() {
               <div className={styles.field}>
                 <label htmlFor="hw-roof">Dachform</label>
                 <select id="hw-roof" value={roof} onChange={(event) => setRoof(event.target.value)}>
-                  <option>Satteldach</option>
-                  <option>Walmdach</option>
-                  <option>Flachdach</option>
+                  <option>Satteldach</option><option>Walmdach</option><option>Flachdach</option>
                 </select>
               </div>
               <div className={styles.field}>
                 <label htmlFor="hw-scope">Welche Arbeit ist geplant?</label>
                 <select id="hw-scope" value={scope} onChange={(event) => setScope(event.target.value)}>
-                  <option>Komplettsanierung</option>
-                  <option>Neueindeckung</option>
-                  <option>Reparatur</option>
+                  <option>Komplettsanierung</option><option>Neueindeckung</option><option>Reparatur</option>
                 </select>
               </div>
               <div className={styles.result}>
-                <small>GROBE PREISSPANNE</small>
-                <b>{estimate}</b>
-                <p>Nur eine Demo-Schätzung. Ein genauer Preis ist erst nach Besichtigung möglich.</p>
+                <small>GROBE PREISSPANNE</small><b>{estimate}</b><p>Nur eine Demo-Schätzung. Ein genauer Preis ist erst nach Besichtigung möglich.</p>
               </div>
             </div>
           </div>
@@ -181,30 +188,21 @@ export default function DemoHandwerk() {
 
       <section className={styles.section} id="ablauf">
         <div className={styles.shell}>
-          <div className={styles.sectionHead}>
-            <small>/ 04 SO LÄUFT ES AB</small>
-            <div><h2>Vier einfache Schritte bis zum fertigen Dach.</h2></div>
-          </div>
+          <div className={styles.sectionHead}><small>/ 04 SO LÄUFT ES AB</small><div><h2>Vier einfache Schritte bis zum fertigen Dach.</h2></div></div>
           <div className={styles.timeline}>
             {[
               ["01", "Termin vor Ort", "Wir schauen uns das Dach an, nehmen Maße auf und besprechen Ihre Wünsche."],
               ["02", "Klares Angebot", "Sie bekommen eine verständliche Aufstellung der Arbeiten und Kosten."],
               ["03", "Umsetzung", "Während der Arbeiten sehen Sie Fortschritt, Fotos und wichtige Informationen zum Projekt."],
               ["04", "Abnahme", "Zum Schluss prüfen wir alles gemeinsam und dokumentieren den fertigen Stand."],
-            ].map(([n, title, text]) => (
-              <article key={n}><b>{n}</b><h3>{title}</h3><p>{text}</p></article>
-            ))}
+            ].map(([n, title, text]) => <article key={n}><b>{n}</b><h3>{title}</h3><p>{text}</p></article>)}
           </div>
         </div>
       </section>
 
       <section className={styles.contact} id="kontakt">
         <div className={`${styles.shell} ${styles.contactGrid}`}>
-          <div>
-            <div className={styles.kicker}>Unverbindlich anfragen</div>
-            <h2>Was steht bei Ihnen an?</h2>
-            <p>Beschreiben Sie kurz Ihr Projekt. Diese Beispielseite sendet keine echten Daten.</p>
-          </div>
+          <div><div className={styles.kicker}>Unverbindlich anfragen</div><h2>Was steht bei Ihnen an?</h2><p>Beschreiben Sie kurz Ihr Projekt. Diese Beispielseite sendet keine echten Daten.</p></div>
           <form onSubmit={(event) => event.preventDefault()}>
             <label htmlFor="hw-name">Name<input id="hw-name" placeholder="Max Mustermann" /></label>
             <label htmlFor="hw-mail">E-Mail<input id="hw-mail" type="email" placeholder="max@beispiel.de" /></label>
@@ -216,9 +214,7 @@ export default function DemoHandwerk() {
       </section>
 
       <footer className={`${styles.footer} ${styles.shell}`}>
-        <div><strong>NORDWERK Dach & Bau</strong><br />Hildesheim & Region</div>
-        <div>Mo–Fr 07:00–17:00</div>
-        <div className={styles.footerLinks}><span>Impressum</span><span>Datenschutz</span><span>WebForge Demo</span></div>
+        <div><strong>NORDWERK Dach & Bau</strong><br />Hildesheim & Region</div><div>Mo–Fr 07:00–17:00</div><div className={styles.footerLinks}><span>Impressum</span><span>Datenschutz</span><span>WebForge Demo</span></div>
       </footer>
     </main>
   );
