@@ -44,7 +44,8 @@ for (const stale of [
 ]) {
   if (readme.includes(stale)) blockers.push(`DOKU  veraltete aktive Supabase-Angabe: ${stale}`);
 }
-if (!blockers.some((item) => item.startsWith("DOKU"))) checks.push("OK  README beschreibt Neon/Vercel als aktive Architektur");
+if (!blockers.some((item) => item.startsWith("DOKU")))
+  checks.push("OK  README beschreibt Neon/Vercel als aktive Architektur");
 
 const siteConfig = await readFile("lib/site-config.ts", "utf8");
 for (const invariant of ["SITE_MODULES", "validateSiteRegistry", "getSiteConfig"]) {

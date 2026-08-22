@@ -15,10 +15,7 @@ export type CustomerSiteInput = {
   seo?: Partial<SiteConfig["seo"]>;
 };
 
-const industryDefaults: Record<
-  SiteIndustry,
-  Pick<SiteConfig, "theme" | "modules">
-> = {
+const industryDefaults: Record<SiteIndustry, Pick<SiteConfig, "theme" | "modules">> = {
   handwerk: {
     theme: {
       primary: "#d7ff52",
@@ -114,18 +111,68 @@ export type SiteModuleDefinition = {
 };
 
 export const moduleCatalog: readonly SiteModuleDefinition[] = [
-  { id: "services", label: "Leistungen", customerValue: "Leistungen verständlich darstellen", industries: ["handwerk", "service", "custom"] },
-  { id: "references", label: "Referenzen", customerValue: "Vertrauen durch echte Arbeiten und Projekte", industries: ["handwerk", "service", "custom"] },
-  { id: "contact", label: "Anfrage", customerValue: "Interessenten schnell zur Anfrage führen", industries: ["handwerk", "gastro", "retail", "service", "custom"] },
-  { id: "cost-estimator", label: "Kostenrechner", customerValue: "Eine erste Preisorientierung geben", industries: ["handwerk", "service"] },
+  {
+    id: "services",
+    label: "Leistungen",
+    customerValue: "Leistungen verständlich darstellen",
+    industries: ["handwerk", "service", "custom"],
+  },
+  {
+    id: "references",
+    label: "Referenzen",
+    customerValue: "Vertrauen durch echte Arbeiten und Projekte",
+    industries: ["handwerk", "service", "custom"],
+  },
+  {
+    id: "contact",
+    label: "Anfrage",
+    customerValue: "Interessenten schnell zur Anfrage führen",
+    industries: ["handwerk", "gastro", "retail", "service", "custom"],
+  },
+  {
+    id: "cost-estimator",
+    label: "Kostenrechner",
+    customerValue: "Eine erste Preisorientierung geben",
+    industries: ["handwerk", "service"],
+  },
   { id: "menu", label: "Speisekarte", customerValue: "Gerichte und Preise direkt zeigen", industries: ["gastro"] },
-  { id: "cart", label: "Warenkorb", customerValue: "Direkte Bestellungen ermöglichen", industries: ["gastro", "retail"] },
-  { id: "order-status", label: "Bestellstatus", customerValue: "Kunden über den Fortschritt informieren", industries: ["gastro", "retail"] },
+  {
+    id: "cart",
+    label: "Warenkorb",
+    customerValue: "Direkte Bestellungen ermöglichen",
+    industries: ["gastro", "retail"],
+  },
+  {
+    id: "order-status",
+    label: "Bestellstatus",
+    customerValue: "Kunden über den Fortschritt informieren",
+    industries: ["gastro", "retail"],
+  },
   { id: "catalog", label: "Sortiment", customerValue: "Produkte übersichtlich präsentieren", industries: ["retail"] },
-  { id: "configurator", label: "Konfigurator", customerValue: "Produkte oder Leistungen individuell zusammenstellen", industries: ["retail", "service", "custom"] },
-  { id: "customer-portal", label: "Kundenbereich", customerValue: "Projekte, Dateien und Status zentral bereitstellen", industries: ["handwerk", "service", "custom"] },
-  { id: "file-upload", label: "Datei-Upload", customerValue: "Fotos und Unterlagen direkt vom Kunden erhalten", industries: ["handwerk", "service", "custom"] },
-  { id: "booking", label: "Terminbuchung", customerValue: "Termine ohne Telefon abstimmen", industries: ["service", "custom"] },
+  {
+    id: "configurator",
+    label: "Konfigurator",
+    customerValue: "Produkte oder Leistungen individuell zusammenstellen",
+    industries: ["retail", "service", "custom"],
+  },
+  {
+    id: "customer-portal",
+    label: "Kundenbereich",
+    customerValue: "Projekte, Dateien und Status zentral bereitstellen",
+    industries: ["handwerk", "service", "custom"],
+  },
+  {
+    id: "file-upload",
+    label: "Datei-Upload",
+    customerValue: "Fotos und Unterlagen direkt vom Kunden erhalten",
+    industries: ["handwerk", "service", "custom"],
+  },
+  {
+    id: "booking",
+    label: "Terminbuchung",
+    customerValue: "Termine ohne Telefon abstimmen",
+    industries: ["service", "custom"],
+  },
 ];
 
 export function getAvailableModules(industry: SiteIndustry): SiteModuleDefinition[] {

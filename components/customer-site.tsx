@@ -7,15 +7,33 @@ const fallbackModuleCopy: Record<SiteModule, { title: string; text: string }> = 
   services: { title: "Leistungen", text: "Die wichtigsten Leistungen verständlich und übersichtlich dargestellt." },
   references: { title: "Referenzen", text: "Ausgewählte Arbeiten und Projekte schaffen Vertrauen vor der Anfrage." },
   contact: { title: "Anfrage", text: "Ein klarer Kontaktweg macht den nächsten Schritt für Interessenten einfach." },
-  "cost-estimator": { title: "Kostenrechner", text: "Kunden erhalten direkt eine erste unverbindliche Preisorientierung." },
+  "cost-estimator": {
+    title: "Kostenrechner",
+    text: "Kunden erhalten direkt eine erste unverbindliche Preisorientierung.",
+  },
   menu: { title: "Speisekarte", text: "Gerichte, Preise und Varianten sind direkt auf der eigenen Website verfügbar." },
   cart: { title: "Warenkorb", text: "Produkte und Extras können direkt ausgewählt und gesammelt werden." },
   "order-status": { title: "Bestellstatus", text: "Kunden sehen, wie weit ihre Bestellung oder ihr Auftrag ist." },
-  catalog: { title: "Sortiment", text: "Produkte werden strukturiert und auf dem Smartphone gut erfassbar präsentiert." },
-  configurator: { title: "Konfigurator", text: "Kunden stellen Produkt oder Leistung passend zu ihren Wünschen zusammen." },
-  "customer-portal": { title: "Kundenbereich", text: "Projekte, Dateien und Informationen stehen geschützt an einem Ort bereit." },
-  "file-upload": { title: "Datei-Upload", text: "Fotos und Unterlagen können direkt über die Website übermittelt werden." },
-  booking: { title: "Terminbuchung", text: "Freie Termine können ohne Rückruf oder E-Mail-Pingpong ausgewählt werden." },
+  catalog: {
+    title: "Sortiment",
+    text: "Produkte werden strukturiert und auf dem Smartphone gut erfassbar präsentiert.",
+  },
+  configurator: {
+    title: "Konfigurator",
+    text: "Kunden stellen Produkt oder Leistung passend zu ihren Wünschen zusammen.",
+  },
+  "customer-portal": {
+    title: "Kundenbereich",
+    text: "Projekte, Dateien und Informationen stehen geschützt an einem Ort bereit.",
+  },
+  "file-upload": {
+    title: "Datei-Upload",
+    text: "Fotos und Unterlagen können direkt über die Website übermittelt werden.",
+  },
+  booking: {
+    title: "Terminbuchung",
+    text: "Freie Termine können ohne Rückruf oder E-Mail-Pingpong ausgewählt werden.",
+  },
 };
 
 function cssVariables(site: SiteConfig): CSSProperties {
@@ -35,7 +53,9 @@ function ModuleCards({ modules }: { modules: readonly SiteModule[] }) {
         const copy = fallbackModuleCopy[module];
         return (
           <article className={styles.card} key={module}>
-            <small>{String(index + 1).padStart(2, "0")} · {catalog?.label ?? copy.title}</small>
+            <small>
+              {String(index + 1).padStart(2, "0")} · {catalog?.label ?? copy.title}
+            </small>
             <h3>{copy.title}</h3>
             <p>{catalog?.customerValue ?? copy.text}</p>
           </article>
@@ -62,7 +82,9 @@ export default function CustomerSite({ site }: { site: SiteConfig }) {
           <a href="#funktionen">Funktionen</a>
           <a href="#kontakt">Kontakt</a>
         </div>
-        <a className={styles.cta} href="#kontakt">Anfragen ↗</a>
+        <a className={styles.cta} href="#kontakt">
+          Anfragen ↗
+        </a>
       </nav>
 
       <section className={`${styles.hero} ${styles.shell}`}>
@@ -70,7 +92,9 @@ export default function CustomerSite({ site }: { site: SiteConfig }) {
           <span className={styles.eyebrow}>{site.category}</span>
           <h1>{site.tagline}</h1>
           <p>{site.description}</p>
-          <a className={styles.cta} href="#kontakt">Unverbindlich anfragen ↗</a>
+          <a className={styles.cta} href="#kontakt">
+            Unverbindlich anfragen ↗
+          </a>
         </div>
         <aside className={styles.heroCard}>
           <small>{site.business.toUpperCase()}</small>
@@ -84,7 +108,10 @@ export default function CustomerSite({ site }: { site: SiteConfig }) {
             <span className={styles.eyebrow}>Was die Website erledigt</span>
             <div>
               <h2>Einfach für Kunden. Praktisch für den Betrieb.</h2>
-              <p>Die Website wird aus wiederverwendbaren Modulen zusammengestellt. Nur die Funktionen, die für das Unternehmen sinnvoll sind, werden aktiviert.</p>
+              <p>
+                Die Website wird aus wiederverwendbaren Modulen zusammengestellt. Nur die Funktionen, die für das
+                Unternehmen sinnvoll sind, werden aktiviert.
+              </p>
             </div>
           </div>
           <ModuleCards modules={site.modules} />
@@ -97,7 +124,10 @@ export default function CustomerSite({ site }: { site: SiteConfig }) {
             <span className={styles.eyebrow}>Aktivierte Module</span>
             <div>
               <h2>Auf das Unternehmen zugeschnitten.</h2>
-              <p>Farben, Inhalte, Kontaktdaten und Module kommen aus einer zentralen Konfiguration. Für einen neuen Kunden muss kein neues Seitengerüst programmiert werden.</p>
+              <p>
+                Farben, Inhalte, Kontaktdaten und Module kommen aus einer zentralen Konfiguration. Für einen neuen
+                Kunden muss kein neues Seitengerüst programmiert werden.
+              </p>
             </div>
           </div>
           <div className={styles.modulePills}>
@@ -118,10 +148,16 @@ export default function CustomerSite({ site }: { site: SiteConfig }) {
           <div className={styles.contactBox}>
             {contactValues.length > 0 ? (
               contactValues.map(([label, value]) => (
-                <div key={label}><small>{label}</small><strong>{value}</strong></div>
+                <div key={label}>
+                  <small>{label}</small>
+                  <strong>{value}</strong>
+                </div>
               ))
             ) : (
-              <div><small>Kontakt</small><strong>Kontaktdaten werden im Kunden-Onboarding ergänzt.</strong></div>
+              <div>
+                <small>Kontakt</small>
+                <strong>Kontaktdaten werden im Kunden-Onboarding ergänzt.</strong>
+              </div>
             )}
           </div>
         </div>

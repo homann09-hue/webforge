@@ -121,8 +121,7 @@ const siteRegistry = {
     category: "Blumenladen",
     industry: "retail",
     tagline: "Blumen, die wirklich zu Ihnen passen.",
-    description:
-      "Lokale Floristik mit Sortiment, Strauß-Konfigurator, Preisvorschau und unkomplizierter Anfrage.",
+    description: "Lokale Floristik mit Sortiment, Strauß-Konfigurator, Preisvorschau und unkomplizierter Anfrage.",
     locale: "de-DE",
     theme: {
       primary: "#ef91aa",
@@ -140,8 +139,7 @@ const siteRegistry = {
     modules: ["catalog", "configurator", "contact"],
     seo: {
       title: "Blütenliebe — Blumenladen-Demo",
-      description:
-        "Beispiel einer modernen Floristik-Website mit Sortiment, Strauß-Konfigurator und lokaler Anfrage.",
+      description: "Beispiel einer modernen Floristik-Website mit Sortiment, Strauß-Konfigurator und lokaler Anfrage.",
     },
   },
 } as const satisfies Record<string, SiteConfig>;
@@ -175,9 +173,7 @@ export function validateSiteConfig(site: SiteConfig): string[] {
   if (!site.seo.description.trim()) errors.push("SEO-Beschreibung fehlt");
   if (site.modules.length === 0) errors.push("mindestens ein Modul ist erforderlich");
 
-  const unknownModules = site.modules.filter(
-    (module) => !SITE_MODULES.includes(module as SiteModule),
-  );
+  const unknownModules = site.modules.filter((module) => !SITE_MODULES.includes(module as SiteModule));
   if (unknownModules.length > 0) errors.push(`unbekannte Module: ${unknownModules.join(", ")}`);
 
   return errors;
@@ -185,8 +181,6 @@ export function validateSiteConfig(site: SiteConfig): string[] {
 
 export function validateSiteRegistry(): Record<string, string[]> {
   return Object.fromEntries(
-    siteConfigs
-      .map((site) => [site.slug, validateSiteConfig(site)] as const)
-      .filter(([, errors]) => errors.length > 0),
+    siteConfigs.map((site) => [site.slug, validateSiteConfig(site)] as const).filter(([, errors]) => errors.length > 0),
   );
 }
