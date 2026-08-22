@@ -60,11 +60,9 @@
   color: #ffffff !important;
 }
 /* Contact section uses the orange accent as its background. */
-[class*="demo-experience_gastro"] [class*="demo-experience_contact"] [class*="demo-experience_kicker"] {
+[class*="demo-experience_gastro"] [class*="demo-experience_contact"] [class*="demo-experience_kicker"],
+[class*="demo-experience_gastro"] [class*="demo-experience_contactGrid"] > div > p {
   color: #ffffff !important;
-}
-[class*="demo-experience_gastro"] [class*="demo-experience_contact"] p {
-  color: #000000 !important;
 }
 
 /* Floristik: secondary text on dark sections must stay readable. */
