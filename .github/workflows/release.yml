@@ -1,0 +1,39 @@
+name: Market Release Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+      - run: npm i --no-save playwright @axe-core/playwright
+      - run: npx playwright install --with-deps chromium
+
+      - name: Full release check
+        run: npm run release:check
+
+      - name: End-to-end admin flow
+        run: npm run test:e2e
+
+      - name: Release summary
+        if: success()
+        run: |
+          echo "## WebForge Market Release Gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Verify" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Market readiness" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ CSP" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Accessibility" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ End-to-end admin flow" >> "$GITHUB_STEP_SUMMARY"
