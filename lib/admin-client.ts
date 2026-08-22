@@ -38,13 +38,13 @@ export async function adminFetch<T = JsonRecord>(path: string, body: JsonRecord 
   return data as T;
 }
 
-/** Exchanges the password for a session cookie. Throws on a wrong password. */
-export async function adminLogin(password: string): Promise<void> {
+/** Exchanges user credentials (or the temporary shared password) for a session cookie. */
+export async function adminLogin(email: string, password: string): Promise<void> {
   const response = await fetch("/api/admin/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "same-origin",
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ email, password }),
   });
   const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
   if (!response.ok || !data.ok) throw new Error(data.error || "Anmeldung fehlgeschlagen.");

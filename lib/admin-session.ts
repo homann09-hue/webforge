@@ -5,7 +5,7 @@ import { backendFunctionFetch } from "@/lib/backend-transport";
 export const ADMIN_COOKIE = "webforge_admin_session";
 
 /** Shape produced by the current backend admin-login endpoint. */
-const TOKEN_PATTERN = /^wfs_[0-9a-f]{64}$/;
+const TOKEN_PATTERN = /^wf[su]_[0-9a-f]{64}$/;
 
 /**
  * Session lifetime. The backend enforces its own expiry server side;
@@ -29,11 +29,12 @@ export class AdminRateLimited extends Error {
 }
 
 /**
- * Exchanges the shared admin password for a short lived session token.
+ * Exchanges either an email/password pair or the temporary shared password
+ * for a short-lived session token.
  * Runs server side only, so the password never reaches the browser's storage.
  */
-export async function exchangePasswordForToken(password: string): Promise<string> {
-  const response = await backendFunctionFetch("admin-login", { password }, { cache: "no-store" });
+export async function exchangeCredentialsForToken(email: string, password: string): Promise<string> {
+  const response = await backendFunctionFetch("admin-login", { email, password }, { cache: "no-store" });
 
   const data = (await response.json().catch(() => ({}))) as { ok?: boolean; token?: unknown };
 

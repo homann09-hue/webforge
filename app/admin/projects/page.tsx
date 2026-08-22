@@ -76,6 +76,7 @@ function defaultNewTask(): NewTaskDraft {
 }
 
 export default function ProjectsAdmin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [projects, setProjects] = useState<CustomerProject[]>([]);
   const [drafts, setDrafts] = useState<Record<number, ProjectDraft>>({});
@@ -110,7 +111,7 @@ export default function ProjectsAdmin() {
   async function signIn() {
     setError("");
     try {
-      await adminLogin(password);
+      await adminLogin(email, password);
       setPassword("");
       await loadProjects();
     } catch (err) {
@@ -296,16 +297,27 @@ export default function ProjectsAdmin() {
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >
               <input
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="E-Mail (für Benutzerkonto)"
+                aria-label="E-Mail-Adresse"
+              />
+              <input
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Adminpasswort"
+                placeholder="Passwort"
+                aria-label="Passwort"
                 required
               />
               <button className="button" disabled={loading}>
                 {loading ? "Prüfe …" : "Einloggen"}
               </button>
               {error && <p>{error}</p>}
+              <small>E-Mail für ein Benutzerkonto eingeben oder für den Übergangszugang leer lassen.</small>
             </form>
           </div>
         </section>

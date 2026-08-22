@@ -8,6 +8,7 @@ const BASE = process.env.E2E_BASE_URL || "http://localhost:3200";
 const MOCK = process.env.MOCK_BASE_URL || "http://localhost:54321";
 const mockState = async () => (await fetch(`${MOCK}/__test__/state`)).json();
 const PASSWORD = process.env.MOCK_ADMIN_PASSWORD || "test-password";
+const EMAIL = process.env.MOCK_ADMIN_EMAIL || "admin@example.test";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -49,13 +50,16 @@ async function appGet(path) {
 // 1. Login gate
 await page.goto(`${BASE}/admin`, { waitUntil: "networkidle" });
 const passwordField = page.locator('input[type="password"]');
+const emailField = page.locator('input[type="email"]');
 check("Loginformular wird angezeigt", await passwordField.isVisible());
 
+await emailField.fill(EMAIL);
 await passwordField.fill("wrong-password");
 await page.locator('button[type="submit"]').click();
 await page.waitForTimeout(900);
 check("Falsches Passwort wird abgelehnt", await passwordField.isVisible(), "Loginformular noch sichtbar");
 
+await emailField.fill(EMAIL);
 await passwordField.fill(PASSWORD);
 await page.locator('button[type="submit"]').click();
 await page.waitForTimeout(1800);
@@ -281,9 +285,16 @@ if (await logoutButton.count()) {
   check("Logout-Button gefunden", false);
 }
 
-// 10. Raw passwords must never reach the admin gateway
+// 10. Temporary shared-login fallback remains usable during the account rollout
+await emailField.fill("");
+await passwordField.fill(PASSWORD);
+await page.locator('button[type="submit"]').click();
+await page.waitForTimeout(1200);
+check("Shared-Login bleibt als Übergangszugang nutzbar", !(await passwordField.isVisible().catch(() => false)));
+
+// 11. Raw passwords must never reach the admin gateway
 const finalState = await mockState();
-const badCredentials = finalState.calls.filter((call) => !/^wfs_[0-9a-f]{64}$/.test(call.credential || ""));
+const badCredentials = finalState.calls.filter((call) => !/^wf[su]_[0-9a-f]{64}$/.test(call.credential || ""));
 check(
   "Gateway bekam ausschliesslich Session-Tokens",
   badCredentials.length === 0,

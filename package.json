@@ -14,6 +14,8 @@
     "source:smoke": "node scripts/source-smoke.mjs",
     "neon:smoke": "node scripts/neon-smoke.mjs",
     "neon:auth-check": "node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --check",
+    "neon:auth-bridge-check": "node scripts/apply-neon-migration.mjs migration/neon/002_multi_user_admin_bridge.sql --check",
+    "neon:user-provision": "node scripts/provision-neon-user.mjs",
     "market:readiness": "node scripts/release-gate.mjs",
     "verify": "npm run format:check && npm run security:smoke && npm run source:smoke && npm run lint && npm run test && npm run build",
     "release:check": "npm run verify && npm run market:readiness",

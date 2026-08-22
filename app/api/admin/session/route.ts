@@ -4,23 +4,29 @@ import {
   AdminUnauthorized,
   ADMIN_COOKIE,
   clearAdminCookie,
-  exchangePasswordForToken,
+  exchangeCredentialsForToken,
   requireAdminSession,
   revokeAdminSession,
   setAdminCookie,
 } from "@/lib/admin-session";
 import { cookies } from "next/headers";
 
-/** Login: swaps the shared admin password for a session token in an httpOnly cookie. */
+/** Login: swaps user credentials or the temporary shared password for an httpOnly session cookie. */
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
+    const email = String(body.email || "")
+      .trim()
+      .toLowerCase();
     const password = String(body.password || "");
-    if (!password || password.length > 200) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ ok: false, error: "E-Mail-Adresse ist ungültig." }, { status: 400 });
+    }
+    if (!password || password.length > 200 || email.length > 254) {
       return NextResponse.json({ ok: false, error: "Passwort fehlt." }, { status: 400 });
     }
 
-    const token = await exchangePasswordForToken(password);
+    const token = await exchangeCredentialsForToken(email, password);
     return setAdminCookie(NextResponse.json({ ok: true }), token);
   } catch (error) {
     if (error instanceof AdminRateLimited) {

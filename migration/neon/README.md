@@ -33,5 +33,6 @@ Supabase files are retained only as migration and rollback history.
 - upload/download path verified using private Blob
 - `npm run verify` passes
 - browser E2E passes
-- multi-user migration applied to and accepted against the production Neon database
+- multi-user schema and admin authorization bridge applied to and accepted against the production Neon database
+- first owner account provisioned through the interactive hidden-password script
 - latest `main` deployed and smoke-tested on the commercial production host

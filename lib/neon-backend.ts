@@ -99,8 +99,11 @@ async function writeAuditLog(name: string, args: Record<string, unknown>): Promi
 async function adminLogin(body: Record<string, unknown>): Promise<Response> {
   try {
     const password = typeof body.password === "string" ? body.password : "";
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const sql = getNeonSql();
-    const result = await sql`select public.internal_admin_create_session(${password}) as token`;
+    const result = email
+      ? await sql`select public.internal_user_create_session(${email}, ${password}) as token`
+      : await sql`select public.internal_admin_create_session(${password}) as token`;
     const token = firstRow(result)?.token;
     if (typeof token !== "string") return jsonResponse({ ok: false }, 401);
     return jsonResponse({ ok: true, token, expiresIn: 60 * 60 * 8 });
@@ -113,7 +116,11 @@ async function adminLogout(body: Record<string, unknown>): Promise<Response> {
   try {
     const token = typeof body.token === "string" ? body.token : "";
     const sql = getNeonSql();
-    await sql`select public.internal_admin_revoke_session(${token})`;
+    if (token.startsWith("wfu_")) {
+      await sql`select public.internal_user_revoke_session(${token})`;
+    } else {
+      await sql`select public.internal_admin_revoke_session(${token})`;
+    }
     return jsonResponse({ ok: true });
   } catch (error) {
     return errorResponse(error);

@@ -46,8 +46,8 @@ WebForge ist ein Website- und Kundenprojekt-System für kleine und mittelständi
 
 1. **Kommerziell zulässiges Hosting sicherstellen.**
    Vercels Hobby-Plan darf nach den aktuellen Vercel-Nutzungsbedingungen nur persönlich bzw. nicht-kommerziell genutzt werden. Vor bezahltem WebForge-Betrieb ist daher mindestens ein für kommerzielle Nutzung zulässiger Vercel-Tarif (z. B. Pro) oder ein anderes geeignetes Hosting-Setup erforderlich.
-2. **Multi-User-Migration kontrolliert auf Neon anwenden und abnehmen.**
-   Bis dahin bleibt der bestehende Shared-Admin-Login als Fallback aktiv.
+2. **Multi-User-Adminbrücke kontrolliert auf Neon anwenden und ersten Owner anlegen.**
+   Das Basisschema ist in Production aktiv; bis zur vollständigen Abnahme bleibt der bestehende Shared-Admin-Login als Fallback erhalten.
 3. **Neuesten `main`-Stand in Production deployen und Smoke-Test durchführen.**
 4. **Rechtstexte vor dem echten Marktstart fachlich/juristisch prüfen lassen.**
 5. **Ersten echten Referenzkunden ausliefern.**
@@ -137,10 +137,11 @@ Vorbereitet sind:
 - `staff`
 - `customer`
 
-Die additive Neon-Migration liegt unter:
+Die additiven Neon-Migrationen liegen unter:
 
 ```text
 migration/neon/001_multi_user_auth.sql
+migration/neon/002_multi_user_admin_bridge.sql
 ```
 
 Kontrollierter Migrationsrunner:
@@ -148,11 +149,21 @@ Kontrollierter Migrationsrunner:
 ```bash
 node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --check
 node scripts/apply-neon-migration.mjs migration/neon/001_multi_user_auth.sql --confirm
+node scripts/apply-neon-migration.mjs migration/neon/002_multi_user_admin_bridge.sql --check
+node scripts/apply-neon-migration.mjs migration/neon/002_multi_user_admin_bridge.sql --confirm
 ```
 
 Der Read-only-Modus `--check` prüft den Produktionsstand ohne Schemaänderung. Der Schreibmodus `--confirm` führt die
 additive Migration aus und verifiziert das Multi-User-Schema anschließend. Beide Modi verlangen
 `DATABASE_URL_UNPOOLED` oder `DATABASE_URL`.
+
+Ein Owner-/Admin-Konto wird ausschließlich interaktiv mit verdeckter
+Passworteingabe angelegt; das Passwort gehört weder in den Chat noch in eine
+Shell-History oder Umgebungsdatei:
+
+```bash
+vercel env run -e production -- npm run neon:user-provision -- --email name@example.de --name "Vorname Nachname" --role owner
+```
 
 ## Kleinunternehmer nach § 19 UStG
 

@@ -39,6 +39,24 @@ async function verifyMultiUserSchema() {
   console.log("Multi-User-Schema verifiziert.");
 }
 
+async function verifyMultiUserAdminBridge() {
+  const { rows } = await pool.query(`
+    select pg_get_functiondef(to_regprocedure('private.assert_admin_credential(text)')) as credential_definition,
+           pg_get_functiondef(to_regprocedure('public.internal_user_create_session(text,text)')) as login_definition
+  `);
+  const credentialDefinition = rows[0]?.credential_definition || "";
+  const loginDefinition = rows[0]?.login_definition || "";
+  if (
+    !credentialDefinition.includes("private.user_sessions") ||
+    !credentialDefinition.includes("'owner', 'admin'") ||
+    !loginDefinition.includes("private.admin_gateway_failures") ||
+    !loginDefinition.includes("return null")
+  ) {
+    throw new Error("Multi-User-Adminbrücke ist unvollständig.");
+  }
+  console.log("Multi-User-Adminbrücke verifiziert.");
+}
+
 try {
   if (checkOnly) {
     console.log(`Prüfe Migration ohne Schreibzugriff: ${migration}`);
@@ -53,6 +71,9 @@ try {
 
   if (migration.endsWith("001_multi_user_auth.sql")) {
     await verifyMultiUserSchema();
+  }
+  if (migration.endsWith("002_multi_user_admin_bridge.sql")) {
+    await verifyMultiUserAdminBridge();
   }
 } catch (error) {
   console.error(

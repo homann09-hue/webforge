@@ -9,7 +9,8 @@ import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 
 const PASSWORD = process.env.MOCK_ADMIN_PASSWORD || "test-password";
-const TOKEN_PATTERN = /^wfs_[0-9a-f]{64}$/;
+const EMAIL = process.env.MOCK_ADMIN_EMAIL || "admin@example.test";
+const TOKEN_PATTERN = /^wf[su]_[0-9a-f]{64}$/;
 const sessions = new Map();
 const portalTokens = new Map();
 
@@ -431,8 +432,12 @@ export function startMockBackend(port = 54321) {
     const body = await readBody(req);
 
     if (url.pathname === "/backend/admin-login") {
-      if (body.password !== PASSWORD) return json(res, 401, { ok: false, error: "unauthorized" });
-      const token = `wfs_${randomBytes(32).toString("hex")}`;
+      const userLogin = body.email === EMAIL;
+      const sharedLogin = !body.email;
+      if ((!userLogin && !sharedLogin) || body.password !== PASSWORD) {
+        return json(res, 401, { ok: false, error: "unauthorized" });
+      }
+      const token = `${userLogin ? "wfu" : "wfs"}_${randomBytes(32).toString("hex")}`;
       sessions.set(token, { revoked: false });
       return json(res, 200, { ok: true, token, expiresIn: 28800 });
     }

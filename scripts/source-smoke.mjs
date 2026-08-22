@@ -21,6 +21,8 @@ const required = [
   "app/api/admin/session/route.ts",
   "app/api/stripe/webhook/route.ts",
   "migration/neon/001_multi_user_auth.sql",
+  "migration/neon/002_multi_user_admin_bridge.sql",
+  "scripts/provision-neon-user.mjs",
   "next.config.ts",
 ];
 for (const file of required) await access(file);
@@ -146,6 +148,16 @@ for (const file of ["components/demo-handwerk.tsx", "components/demo-gastro.tsx"
 const sessionModule = await readFile("lib/admin-session.ts", "utf8");
 for (const flag of ["httpOnly: true", 'sameSite: "strict"']) {
   if (!sessionModule.includes(flag)) throw new Error(`lib/admin-session.ts: session cookie must set ${flag}`);
+}
+if (!sessionModule.includes("/^wf[su]_") || !sessionModule.includes("exchangeCredentialsForToken")) {
+  throw new Error("lib/admin-session.ts: shared and multi-user session tokens must remain supported");
+}
+
+const authBridgeMigration = await readFile("migration/neon/002_multi_user_admin_bridge.sql", "utf8");
+for (const invariant of ["private.user_sessions", "admin_gateway_failures", "return null", "('owner', 'admin')"]) {
+  if (!authBridgeMigration.includes(invariant)) {
+    throw new Error(`Multi-user admin bridge missing invariant: ${invariant}`);
+  }
 }
 
 const stripeModule = await readFile("lib/stripe-signature.ts", "utf8");

@@ -52,6 +52,7 @@ function draftFromLead(lead: Lead): CommercialDraft {
 }
 
 export default function Admin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -119,7 +120,7 @@ export default function Admin() {
   async function signIn() {
     setError("");
     try {
-      await adminLogin(password);
+      await adminLogin(email, password);
       setPassword("");
       await loadWorkspace();
     } catch (err) {
@@ -381,8 +382,19 @@ export default function Admin() {
               }}
               style={{ display: "grid", gap: 12, maxWidth: 440 }}
             >
+              <label className="sr-only" htmlFor="admin-email">
+                E-Mail-Adresse
+              </label>
+              <input
+                id="admin-email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="E-Mail (für Benutzerkonto)"
+              />
               <label className="sr-only" htmlFor="admin-password">
-                Adminpasswort
+                Passwort
               </label>
               <input
                 id="admin-password"
@@ -390,13 +402,14 @@ export default function Admin() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Adminpasswort"
+                placeholder="Passwort"
                 required
               />
               <button className="button" type="submit" disabled={loading}>
                 {loading ? "Prüfe …" : "Einloggen"}
               </button>
               {error && <p>{error}</p>}
+              <small>E-Mail leer lassen, um vorübergehend den bisherigen Adminzugang zu verwenden.</small>
             </form>
           </div>
         </section>

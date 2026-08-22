@@ -6,6 +6,7 @@ import { adminFetch, adminLogin, adminSessionActive, handleAdminError } from "@/
 type Project = { id: number; project_number: string; name: string; company: string; portal_enabled?: boolean };
 
 export default function PortalsAdmin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [authenticated, setAuthenticated] = useState(false);
@@ -20,7 +21,7 @@ export default function PortalsAdmin() {
   async function signIn() {
     setError("");
     try {
-      await adminLogin(password);
+      await adminLogin(email, password);
       setPassword("");
       await load();
     } catch (err) {
@@ -89,14 +90,25 @@ export default function PortalsAdmin() {
               style={{ display: "grid", gap: 10, maxWidth: 420 }}
             >
               <input
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="E-Mail (für Benutzerkonto)"
+                aria-label="E-Mail-Adresse"
+              />
+              <input
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Adminpasswort"
+                placeholder="Passwort"
+                aria-label="Passwort"
                 required
               />
               <button className="button">Einloggen</button>
               {error && <p>{error}</p>}
+              <small>E-Mail für ein Benutzerkonto eingeben oder für den Übergangszugang leer lassen.</small>
             </form>
           </div>
         </section>
