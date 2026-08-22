@@ -2,6 +2,66 @@
 
 import { useEffect } from "react";
 
+const realisticOverrides = `
+[data-home] [class*="hero"]::before {
+  display: none !important;
+}
+
+[data-home] [class*="heroStage"] {
+  min-height: 650px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 34px !important;
+  overflow: hidden !important;
+  background-image: url('/demo/ai-roofers.webp') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow: 0 36px 90px rgba(0,0,0,.34) !important;
+}
+
+[data-home] [class*="heroStage"] > * {
+  display: none !important;
+}
+
+[data-home] [class*="capCard"]::after {
+  display: none !important;
+}
+
+[data-home] [class*="demoVisual"] {
+  background-color: #171a1d !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+[data-home] [class*="demoVisual"]::before,
+[data-home] [class*="demoVisual"]::after {
+  display: none !important;
+}
+
+[data-home] [class*="craftVisual"] {
+  background-image: url('/demo/ai-roofers.webp') !important;
+}
+
+[data-home] [class*="foodVisual"] {
+  background-image: url('/demo/ai-restaurant.webp') !important;
+}
+
+[data-home] [class*="flowerVisual"] {
+  background-image: url('/demo/ai-florist.webp') !important;
+}
+
+@media (max-width: 700px) {
+  [data-home] [class*="heroStage"] {
+    min-height: 500px !important;
+    background-position: 54% center !important;
+  }
+
+  [data-home] [class*="demoVisual"] {
+    min-height: 430px !important;
+  }
+}
+`;
+
 export default function HomeMotion() {
   useEffect(() => {
     const root = document.querySelector<HTMLElement>("[data-home]");
@@ -76,5 +136,5 @@ export default function HomeMotion() {
     };
   }, []);
 
-  return null;
+  return <style>{realisticOverrides}</style>;
 }
