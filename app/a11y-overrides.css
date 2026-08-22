@@ -59,10 +59,12 @@
   opacity: 1 !important;
   color: #ffffff !important;
 }
-/* Contact section uses the orange accent as its background. Its tiny kicker
-   needs white rather than the generic dark ink to clear WCAG AA. */
+/* Contact section uses the orange accent as its background. */
 [class*="demo-experience_gastro"] [class*="demo-experience_contact"] [class*="demo-experience_kicker"] {
   color: #ffffff !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_contact"] p {
+  color: #000000 !important;
 }
 
 /* Floristik: secondary text on dark sections must stay readable. */
