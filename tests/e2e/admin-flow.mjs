@@ -53,6 +53,14 @@ const passwordField = page.locator('input[type="password"]');
 const emailField = page.locator('input[type="email"]');
 check("Loginformular wird angezeigt", await passwordField.isVisible());
 
+const revealPassword = page.getByRole("button", { name: "Anzeigen" });
+await revealPassword.click();
+check(
+  "Passworteingabe kann kontrolliert werden",
+  (await page.locator("#admin-password").getAttribute("type")) === "text",
+);
+await page.getByRole("button", { name: "Verbergen" }).click();
+
 await emailField.fill(EMAIL);
 await passwordField.fill("wrong-password");
 await page.locator('button[type="submit"]').click();

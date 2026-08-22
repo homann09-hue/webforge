@@ -54,6 +54,7 @@ function draftFromLead(lead: Lead): CommercialDraft {
 export default function Admin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -389,6 +390,9 @@ export default function Admin() {
                 id="admin-email"
                 type="email"
                 autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="E-Mail (für Benutzerkonto)"
@@ -396,20 +400,35 @@ export default function Admin() {
               <label className="sr-only" htmlFor="admin-password">
                 Passwort
               </label>
-              <input
-                id="admin-password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Passwort"
-                required
-              />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                <input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Passwort"
+                  required
+                />
+                <button
+                  type="button"
+                  className="button"
+                  aria-controls="admin-password"
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                >
+                  {showPassword ? "Verbergen" : "Anzeigen"}
+                </button>
+              </div>
               <button className="button" type="submit" disabled={loading}>
                 {loading ? "Prüfe …" : "Einloggen"}
               </button>
               {error && <p>{error}</p>}
               <small>E-Mail leer lassen, um vorübergehend den bisherigen Adminzugang zu verwenden.</small>
+              <small>Bei einem gespeicherten Browser-Passwort zuerst „Anzeigen“ wählen und die Eingabe prüfen.</small>
             </form>
           </div>
         </section>

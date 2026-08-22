@@ -36,7 +36,10 @@ export async function POST(req: Request) {
       );
     }
     if (error instanceof AdminUnauthorized) {
-      return NextResponse.json({ ok: false, error: "Ungültiges Passwort." }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, error: "E-Mail oder Passwort stimmt nicht. Bitte gespeicherte Browser-Zugangsdaten prüfen." },
+        { status: 401 },
+      );
     }
     console.error("WEBFORGE_ADMIN_LOGIN_ERROR", error);
     return NextResponse.json({ ok: false, error: "Anmeldung fehlgeschlagen." }, { status: 500 });
