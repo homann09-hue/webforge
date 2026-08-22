@@ -52,7 +52,11 @@ export async function POST(req: Request) {
 
     const sql = getNeonSql();
     const projectRows = await sql`select public.portal_get_project(${token}) as project`;
-    const project = projectRows[0]?.project as { project_id?: number } | undefined;
+    const firstProjectRow =
+      Array.isArray(projectRows) && projectRows.length > 0 && !Array.isArray(projectRows[0])
+        ? (projectRows[0] as Record<string, unknown>)
+        : undefined;
+    const project = firstProjectRow?.project as { project_id?: number } | undefined;
     if (!project?.project_id)
       return NextResponse.json({ ok: false, error: "Portal-Link ungültig oder abgelaufen." }, { status: 401 });
 
