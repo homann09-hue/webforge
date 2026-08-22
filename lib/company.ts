@@ -12,16 +12,16 @@
  */
 export const company = {
   /** Legal name of the business, exactly as registered. */
-  legalName: "TODO",
+  legalName: "Angelo Test",
   /** Trading name shown to customers. */
   tradingName: "WebForge",
   /** Sole trader: the owner's full name. Company: the managing director(s). */
-  representative: "TODO",
-  street: "TODO",
-  postalCode: "TODO",
-  city: "TODO",
+  representative: "Angelo Test",
+  street: "Hauptstr. 88",
+  postalCode: "31061",
+  city: "Alfeld",
   country: "Deutschland",
-  email: "TODO",
+  email: "Homann@ovara.de",
   phone: "TODO",
   /** Optional. Leave empty if you are a Kleinunternehmer under §19 UStG. */
   vatId: "",
