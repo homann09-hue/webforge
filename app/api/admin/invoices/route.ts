@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isBookableLine } from "@/lib/money";
 
 import { adminErrorResponse, requireAdminSession } from "@/lib/admin-session";
+import { company } from "@/lib/company";
 import {
   addPayment,
   createInvoice,
@@ -32,7 +33,8 @@ export async function POST(req: Request) {
       const title = String(body.title || "").trim();
       const issueDate = String(body.issueDate || "").trim();
       const dueDate = String(body.dueDate || "").trim();
-      const taxPercent = Number(body.taxPercent ?? 19);
+      const requestedTaxPercent = Number(body.taxPercent ?? 19);
+      const taxPercent = company.smallBusiness ? 0 : requestedTaxPercent;
       const notes = String(body.notes || "").trim();
       const rawItems = Array.isArray(body.items) ? body.items : [];
       const items = rawItems.map((item: Record<string, unknown>) => ({
