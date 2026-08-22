@@ -86,3 +86,5 @@ jobs:
           git add -- app/admin/page.tsx app/admin/invoices/page.tsx tests/e2e/admin-flow.mjs
           git commit -m "Align admin tax UI with small business status"
           git push origin HEAD:market-readiness-v1
+
+# one-shot trigger
