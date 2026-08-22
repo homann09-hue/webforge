@@ -62,6 +62,29 @@ for (const role of ["owner", "admin", "staff", "customer"]) {
   if (!authorization.includes(`"${role}"`)) blockers.push(`AUTH  Rolle fehlt: ${role}`);
 }
 
+if (/smallBusiness:\s*true/.test(company)) {
+  const [offerRoute, invoiceRoute, adminPage, invoicePage, printTemplate] = await Promise.all([
+    readFile("app/api/admin/offers/route.ts", "utf8"),
+    readFile("app/api/admin/invoices/route.ts", "utf8"),
+    readFile("app/admin/page.tsx", "utf8"),
+    readFile("app/admin/invoices/page.tsx", "utf8"),
+    readFile("lib/print-template.ts", "utf8"),
+  ]);
+
+  if (!offerRoute.includes("company.smallBusiness ? 0"))
+    blockers.push("TAX  Angebots-API erzwingt bei §19 UStG nicht 0 % Umsatzsteuer");
+  if (!invoiceRoute.includes("company.smallBusiness ? 0"))
+    blockers.push("TAX  Rechnungs-API erzwingt bei §19 UStG nicht 0 % Umsatzsteuer");
+  if (!adminPage.includes('company.smallBusiness ? "0" : "19"'))
+    blockers.push("TAX  Angebotsmaske nutzt nicht den Kleinunternehmer-Standard");
+  if (!invoicePage.includes('company.smallBusiness ? "0" : "19"'))
+    blockers.push("TAX  Rechnungsmaske nutzt nicht den Kleinunternehmer-Standard");
+  if (!printTemplate.includes("Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."))
+    blockers.push("TAX  Druckvorlage enthält keinen §19-UStG-Hinweis");
+
+  if (!blockers.some((item) => item.startsWith("TAX"))) checks.push("OK  §19-UStG-Regeln technisch abgesichert");
+}
+
 console.log("\nWebForge Release Gate\n=====================");
 for (const line of checks) console.log(line);
 
