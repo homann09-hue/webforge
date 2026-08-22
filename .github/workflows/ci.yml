@@ -37,7 +37,6 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm i --no-save playwright @axe-core/playwright
       - run: npx playwright install --with-deps chromium
 
       - name: End-to-end admin and order flow

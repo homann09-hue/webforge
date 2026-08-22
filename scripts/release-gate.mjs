@@ -29,10 +29,11 @@ for (const [path, label] of [
 
 const company = await readFile("lib/company.ts", "utf8");
 const requiredCompanyFields = ["legalName", "representative", "street", "postalCode", "city", "email", "phone"];
+const placeholderPattern = /\b(todo|test|muster|beispiel)|\[noch einzutragen\]/i;
 for (const field of requiredCompanyFields) {
   const match = company.match(new RegExp(`${field}:\\s*["']([^"']*)["']`));
   const value = match?.[1]?.trim() ?? "";
-  if (!value || value === "TODO") blockers.push(`LEGAL  ${field} ist noch nicht vollständig`);
+  if (!value || placeholderPattern.test(value)) blockers.push(`LEGAL  ${field} ist noch nicht mit Echtdaten belegt`);
 }
 if (!blockers.some((item) => item.startsWith("LEGAL"))) checks.push("OK  Pflicht-Firmendaten vollständig");
 

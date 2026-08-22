@@ -318,7 +318,7 @@
 .flow {
   display: flex;
   gap: 5px;
-  align-items: end;
+  align-items: flex-end;
   height: 85px;
   margin-top: 24px;
 }
@@ -626,7 +626,7 @@
   padding: 18px;
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
 }
 .visualUi small {
   display: block;
@@ -818,6 +818,11 @@
 }
 .formWrap :global(small) {
   color: #727d8c;
+}
+.formWrap :global(small a) {
+  color: #b9c4d2;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .footer {
   min-height: 160px;

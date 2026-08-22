@@ -105,7 +105,7 @@
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: 60px;
-  align-items: end;
+  align-items: flex-end;
 }
 .demoScope :global(.demo-section-head h2),
 .demoScope :global(.demo-section > h2) {

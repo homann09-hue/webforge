@@ -4,6 +4,13 @@ import { adminRpc } from "@/lib/admin-rpc";
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
 export type ProposalStatus = "none" | "draft" | "sent" | "accepted" | "rejected";
 
+export class LeadRateLimitError extends Error {
+  constructor() {
+    super("RATE_LIMITED");
+    this.name = "LeadRateLimitError";
+  }
+}
+
 export type Lead = {
   id: number;
   company: string;
@@ -41,6 +48,7 @@ export async function createLead(input: {
     { cache: "no-store" },
   );
   if (!response.ok) {
+    if (response.status === 429) throw new LeadRateLimitError();
     const data = await response.json().catch(() => ({}));
     throw new Error(String(data?.error || "LEAD_SUBMIT_FAILED"));
   }

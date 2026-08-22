@@ -7,9 +7,9 @@ import { backendFunctionFetch } from "@/lib/backend-transport";
  * It is never read from the request body: route handlers take it from the
  * httpOnly session cookie, so a token cannot be injected by a caller.
  *
- * During the Neon migration the transport still targets the Supabase
- * `admin-gateway`. Keeping that detail behind backend-transport.ts means the
- * business modules no longer need to know which backend provider is active.
+ * Production executes the named operation directly against Neon. The
+ * provider-neutral transport also supports the localhost-only E2E adapter,
+ * keeping test infrastructure out of the business modules.
  */
 export async function adminRpc(name: string, credential: string, args: Record<string, unknown> = {}) {
   const response = await backendFunctionFetch(

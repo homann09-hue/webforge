@@ -246,7 +246,7 @@
   right: 24px;
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: end;
+  align-items: flex-end;
   gap: 20px;
   padding: 22px;
   border-radius: 22px;
@@ -1006,7 +1006,7 @@
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
 }
 .previewInfo small {
   color: var(--muted);

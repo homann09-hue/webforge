@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { company, field, isLegalComplete } from "@/lib/company";
+import { company, field, isLegalComplete, isRealLegalValue } from "@/lib/company";
 
 describe("field", () => {
   it("marks unfilled placeholders", () => {
@@ -13,11 +13,17 @@ describe("field", () => {
 });
 
 describe("isLegalComplete", () => {
-  it("is false while the imprint still carries placeholders", () => {
-    // This guards the checkout links on the pricing page. If someone fills in
-    // lib/company.ts this flips to true and the test below takes over.
-    const stillPlaceholder = company.legalName === "TODO";
-    expect(isLegalComplete()).toBe(!stillPlaceholder);
+  it("rejects obvious test and template data", () => {
+    expect(isRealLegalValue("TODO")).toBe(false);
+    expect(isRealLegalValue("Angelo Test")).toBe(false);
+    expect(isRealLegalValue("Musterstraße 1")).toBe(false);
+    expect(isRealLegalValue("Beispiel GmbH")).toBe(false);
+    expect(isRealLegalValue("WebForge GmbH")).toBe(true);
+  });
+
+  it("matches the completeness of every required value", () => {
+    const required = ["legalName", "representative", "street", "postalCode", "city", "email", "phone"] as const;
+    expect(isLegalComplete()).toBe(required.every((key) => isRealLegalValue(company[key])));
   });
 
   it("requires every legally mandated field", () => {

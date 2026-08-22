@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createLead } from "@/lib/leads";
+import { createLead, LeadRateLimitError } from "@/lib/leads";
 import { clientIpFrom, validateLeadInput } from "@/lib/validation";
 
 export async function POST(req: Request) {
@@ -20,6 +20,12 @@ export async function POST(req: Request) {
     await createLead({ ...validated.value, clientIp: clientIpFrom(req.headers) });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
+    if (error instanceof LeadRateLimitError) {
+      return NextResponse.json(
+        { ok: false, error: "Zu viele Anfragen. Bitte versuchen Sie es später erneut." },
+        { status: 429 },
+      );
+    }
     console.error("WEBFORGE_LEAD_REQUEST_ERROR", error);
     return NextResponse.json({ ok: false, error: "Anfrage konnte nicht gespeichert werden." }, { status: 500 });
   }

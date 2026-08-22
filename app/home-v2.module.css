@@ -839,7 +839,7 @@
 .portalPanel > div {
   display: flex;
   gap: 7px;
-  align-items: end;
+  align-items: flex-end;
   height: 70px;
 }
 .portalPanel i {

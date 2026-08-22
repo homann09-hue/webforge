@@ -45,9 +45,13 @@ for (const name of ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"]) {
   const line = envExample.split(/\r?\n/).find((value) => value.startsWith(`${name}=`));
   if (!line || line !== `${name}=`) throw new Error(`${name} must remain blank in .env.example`);
 }
+if (envExample.includes("NEXT_PUBLIC_LEGAL_COMPLETE")) {
+  throw new Error("Legal completeness must not have a deployment-time bypass");
+}
 
 const noSupabaseRuntimeFiles = [
   ".env.example",
+  "middleware.ts",
   "next.config.ts",
   "lib/backend-transport.ts",
   "lib/submissions.ts",
@@ -116,6 +120,17 @@ if (!sessionRoute.includes("revokeAdminSession")) {
   throw new Error("app/api/admin/session: DELETE must revoke the session server side");
 }
 
+const [leadRoute, leadsModule] = await Promise.all([
+  readFile("app/api/lead/route.ts", "utf8"),
+  readFile("lib/leads.ts", "utf8"),
+]);
+if (!leadsModule.includes("LeadRateLimitError") || !leadsModule.includes("response.status === 429")) {
+  throw new Error("lib/leads.ts: backend rate limiting must remain distinguishable");
+}
+if (!leadRoute.includes("LeadRateLimitError") || !leadRoute.includes("status: 429")) {
+  throw new Error("app/api/lead: rate limiting must reach the browser as HTTP 429");
+}
+
 const globals = await readFile("app/globals.css", "utf8");
 if (!globals.includes(".sr-only")) throw new Error("app/globals.css: .sr-only utility is required for form labels");
 
@@ -136,6 +151,11 @@ for (const flag of ["httpOnly: true", 'sameSite: "strict"']) {
 const stripeModule = await readFile("lib/stripe-signature.ts", "utf8");
 if (!stripeModule.includes("timingSafeEqual")) {
   throw new Error("lib/stripe-signature.ts: signature comparison must stay constant time");
+}
+
+const companyModule = await readFile("lib/company.ts", "utf8");
+if (companyModule.includes("NEXT_PUBLIC_LEGAL_COMPLETE")) {
+  throw new Error("lib/company.ts: checkout safety must not be bypassable through the environment");
 }
 
 const onboardingModule = await readFile("lib/onboarding.ts", "utf8");

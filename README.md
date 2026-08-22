@@ -39,7 +39,7 @@ WebForge ist ein Website- und Kundenprojekt-System für kleine und mittelständi
 - Production-Dependency-Audit als CI-Gate
 - CSP- und Accessibility-Browser-Gates
 - Market-Readiness-Gate
-- Firmendaten für Impressum/Datenschutz eingetragen
+- Firmendaten zentralisiert; Checkout bleibt bei Test-/Platzhalterdaten automatisch gesperrt
 - Kleinunternehmerregelung nach § 19 UStG technisch berücksichtigt
 
 ## Noch offen vor kommerziellem Marktstart
@@ -277,10 +277,9 @@ Ein kommerzieller Marktstart ist erst freigegeben, wenn:
 
 Keine weiteren Demo-Branchen bauen, bevor die Release-Gates abgeschlossen sind.
 
-1. CI vollständig grün
+1. Rechtstexte prüfen lassen
 2. kommerzielles Hosting sicherstellen
-3. PR #9 mergen
-4. Multi-User-Migration auf Neon anwenden und testen
-5. Production deployen
-6. ersten Pilotkunden ausliefern
-7. danach Wartungs-/Hostingmodell und Vertrieb skalieren
+3. Multi-User-Migration auf Neon anwenden und testen
+4. Production deployen und Smoke-Test durchführen
+5. ersten Pilotkunden ausliefern
+6. danach Wartungs-/Hostingmodell und Vertrieb skalieren

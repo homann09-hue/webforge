@@ -45,15 +45,36 @@ export default function LeadForm() {
     <form onSubmit={submit}>
       <label>
         Name Ihres Unternehmens
-        <input name="company" required minLength={2} maxLength={120} placeholder="z. B. Mustermann GmbH" />
+        <input
+          name="company"
+          required
+          minLength={2}
+          maxLength={120}
+          autoComplete="organization"
+          placeholder="z. B. Mustermann GmbH"
+        />
       </label>
       <label>
         Haben Sie schon eine Website oder einen Google-Eintrag?
-        <input name="website" maxLength={300} placeholder="Link einfügen – falls vorhanden" />
+        <input
+          name="website"
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          maxLength={300}
+          placeholder="https://… – falls vorhanden"
+        />
       </label>
       <label>
         Ihre E-Mail-Adresse
-        <input name="email" required type="email" maxLength={254} placeholder="name@unternehmen.de" />
+        <input
+          name="email"
+          required
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          placeholder="name@unternehmen.de"
+        />
       </label>
 
       <div
@@ -69,7 +90,13 @@ export default function LeadForm() {
       <button className="button" disabled={state === "loading"} type="submit">
         {state === "loading" ? "Wird gesendet…" : "Kostenlose Ersteinschätzung anfragen →"}
       </button>
-      <small>{msg || "Unverbindlich. Sie gehen damit keinen Vertrag ein."}</small>
+      <small role="status" aria-live="polite">
+        {msg || (
+          <>
+            Unverbindlich. Sie gehen damit keinen Vertrag ein. Hinweise zum <a href="/datenschutz">Datenschutz</a>.
+          </>
+        )}
+      </small>
     </form>
   );
 }

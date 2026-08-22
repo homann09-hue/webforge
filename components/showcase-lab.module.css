@@ -235,7 +235,7 @@
   background: white;
   display: flex;
   flex-direction: column;
-  justify-content: end;
+  justify-content: flex-end;
 }
 .realisticInfo small {
   font-size: 8px;

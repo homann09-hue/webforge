@@ -1,11 +1,9 @@
 /**
  * Verification of Stripe's `Stripe-Signature` header.
  *
- * NOTE ON WHERE THIS RUNS. The webhook itself is the Supabase Edge Function in
- * supabase/functions/stripe-webhook — Next.js no longer has a webhook route.
- * This module is the reference implementation of the algorithm, kept because
- * it is the only place the logic can be unit tested; the Edge Function mirrors
- * it. If you change one, change both, and run `npm test`.
+ * The production webhook is the Next.js route at
+ * app/api/stripe/webhook/route.ts. The legacy Supabase function remains only
+ * as migration history and is not part of the active runtime.
  *
  * Kept in its own module so it can be tested without a running server, and
  * because the comparison needs to be constant time: a `===` on the hex digest

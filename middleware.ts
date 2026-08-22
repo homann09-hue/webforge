@@ -13,8 +13,6 @@ import { NextRequest, NextResponse } from "next/server";
  * /admin and /portal lose nothing by being dynamic: they are already
  * Cache-Control: no-store, and they are where the customer data is.
  */
-const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jplqdaxtnrqimlgzwuaw.supabase.co";
-
 export function middleware(request: NextRequest) {
   const nonce = crypto.randomUUID().replace(/-/g, "");
 
@@ -28,7 +26,9 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    `connect-src 'self' ${supabaseOrigin}`,
+    // The browser talks only to same-origin Next.js routes. Neon and Vercel
+    // Blob credentials remain server-side and must never be reachable here.
+    "connect-src 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
     "base-uri 'self'",

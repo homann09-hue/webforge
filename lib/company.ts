@@ -12,11 +12,11 @@
  */
 export const company = {
   /** Legal name of the business, exactly as registered. */
-  legalName: "Angelo Test",
+  legalName: "Angelo Homann",
   /** Trading name shown to customers. */
   tradingName: "WebForge",
   /** Sole trader: the owner's full name. Company: the managing director(s). */
-  representative: "Angelo Test",
+  representative: "Angelo Homann",
   street: "Hauptstr. 88",
   postalCode: "31061",
   city: "Alfeld",
@@ -33,6 +33,12 @@ export const company = {
 } as const;
 
 const PLACEHOLDER = "TODO";
+const PLACEHOLDER_PATTERN = /\b(todo|test|muster|beispiel)|\[noch einzutragen\]/i;
+
+export function isRealLegalValue(value: string): boolean {
+  const normalized = value.trim();
+  return normalized.length > 0 && !PLACEHOLDER_PATTERN.test(normalized);
+}
 
 /** Fields that must carry real data before the site may sell anything. */
 const REQUIRED_FIELDS = [
@@ -46,16 +52,13 @@ const REQUIRED_FIELDS = [
 ] as const satisfies readonly (keyof typeof company)[];
 
 /**
- * True once every legally required field carries real data.
- *
- * Can be forced on with NEXT_PUBLIC_LEGAL_COMPLETE=1 — useful if your imprint
- * lives elsewhere, but understand what you are switching off.
+ * True once every legally required field carries real data. This deliberately
+ * has no environment-variable override: a deployment misconfiguration must
+ * never re-enable checkout while the public legal data is incomplete.
  */
 export function isLegalComplete(): boolean {
-  if (process.env.NEXT_PUBLIC_LEGAL_COMPLETE === "1") return true;
   return REQUIRED_FIELDS.every((field) => {
-    const value = String(company[field] ?? "").trim();
-    return value.length > 0 && value !== PLACEHOLDER;
+    return isRealLegalValue(String(company[field] ?? ""));
   });
 }
 

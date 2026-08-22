@@ -34,6 +34,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Keep production traces scoped to this repository even when a parent
+  // directory happens to contain another lockfile (common on developer Macs).
+  outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

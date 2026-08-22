@@ -22,7 +22,7 @@
     "test:csp": "node scripts/csp-check.mjs",
     "test:a11y": "node scripts/a11y-axe.mjs && node scripts/a11y-manual.mjs",
     "test:e2e": "node scripts/e2e.mjs",
-    "test:browser:setup": "npm i --no-save playwright @axe-core/playwright && npx playwright install chromium"
+    "test:browser:setup": "playwright install chromium"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -32,12 +32,14 @@
     "react-dom": "19.1.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/eslintrc": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "eslint": "latest",
     "eslint-config-next": "15.5.21",
+    "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "typescript": "latest",
     "vitest": "^4.1.11"
