@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm install --package-lock-only --ignore-scripts
+      - name: Refresh package lock from package.json overrides
+        run: npm install --package-lock-only --ignore-scripts
       - name: Commit lockfile only
         run: |
           if git diff --quiet -- package-lock.json; then
