@@ -160,6 +160,18 @@ for (const invariant of ["private.user_sessions", "admin_gateway_failures", "ret
   }
 }
 
+const provisionUserScript = await readFile("scripts/provision-neon-user.mjs", "utf8");
+for (const invariant of [
+  "hiddenQuestion",
+  "internal_user_create_session",
+  "assert_admin_credential",
+  'query("commit")',
+]) {
+  if (!provisionUserScript.includes(invariant)) {
+    throw new Error(`Owner provisioning must self-verify securely: ${invariant}`);
+  }
+}
+
 const stripeModule = await readFile("lib/stripe-signature.ts", "utf8");
 if (!stripeModule.includes("timingSafeEqual")) {
   throw new Error("lib/stripe-signature.ts: signature comparison must stay constant time");

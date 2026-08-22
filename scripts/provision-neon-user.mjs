@@ -78,6 +78,7 @@ function hiddenQuestion(prompt) {
 }
 
 let pool;
+let client;
 try {
   const password = await hiddenQuestion("Neues Passwort (verdeckt): ");
   const confirmation = await hiddenQuestion("Passwort wiederholen (verdeckt): ");
@@ -87,7 +88,9 @@ try {
   }
 
   pool = new Pool({ connectionString: databaseUrl });
-  const result = await pool.query(
+  client = await pool.connect();
+  await client.query("begin");
+  const result = await client.query(
     `insert into private.admin_users(email, display_name, role, password_hash)
      values ($1, $2, $3, crypt($4, gen_salt('bf', 12)))
      on conflict ((lower(email))) do update
@@ -100,10 +103,28 @@ try {
     [email, displayName, role, password],
   );
   const user = result.rows[0];
-  console.log(`Benutzer sicher eingerichtet: ${user.email} (${user.role}, ${user.display_name})`);
+
+  // Verify the exact password received by the hidden prompt against the same
+  // production login and authorization path the browser uses. If any step
+  // fails, the transaction rolls the password change back automatically.
+  const login = await client.query(`select public.internal_user_create_session($1, $2) as token`, [email, password]);
+  const token = login.rows[0]?.token;
+  if (!/^wfu_[0-9a-f]{64}$/.test(token || "")) {
+    throw new Error("Der Produktionslogin hat das neue Passwort nicht akzeptiert.");
+  }
+  await client.query(`select private.assert_admin_credential($1)`, [token]);
+  await client.query(`select public.internal_user_revoke_session($1)`, [token]);
+  await client.query(`delete from private.user_sessions where token_hash = encode(digest($1, 'sha256'), 'hex')`, [
+    token,
+  ]);
+  await client.query("commit");
+
+  console.log(`Benutzer und Login verifiziert: ${user.email} (${user.role}, ${user.display_name})`);
 } catch (error) {
+  if (client) await client.query("rollback").catch(() => {});
   console.error("Benutzer konnte nicht eingerichtet werden:", error instanceof Error ? error.message : error);
   process.exitCode = 1;
 } finally {
+  if (client) client.release();
   if (pool) await pool.end();
 }
