@@ -54,8 +54,8 @@ const REQUIRED_FIELDS = [
 export function isLegalComplete(): boolean {
   if (process.env.NEXT_PUBLIC_LEGAL_COMPLETE === "1") return true;
   return REQUIRED_FIELDS.every((field) => {
-    const value = company[field];
-    return typeof value === "string" && value.trim().length > 0 && value !== PLACEHOLDER;
+    const value = String(company[field] ?? "").trim();
+    return value.length > 0 && value !== PLACEHOLDER;
   });
 }
 
