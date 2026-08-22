@@ -22,14 +22,14 @@ export const company = {
   city: "Alfeld",
   country: "Deutschland",
   email: "Homann@ovara.de",
-  phone: "TODO",
+  phone: "015172726262",
   /** Optional. Leave empty if you are a Kleinunternehmer under §19 UStG. */
   vatId: "",
   /** Optional. Only if you are entered in a commercial register. */
   registerCourt: "",
   registerNumber: "",
   /** Set true if you invoice without VAT under §19 UStG. */
-  smallBusiness: false,
+  smallBusiness: true,
 } as const;
 
 const PLACEHOLDER = "TODO";
