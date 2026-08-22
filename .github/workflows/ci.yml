@@ -8,8 +8,6 @@ on:
 permissions:
   contents: read
 
-# GitHub sets CI=true for every job, so the scripts already fail rather than
-# skip when their tooling is missing. No per-step env block is needed.
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -24,10 +22,6 @@ jobs:
       - run: npm ci
       - run: npm run verify
 
-  # The browser-driven checks live in their own job because they need Chromium,
-  # which is too heavy to put in every developer's `npm install`. Leaving them
-  # out of CI entirely was the mistake: the assertions existed but nothing ran
-  # them, so they could rot without anyone noticing.
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -42,22 +36,10 @@ jobs:
       - run: npm i --no-save playwright @axe-core/playwright
       - run: npx playwright install --with-deps chromium
 
-      # The e2e run builds and serves on its own (scripts/e2e.mjs), against the
-      # mock Edge Functions.
       - name: End-to-end admin flow
         run: npm run test:e2e
 
-      # Everything below shares one server. It has to be one step: a background
-      # process does not survive into the next step's shell, and its inherited
-      # stdout keeps the step from ever returning. nohup plus a log file fixes
-      # both, and the trap stops the runner waiting on it at the end.
-      #
-      # NEXT_PUBLIC_SUPABASE_URL points at a port with nothing behind it on
-      # purpose. Without it, lib/supabase-env.ts falls back to the production
-      # project and every pull request would talk to the live database.
       - name: Header and accessibility checks
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:59999
         run: |
           set -euo pipefail
           npm run build
