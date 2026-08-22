@@ -8,6 +8,12 @@ function json(body: unknown, status = 200) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 }
 
+function firstRow(result: unknown): Record<string, unknown> | undefined {
+  return Array.isArray(result) && result.length > 0 && result[0] && typeof result[0] === "object"
+    ? (result[0] as Record<string, unknown>)
+    : undefined;
+}
+
 function stripeSubscriptionId(invoice: Record<string, unknown>) {
   if (typeof invoice.subscription === "string") return invoice.subscription;
   const parent = invoice.parent as Record<string, unknown> | undefined;
@@ -17,13 +23,14 @@ function stripeSubscriptionId(invoice: Record<string, unknown>) {
 
 async function updateSubscriptionByStripeId(stripeSubscriptionId: string, patch: { status: string }) {
   const sql = getNeonSql();
-  const rows = await sql`
+  const result = await sql`
     update public.billing_subscriptions
     set status = ${patch.status}, updated_at = now()
     where stripe_subscription_id = ${stripeSubscriptionId}
     returning id
   `;
-  return rows[0]?.id ? Number(rows[0].id) : null;
+  const row = firstRow(result);
+  return row?.id ? Number(row.id) : null;
 }
 
 async function updatePaymentByIntent(
@@ -31,23 +38,25 @@ async function updatePaymentByIntent(
   patch: { refunded_cents?: number; status?: string; dispute_status?: string },
 ) {
   const sql = getNeonSql();
-  const invoiceRows = await sql`
+  const invoiceResult = await sql`
     select id
     from public.invoices
     where stripe_payment_intent_id = ${paymentIntentId}
     limit 1
   `;
-  const invoiceId = invoiceRows[0]?.id ? Number(invoiceRows[0].id) : null;
+  const invoiceRow = firstRow(invoiceResult);
+  const invoiceId = invoiceRow?.id ? Number(invoiceRow.id) : null;
   if (!invoiceId) return;
 
-  const paymentRows = await sql`
+  const paymentResult = await sql`
     select id
     from public.payments
     where invoice_id = ${invoiceId}
     order by paid_at desc
     limit 1
   `;
-  const paymentId = paymentRows[0]?.id ? Number(paymentRows[0].id) : null;
+  const paymentRow = firstRow(paymentResult);
+  const paymentId = paymentRow?.id ? Number(paymentRow.id) : null;
   if (!paymentId) return;
 
   await sql`
@@ -105,7 +114,7 @@ async function processEvent(event: { id: string; type: string; data: { object: R
       });
 
       if (event.type === "invoice.paid" && localSubscriptionId) {
-        const invoiceRows = await sql`
+        const invoiceResult = await sql`
           select id
           from public.invoices
           where recurring_subscription_id = ${localSubscriptionId}
@@ -113,7 +122,8 @@ async function processEvent(event: { id: string; type: string; data: { object: R
           order by issue_date desc
           limit 1
         `;
-        const invoiceId = invoiceRows[0]?.id ? Number(invoiceRows[0].id) : null;
+        const invoiceRow = firstRow(invoiceResult);
+        const invoiceId = invoiceRow?.id ? Number(invoiceRow.id) : null;
         const amountPaid = Number(object.amount_paid || 0);
         if (invoiceId && Number.isSafeInteger(amountPaid) && amountPaid > 0) {
           const stripeInvoiceId = typeof object.id === "string" ? object.id : null;
@@ -191,13 +201,13 @@ export async function POST(req: Request) {
 
   const sql = getNeonSql();
   try {
-    const inserted = await sql`
+    const insertedResult = await sql`
       insert into public.stripe_webhook_events(event_id, event_type)
       values (${event.id}, ${event.type})
       on conflict (event_id) do nothing
       returning event_id
     `;
-    if (inserted.length === 0) return json({ ok: true, duplicate: true });
+    if (!firstRow(insertedResult)?.event_id) return json({ ok: true, duplicate: true });
 
     try {
       await processEvent(event);
