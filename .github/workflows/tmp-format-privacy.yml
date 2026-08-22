@@ -32,3 +32,5 @@ jobs:
           git add -- app/datenschutz/page.tsx
           git commit -m "Format privacy policy"
           git push origin HEAD:market-readiness-v1
+
+# one-shot trigger
