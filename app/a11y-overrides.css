@@ -1,0 +1,29 @@
+/* Accessibility color corrections verified by the browser axe gate.
+ * Kept separate from the design modules so the fixes are easy to audit. */
+
+/* Main-page realistic showcase: small metadata on white cards. */
+[class*="showcase-lab_realisticInfo"] small,
+[class*="showcase-lab_realisticInfo"] span {
+  color: #5b636c !important;
+}
+
+/* Handwerk: darker muted copy on the warm light surface, lighter copy in dark sections. */
+[class*="demo-experience_craft"] {
+  --muted: #595f56 !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] {
+  --muted: #b4bbb0 !important;
+}
+
+/* Gastro: white CTAs need a darker orange; dark sections need light secondary copy. */
+[class*="demo-experience_gastro"] {
+  --accent: #d93618 !important;
+}
+[class*="demo-experience_gastro"] [class*="darkSection"] {
+  --muted: #c2afa6 !important;
+}
+
+/* Floristik: secondary text on dark sections must stay readable. */
+[class*="demo-experience_flower"] [class*="darkSection"] {
+  --muted: #c4b2bb !important;
+}
