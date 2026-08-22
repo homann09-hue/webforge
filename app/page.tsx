@@ -1,571 +1,414 @@
 import type { Metadata } from "next";
 import HomeMotion from "@/components/home-motion";
 import LeadForm from "@/components/lead-form";
+import ShowcaseLab from "@/components/showcase-lab";
 import { isLegalComplete } from "@/lib/company";
-import styles from "./home-v2.module.css";
+import styles from "./home-experience.module.css";
 
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = {
+  title: "WebForge — Moderne Websites für Unternehmen",
+  description:
+    "WebForge erstellt moderne Websites mit Anfrageformularen, Bestellsystemen, Kundenbereichen und praktischen Funktionen für Unternehmen.",
+  alternates: { canonical: "/" },
+};
+
+const capabilities = [
+  [
+    "01",
+    "Professioneller Auftritt",
+    "Eine moderne Website, die zu Ihrem Unternehmen passt und auf Handy, Tablet und Computer sauber funktioniert.",
+    "#c9ff4b",
+  ],
+  [
+    "02",
+    "Online verkaufen oder Bestellungen annehmen",
+    "Produkte, Varianten, Warenkorb und Bestellablauf direkt auf Ihrer eigenen Website – ohne unnötige Umwege.",
+    "#ff6b42",
+  ],
+  [
+    "03",
+    "Kundenbereich",
+    "Kunden können Projekte, Dateien, Angebote oder den aktuellen Stand bequem online ansehen.",
+    "#86a8ff",
+  ],
+  [
+    "04",
+    "Weniger Arbeit im Alltag",
+    "Anfragen, Formulare, Benachrichtigungen und Abläufe können so verbunden werden, dass weniger manuell erledigt werden muss.",
+    "#e38bff",
+  ],
+];
+
+const demos = [
+  {
+    number: "01",
+    type: "HANDWERK",
+    name: "Nordwerk",
+    copy: "Beispiel für einen Handwerksbetrieb mit Leistungen, Referenzen, Anfrageformular und einem Rechner für eine erste Kosteneinschätzung.",
+    href: "/demo/handwerk",
+    features: ["Kostenrechner", "Referenzen", "Projektablauf", "Anfrageformular"],
+    visual: styles.craftVisual,
+    ui: ["AKTUELLES PROJEKT", "Sanierung · 180 m²", "82%"],
+  },
+  {
+    number: "02",
+    type: "LIEFERDIENST",
+    name: "Forno 37",
+    copy: "Beispiel für einen Lieferdienst mit Speisekarte, Größen, Extras, Warenkorb und Bestellstatus.",
+    href: "/demo/gastro",
+    features: ["Speisekarte", "Extras", "Warenkorb", "Bestellstatus"],
+    visual: styles.foodVisual,
+    ui: ["BESTELLUNG", "Burrata Club · L", "13:42"],
+  },
+  {
+    number: "03",
+    type: "EINZELHANDEL",
+    name: "Blütenliebe",
+    copy: "Beispiel für ein Blumenatelier mit Sortiment und einem einfachen Strauß-Konfigurator für Anlass, Stil, Farben und Größe.",
+    href: "/demo/blumen",
+    features: ["Strauß zusammenstellen", "Sortiment", "Vorschau", "Anfrage"],
+    visual: styles.flowerVisual,
+    ui: ["STRAUSS PLANEN", "Rosé Signature", "39 €"],
+  },
+];
 
 const packages = [
   {
     name: "Starter",
     price: "399 €",
+    text: "Für kleine Unternehmen, die schnell mit einer professionellen Website starten möchten.",
     checkout: "https://buy.stripe.com/aFa9AT6HI9EO470cMCbV600",
-    text: "Für kleine Unternehmen, die sofort professionell auftreten wollen.",
-    features: ["One-Page Experience", "Mobile & Desktop", "Kontakt, Maps & SEO", "Performance-Basis"],
+    features: ["Eine moderne Seite", "Für Handy & Computer", "Kontaktformular", "Grundlegende Suchmaschinen-Optimierung"],
   },
   {
     name: "Business",
     price: "699 €",
+    text: "Für Unternehmen mit mehreren Leistungen oder Bereichen und einer umfangreicheren Website.",
     checkout: "https://buy.stripe.com/7sY8wP8PQdV46f83c2bV601",
-    text: "Für Unternehmen mit mehreren Leistungen, Seiten und klaren Conversion-Zielen.",
     popular: true,
-    features: ["Mehrere individuelle Seiten", "Conversion-System", "Erweiterte SEO-Basis", "Individuelle Komponenten"],
+    features: ["Mehrere Seiten", "Individuelle Bereiche", "Klare Anfragewege", "Erweiterte Suchmaschinen-Optimierung"],
   },
   {
     name: "Pro",
-    price: "1.249 €",
+    price: "ab 1.249 €",
+    text: "Für Unternehmen, die mehr als eine normale Website brauchen – zum Beispiel Bestellungen, Kundenbereiche oder Rechner.",
     checkout: "https://buy.stripe.com/dRm00jfee3gqfPIcMCbV602",
-    text: "Für digitale Produkte, Bestellflows, Portale und anspruchsvolle Abläufe.",
-    features: ["Bestell- & Anfrageflows", "Admin-Optionen", "Portale & Automationen", "Priorisierte Umsetzung"],
-  },
-];
-const maintenanceCheckout = "https://buy.stripe.com/28EbJ18PQg3ccDwaEubV603";
-const capabilities = [
-  {
-    number: "01",
-    title: "Digital Experiences",
-    text: "Marke, Typografie, Motion und Interaktion greifen als ein System ineinander – nicht als zufällige Effekte.",
-    className: styles.capExperience,
-  },
-  {
-    number: "02",
-    title: "Commerce & Orders",
-    text: "Produkte, Varianten, Warenkorb und Checkout-Flows so aufgebaut, dass Kunden nicht suchen müssen.",
-    className: styles.capCommerce,
-  },
-  {
-    number: "03",
-    title: "Portals & Operations",
-    text: "Kundenportale, Admin-Flächen, Angebote, Projekte und Rechnungen als echte digitale Prozesse.",
-    className: styles.capPortal,
-  },
-  {
-    number: "04",
-    title: "Performance",
-    text: "Schnelle Ladezeiten, klare Informationsarchitektur und technische Qualität als Teil des Designs.",
-    className: styles.capPerformance,
-  },
-];
-const demos = [
-  {
-    type: "Handwerk",
-    name: "Nordwerk Dach & Bau",
-    text: "Vertrauen, Leistungen, Referenzen und Anfrageflow in einer starken Handwerker-Experience.",
-    href: "/demo/handwerk",
-    accent: styles.demoCraft,
-  },
-  {
-    type: "Lieferdienst",
-    name: "Forno 37",
-    text: "Speisekarte, Größen, Toppings, Warenkorb und Checkout als vollständiger digitaler Bestellflow.",
-    href: "/demo/gastro",
-    accent: styles.demoFood,
-  },
-  {
-    type: "Retail",
-    name: "Blütenliebe",
-    text: "Editorialer Markenauftritt mit Sortiment, Anlässen, Größenwahl und Anfrageprozess.",
-    href: "/demo/blumen",
-    accent: styles.demoFlower,
+    features: ["Bestellsysteme oder Kundenbereiche", "Rechner & Konfiguratoren", "Automatische Abläufe", "Individuelle Funktionen"],
   },
 ];
 
 export default function Home() {
   const canSell = isLegalComplete();
+
   return (
     <main className={styles.home} data-home>
       <HomeMotion />
-      <div className={styles.cursorGlow} aria-hidden="true" />
       <div className={styles.noise} aria-hidden="true" />
-      <div className={styles.scrollProgress} aria-hidden="true" />
-      <nav className={styles.navWrap}>
-        <div className={`${styles.nav} ${styles.shell}`}>
-          <a className={styles.brand} href="#top" aria-label="WebForge Startseite">
-            <span className={styles.brandMark}>W</span>
-            <span className={styles.brandText}>WebForge</span>
-          </a>
-          <div className={styles.navLinks}>
-            <a href="#system">System</a>
-            <a href="#demos">Demos</a>
-            <a href="#prozess">Prozess</a>
-            <a href="#preise">Preise</a>
-          </div>
-          <a className={styles.navCta} href="#kontakt">
-            Projekt starten <span>↗</span>
-          </a>
+
+      <nav className={styles.nav}>
+        <a className={styles.brand} href="#top" aria-label="WebForge Startseite">
+          <span className={styles.brandMark}>WF</span>
+          <b>WebForge</b>
+        </a>
+        <div className={styles.navLinks}>
+          <a href="#lab">Was ist möglich?</a>
+          <a href="#demos">Beispiele</a>
+          <a href="#system">Leistungen</a>
+          <a href="#preise">Preise</a>
         </div>
+        <a className={styles.navCta} href="#kontakt">
+          Website anfragen ↗
+        </a>
       </nav>
+
       <section className={`${styles.hero} ${styles.shell}`} id="top">
         <div className={styles.heroCopy} data-reveal>
-          <div className={styles.availability}>
-            <span className={styles.liveDot} />
-            Neue Projekte verfügbar · Deutschlandweit
+          <div className={styles.status}>
+            <i /> Websites · Bestellungen · Kundenbereiche · Automatische Abläufe
           </div>
-          <h1 className={styles.heroTitle}>
-            <span>Websites, die</span>
-            <span className={styles.heroAccent}>nicht stillstehen.</span>
+          <h1>
+            Eine Website, die <em>mehr für Sie erledigt.</em>
           </h1>
           <p className={styles.heroLead}>
-            WebForge baut digitale Auftritte, die zeigen, was heute möglich ist: starke Markenführung, flüssige Motion,
-            echte Funktionen und eine User Experience, die Besucher in Kunden verwandelt.
+            WebForge erstellt moderne Websites für Unternehmen. Auf Wunsch nicht nur mit Text und Bildern, sondern auch
+            mit Bestellungen, Rechnern, Kundenbereichen und anderen Funktionen, die im Alltag wirklich helfen.
           </p>
-          <div className={styles.heroActions}>
-            <a className={styles.primary} href="#kontakt">
-              Kostenlosen Entwurf anfragen <span>↗</span>
+          <div className={styles.actions}>
+            <a className={styles.primary} href="#demos">
+              Beispiele ansehen ↗
             </a>
-            <a className={styles.secondary} href="#demos">
-              Live-Erlebnisse ansehen <span>↓</span>
+            <a className={styles.secondary} href="#kontakt">
+              Kostenlosen Entwurf anfragen
             </a>
           </div>
-          <div className={styles.heroProof}>
+          <div className={styles.heroStats}>
             <div>
               <b>3</b>
-              <span>Live-Demos</span>
+              <span>interaktive Beispiel-Websites</span>
             </div>
             <div>
               <b>399 €</b>
-              <span>Einstieg</span>
+              <span>ab Einstieg</span>
             </div>
             <div>
               <b>100%</b>
-              <span>maßgeschneidert</span>
+              <span>auf Ihr Unternehmen angepasst</span>
             </div>
           </div>
         </div>
+
         <div className={styles.heroStage} data-reveal data-tilt>
-          <div className={styles.stageHalo} />
-          <div className={styles.browserShell}>
-            <div className={styles.browserTop}>
-              <div className={styles.browserDots}>
+          <div className={styles.orbit} />
+          <div className={styles.orbit} />
+          <div className={styles.stageCore}>
+            <div className={styles.stageTop}>
+              <div className={styles.stageDots}>
                 <i />
                 <i />
                 <i />
               </div>
-              <div className={styles.addressBar}>webforge / live-experience</div>
-              <span className={styles.browserStatus}>LIVE</span>
+              <span>WEBFORGE / WEBSITE</span>
+              <b>LIVE</b>
             </div>
-            <div className={styles.browserBody}>
-              <div className={styles.miniNav}>
-                <span className={styles.miniLogo}>WF</span>
-                <div>
-                  <i />
-                  <i />
-                  <i />
-                </div>
-                <b>Start ↗</b>
-              </div>
-              <div className={styles.miniHero}>
-                <small>NEXT-GEN DIGITAL</small>
-                <strong>
-                  Built to move.
-                  <br />
-                  Built to convert.
-                </strong>
-                <p>Strategy · Design · Product</p>
-              </div>
-              <div className={styles.miniGrid}>
-                <div className={styles.miniCardA}>
-                  <span>98</span>
-                  <small>PERFORMANCE</small>
-                </div>
-                <div className={styles.miniCardB}>
-                  <i />
-                  <i />
-                  <i />
-                  <b>Live system</b>
-                </div>
-                <div className={styles.miniCardC}>
-                  <span>↗</span>
-                  <small>CONVERSION FLOW</small>
-                </div>
-              </div>
-              <div className={styles.miniTicker}>
-                <span>DESIGN</span>
-                <span>MOTION</span>
-                <span>COMMERCE</span>
-                <span>PORTALS</span>
+            <div className={styles.stageBody}>
+              <small>MODERN · SCHNELL · INDIVIDUELL</small>
+              <h2>
+                Gut aussehen.
+                <br />
+                <span>Einfach funktionieren.</span>
+              </h2>
+              <div className={styles.stageMetricGrid}>
+                <article className={styles.stageMetric}>
+                  <small>QUALITÄT</small>
+                  <b>95</b>
+                  <div className={styles.stageMetricOrb} />
+                </article>
+                <article className={styles.stageMetric}>
+                  <small>ANFRAGEWEG</small>
+                  <b>KLAR</b>
+                  <div className={styles.flow}>
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                </article>
               </div>
             </div>
           </div>
-          <div className={`${styles.stageChip} ${styles.stageChipOne}`}>
-            <small>INTERACTION</small>
-            <b>60 FPS</b>
+          <div className={`${styles.floatChip} ${styles.chip1}`}>
+            <small>TECHNIK</small>
+            <b>Schnell & sicher</b>
           </div>
-          <div className={`${styles.stageChip} ${styles.stageChipTwo}`}>
-            <small>EXPERIENCE</small>
-            <b>Premium</b>
-          </div>
-          <div className={`${styles.stageChip} ${styles.stageChipThree}`}>
-            <span className={styles.pulseIcon}>●</span>
-            <b>Live System</b>
+          <div className={`${styles.floatChip} ${styles.chip2}`}>
+            <small>ZIEL</small>
+            <b>Mehr Anfragen</b>
           </div>
         </div>
       </section>
-      <section className={styles.marquee} aria-label="WebForge Leistungen">
+
+      <div className={styles.marquee} aria-hidden="true">
         <div className={styles.marqueeTrack}>
-          {[
-            "STRATEGY",
-            "DESIGN",
-            "MOTION",
-            "WEB APPS",
-            "COMMERCE",
-            "PORTALS",
-            "AUTOMATION",
-            "SEO",
-            "PERFORMANCE",
-            "STRATEGY",
-            "DESIGN",
-            "MOTION",
-            "WEB APPS",
-            "COMMERCE",
-            "PORTALS",
-            "AUTOMATION",
-          ].map((item, index) => (
-            <span key={`${item}-${index}`}>
-              {item}
-              <i>✦</i>
-            </span>
-          ))}
+          {[...Array(2)]
+            .flatMap(() => ["WEBSITES", "BESTELLUNGEN", "KUNDENBEREICHE", "FORMULARE", "RECHNER", "MOBILE", "SEO", "WEBSITES"])
+            .map((item, index) => (
+              <span key={`${item}-${index}`}>
+                {item}
+                <i />
+              </span>
+            ))}
+        </div>
+      </div>
+
+      <section className={`${styles.section} ${styles.labSection}`} id="lab">
+        <div className={styles.shell}>
+          <div className={styles.sectionHead} data-reveal>
+            <span className={styles.eyebrow}>/ 01 — WAS IST MÖGLICH?</span>
+            <div>
+              <h2>
+                Probieren Sie es <em>direkt aus.</em>
+              </h2>
+              <p>
+                Wählen Sie aus, welche Art Website Sie brauchen. Das Beispiel zeigt, wie unterschiedlich eine Website
+                für Dienstleister, Shops oder Kundenbereiche aufgebaut sein kann.
+              </p>
+            </div>
+          </div>
+          <div data-reveal>
+            <ShowcaseLab />
+          </div>
         </div>
       </section>
+
       <section className={`${styles.section} ${styles.shell}`} id="system">
-        <div className={styles.sectionIntro} data-reveal>
-          <span className={styles.eyebrow}>/ 01 — DAS SYSTEM</span>
+        <div className={styles.sectionHead} data-reveal>
+          <span className={styles.eyebrow}>/ 02 — WAS WIR BAUEN</span>
           <div>
             <h2>
-              Design ist nur dann stark,
-              <br />
-              <em>wenn es etwas tut.</em>
+              Nicht nur schön. <em>Auch praktisch.</em>
             </h2>
             <p>
-              Unsere Website ist selbst der Beweis: Motion, Interface, Information und Conversion werden als ein
-              zusammenhängendes Produkt gedacht.
+              Ihre Website soll verständlich sein, Vertrauen schaffen und Kunden schnell zum nächsten Schritt führen –
+              zum Beispiel zu einer Anfrage, Bestellung oder Terminbuchung.
             </p>
           </div>
         </div>
         <div className={styles.capGrid}>
-          {capabilities.map((cap, index) => (
-            <article className={`${styles.capCard} ${cap.className}`} data-reveal data-tilt key={cap.title}>
-              <div className={styles.capHead}>
-                <span>{cap.number}</span>
-                <small>WEBFORGE CAPABILITY</small>
-              </div>
-              <div className={styles.capVisual} aria-hidden="true">
-                {index === 0 && (
-                  <>
-                    <div className={styles.orbitOne} />
-                    <div className={styles.orbitTwo} />
-                    <b className={styles.orbitCore}>WF</b>
-                  </>
-                )}
-                {index === 1 && (
-                  <>
-                    <div className={styles.orderItem}>
-                      <span>01</span>
-                      <b>Product</b>
-                      <small>+ 24,90 €</small>
-                    </div>
-                    <div className={styles.orderItem}>
-                      <span>02</span>
-                      <b>Variant</b>
-                      <small>+ 3,50 €</small>
-                    </div>
-                    <div className={styles.orderBar}>
-                      <i />
-                      <b>Checkout</b>
-                      <span>→</span>
-                    </div>
-                  </>
-                )}
-                {index === 2 && (
-                  <>
-                    <div className={styles.portalSidebar}>
-                      <i />
-                      <i />
-                      <i />
-                      <i />
-                    </div>
-                    <div className={styles.portalPanel}>
-                      <small>PROJECT</small>
-                      <b>82%</b>
-                      <div>
-                        <i />
-                        <i />
-                        <i />
-                      </div>
-                    </div>
-                    <div className={styles.portalPanelSmall}>
-                      <span>4</span>
-                      <small>OPEN TASKS</small>
-                    </div>
-                  </>
-                )}
-                {index === 3 && (
-                  <>
-                    <div className={styles.scoreRing}>
-                      <span>98</span>
-                      <small>SCORE</small>
-                    </div>
-                    <div className={styles.performanceBars}>
-                      <i />
-                      <i />
-                      <i />
-                      <i />
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className={styles.capCopy}>
-                <h3>{cap.title}</h3>
-                <p>{cap.text}</p>
-              </div>
+          {capabilities.map(([n, title, text, color]) => (
+            <article
+              className={styles.capCard}
+              style={{ "--cap": color } as React.CSSProperties}
+              data-reveal
+              data-tilt
+              key={title}
+            >
+              <small>{n} / WEBFORGE</small>
+              <h3>{title}</h3>
+              <p>{text}</p>
             </article>
           ))}
         </div>
       </section>
-      <section className={styles.showcase} id="demos">
-        <div className={`${styles.shell} ${styles.section}`}>
-          <div className={styles.sectionIntro} data-reveal>
-            <span className={styles.eyebrow}>/ 02 — LIVE EXPERIENCES</span>
+
+      <section className={`${styles.section} ${styles.demoSection}`} id="demos">
+        <div className={styles.shell}>
+          <div className={styles.sectionHead} data-reveal>
+            <span className={styles.eyebrow}>/ 03 — BEISPIEL-WEBSITES</span>
             <div>
               <h2>
-                Drei Branchen.
-                <br />
-                <em>Drei eigene Welten.</em>
+                So könnte Ihre Website <em>funktionieren.</em>
               </h2>
               <p>
-                Kein Template-Feeling. Jede Demo besitzt ein eigenes visuelles System, eigene Interaktionen und einen
-                zur Branche passenden Conversion-Flow.
+                Die Beispiele zeigen nicht nur verschiedene Designs, sondern auch verschiedene Funktionen für echte
+                Unternehmen.
               </p>
             </div>
           </div>
-          <div className={styles.demoStack}>
-            {demos.map((demo, index) => (
-              <article className={`${styles.demoPanel} ${demo.accent}`} data-reveal data-tilt key={demo.name}>
-                <div className={styles.demoMeta}>
-                  <span>0{index + 1}</span>
-                  <small>{demo.type}</small>
-                </div>
-                <div className={styles.demoPreview}>
-                  {index === 0 && (
-                    <div className={styles.craftPreview}>
-                      <div className={styles.previewNav}>
-                        <b>NORDWERK</b>
-                        <span>ANFRAGE ↗</span>
-                      </div>
-                      <strong>
-                        Dächer,
-                        <br />
-                        die bleiben.
-                      </strong>
-                      <div className={styles.previewStats}>
-                        <span>
-                          <b>24h</b>
-                          <small>Reaktion</small>
-                        </span>
-                        <span>
-                          <b>18+</b>
-                          <small>Jahre</small>
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {index === 1 && (
-                    <div className={styles.foodPreview}>
-                      <div className={styles.foodNav}>
-                        <b>FORNO 37</b>
-                        <span>🛒 2</span>
-                      </div>
-                      <strong>
-                        Hot.
-                        <br />
-                        Fast.
-                        <br />
-                        Forno.
-                      </strong>
-                      <div className={styles.foodOrder}>
-                        <span>Pizza No. 7</span>
-                        <b>14,90 €</b>
-                        <i>+</i>
-                      </div>
-                    </div>
-                  )}
-                  {index === 2 && (
-                    <div className={styles.flowerPreview}>
-                      <div className={styles.flowerNav}>
-                        <b>BLÜTENLIEBE</b>
-                        <span>SHOP ↗</span>
-                      </div>
-                      <strong>
-                        Flowers
-                        <br />
-                        <em>with feeling.</em>
-                      </strong>
-                      <div className={styles.flowerProduct}>
-                        <i />
-                        <div>
-                          <small>BOUQUET 04</small>
-                          <b>Rosé Edit</b>
-                        </div>
-                        <span>39 €</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className={styles.demoInfo}>
+          <div className={styles.demoGrid}>
+            {demos.map((demo) => (
+              <article className={styles.demoCard} data-reveal key={demo.name}>
+                <div className={styles.demoCopy}>
                   <div>
-                    <small>WEBFORGE / LIVE DEMO</small>
+                    <div className={styles.demoMeta}>
+                      <span>{demo.number}</span>
+                      <span>{demo.type}</span>
+                    </div>
                     <h3>{demo.name}</h3>
+                    <p>{demo.copy}</p>
+                    <div className={styles.featurePills}>
+                      {demo.features.map((feature) => (
+                        <span key={feature}>{feature}</span>
+                      ))}
+                    </div>
                   </div>
-                  <p>{demo.text}</p>
-                  <a href={demo.href}>
-                    Experience öffnen <span>↗</span>
+                  <a className={styles.demoLink} href={demo.href}>
+                    <span>Beispiel öffnen</span>
+                    <span>↗</span>
                   </a>
+                </div>
+                <div className={`${styles.demoVisual} ${demo.visual}`}>
+                  <div className={styles.visualUi}>
+                    <div>
+                      <small>{demo.ui[0]}</small>
+                      <b>{demo.ui[1]}</b>
+                    </div>
+                    <strong>{demo.ui[2]}</strong>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         </div>
       </section>
-      <section className={`${styles.section} ${styles.shell}`} id="prozess">
-        <div className={styles.sectionIntro} data-reveal>
-          <span className={styles.eyebrow}>/ 03 — PROZESS</span>
+
+      <section className={`${styles.section} ${styles.shell}`} id="preise">
+        <div className={styles.sectionHead} data-reveal>
+          <span className={styles.eyebrow}>/ 04 — PREISE</span>
           <div>
             <h2>
-              Von null zu live.
-              <br />
-              <em>Ohne Agentur-Chaos.</em>
+              Klarer Einstieg. <em>Mehr nur, wenn Sie es brauchen.</em>
             </h2>
-            <p>Ein klarer Prozess sorgt dafür, dass Geschwindigkeit nicht auf Kosten von Qualität geht.</p>
+            <p>
+              Sie starten mit dem passenden Grundpaket. Zusätzliche Funktionen wie Bestellungen, Kundenbereiche oder
+              Rechner kommen nur dazu, wenn sie für Ihr Unternehmen sinnvoll sind.
+            </p>
           </div>
         </div>
-        <div className={styles.processLine} data-reveal>
-          {[
-            ["01", "Discover", "Zielgruppe, Angebot, Wettbewerb und Conversion-Ziel klären."],
-            ["02", "Direction", "Look, Struktur und erste Interaktion als visuelle Richtung definieren."],
-            ["03", "Build", "Designsystem, responsive Umsetzung und Funktionen vollständig bauen."],
-            ["04", "Launch", "Testen, optimieren, veröffentlichen und auf Wunsch weiter betreuen."],
-          ].map((step) => (
-            <article key={step[0]}>
-              <span>{step[0]}</span>
-              <div className={styles.processDot} />
-              <h3>{step[1]}</h3>
-              <p>{step[2]}</p>
+        <div className={styles.pricingGrid}>
+          {packages.map((pkg) => (
+            <article className={styles.priceCard} data-popular={Boolean(pkg.popular)} data-reveal key={pkg.name}>
+              <div className={styles.priceTop}>
+                <span>WEBFORGE / {pkg.name.toUpperCase()}</span>
+                {pkg.popular && <b>BELIEBT</b>}
+              </div>
+              <h3>{pkg.name}</h3>
+              <div className={styles.price}>{pkg.price}</div>
+              <p>{pkg.text}</p>
+              <ul>
+                {pkg.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+              {canSell ? (
+                <a href={pkg.checkout}>Paket auswählen ↗</a>
+              ) : (
+                <span className={styles.disabled}>Nach Anfrage verfügbar</span>
+              )}
             </article>
           ))}
         </div>
       </section>
-      <section className={styles.pricingSection} id="preise">
-        <div className={`${styles.section} ${styles.shell}`}>
-          <div className={styles.sectionIntro} data-reveal>
-            <span className={styles.eyebrow}>/ 04 — INVESTMENT</span>
-            <div>
-              <h2>
-                Klare Pakete.
-                <br />
-                <em>Keine Agenturpreise.</em>
-              </h2>
-              <p>Der Umfang steht vor Projektstart fest. Keine versteckten Stunden, keine Überraschungen.</p>
-            </div>
-          </div>
-          <div className={styles.pricingGrid}>
-            {packages.map((item) => (
-              <article
-                className={`${styles.priceCard} ${item.popular ? styles.priceFeatured : ""}`}
-                data-reveal
-                data-tilt
-                key={item.name}
-              >
-                <div className={styles.priceTop}>
-                  <small>{item.popular ? "MOST CHOSEN" : "WEBFORGE PACKAGE"}</small>
-                  {item.popular && <span>POPULAR</span>}
-                </div>
-                <h3>{item.name}</h3>
-                <p>{item.text}</p>
-                <strong>{item.price}</strong>
-                <ul>
-                  {item.features.map((feature) => (
-                    <li key={feature}>
-                      <span>✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                {canSell ? (
-                  <a href={item.checkout} rel="noreferrer">
-                    Paket starten <span>↗</span>
-                  </a>
-                ) : (
-                  <a href="#kontakt">
-                    Paket anfragen <span>↗</span>
-                  </a>
-                )}
-              </article>
-            ))}
-          </div>
-          <div className={styles.maintenance} data-reveal>
-            <div>
-              <small>OPTIONAL CARE PLAN</small>
-              <b>Hosting, Betreuung & kleine Änderungen</b>
-            </div>
-            <strong>
-              99 €<span>/Monat</span>
-            </strong>
-            {canSell ? (
-              <a href={maintenanceCheckout} rel="noreferrer">
-                Betreuung starten ↗
-              </a>
-            ) : (
-              <a href="#kontakt">Betreuung anfragen ↗</a>
-            )}
+
+      <section className={`${styles.section} ${styles.shell}`}>
+        <div className={styles.sectionHead} data-reveal>
+          <span className={styles.eyebrow}>/ 05 — SO LÄUFT ES AB</span>
+          <div>
+            <h2>
+              Von der Idee bis zur <em>fertigen Website.</em>
+            </h2>
           </div>
         </div>
+        <div className={styles.process}>
+          {[
+            ["01", "Wir klären, was Sie brauchen", "Wir besprechen Ihr Unternehmen, Ihre Kunden und was die Website für Sie erreichen soll."],
+            ["02", "Sie sehen einen ersten Entwurf", "Wir legen Aufbau, Stil und die wichtigsten Bereiche fest, bevor alles fertig gebaut wird."],
+            ["03", "Wir bauen die Website", "Die Website wird für Handy und Computer umgesetzt und die gewünschten Funktionen werden eingebaut."],
+            ["04", "Die Website geht online", "Wir testen alles, veröffentlichen die Seite und können sie auf Wunsch später weiter ausbauen."],
+          ].map(([n, title, text]) => (
+            <article key={n}>
+              <b>{n}</b>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
       </section>
-      <section className={styles.finalCta} id="kontakt">
-        <div className={styles.ctaOrb} aria-hidden="true" />
-        <div className={`${styles.shell} ${styles.ctaGrid}`}>
+
+      <section className={styles.contact} id="kontakt">
+        <div className={`${styles.shell} ${styles.contactGrid}`}>
           <div data-reveal>
-            <span className={styles.eyebrow}>/ START A PROJECT</span>
+            <span className={styles.eyebrow}>/ WEBSITE ANFRAGEN</span>
             <h2>
-              Ihre Website sollte
-              <br />
-              nicht aussehen wie <em>gestern.</em>
+              Was braucht <em>Ihr Unternehmen?</em>
             </h2>
             <p>
-              Schicken Sie uns Ihr Unternehmen oder Ihre bestehende Website. Wir zeigen Ihnen, in welche Richtung ein
-              moderner digitaler Auftritt gehen kann.
+              Schicken Sie uns kurz Ihr Unternehmen und Ihre Kontaktdaten. Wenn bereits eine Website oder ein
+              Google-Eintrag vorhanden ist, können Sie den Link direkt mitsenden.
             </p>
-            <div className={styles.ctaNotes}>
-              <span>✓ unverbindlich</span>
-              <span>✓ konkrete Richtung</span>
-              <span>✓ kein Sales-Call-Zwang</span>
-            </div>
           </div>
-          <div className={styles.formCard} data-reveal data-tilt>
+          <div className={styles.formWrap} data-reveal>
             <LeadForm />
           </div>
         </div>
       </section>
+
       <footer className={`${styles.footer} ${styles.shell}`}>
-        <div className={styles.footerBrand}>
-          <span className={styles.brandMark}>W</span>
-          <div>
-            <b>WebForge</b>
-            <small>DIGITAL EXPERIENCES</small>
-          </div>
+        <div>
+          <strong>WebForge</strong>
+          <br /> Moderne Websites für Unternehmen
         </div>
-        <p>Strategy · Design · Motion · Web Apps</p>
+        <div>Deutschland · Remote</div>
         <div className={styles.footerLinks}>
           <a href="/impressum">Impressum</a>
           <a href="/datenschutz">Datenschutz</a>
