@@ -1,7 +1,6 @@
 import { del, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getNeonSql } from "@/lib/neon-db";
-import { edgeFunctionUrl, SUPABASE_PUBLISHABLE_KEY } from "@/lib/supabase-env";
 
 const ALLOWED_TYPES: Record<string, string[]> = {
   "image/jpeg": ["jpg", "jpeg"],
@@ -12,22 +11,6 @@ const ALLOWED_TYPES: Record<string, string[]> = {
 };
 
 export async function POST(req: Request) {
-  if (process.env.WEBFORGE_BACKEND !== "neon") {
-    const form = await req.formData();
-    const response = await fetch(edgeFunctionUrl("portal-upload"), {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_PUBLISHABLE_KEY,
-        Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: form,
-    });
-    return new NextResponse(response.body, {
-      status: response.status,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   try {
     const form = await req.formData();
     const token = String(form.get("token") || "");
