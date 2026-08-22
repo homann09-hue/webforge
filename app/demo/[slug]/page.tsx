@@ -7,21 +7,14 @@ import DemoMotion from "@/components/demo-motion";
 import styles from "../demo.module.css";
 import motionStyles from "../demo-motion.module.css";
 import polishStyles from "../demo-polish.module.css";
-import { sites } from "@/lib/site-config";
+import { getSiteConfig, siteConfigs } from "@/lib/site-config";
 
-/**
- * Without this the three demos inherited the homepage title, description and
- * canonical URL — while sitemap.ts submits each of them as its own page.
- */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const site = sites[slug as keyof typeof sites];
+  const site = getSiteConfig(slug);
   if (!site) return {};
 
-  const title = `${site.business} — ${site.category}-Demo`;
-  const description =
-    `Live-Demo einer ${site.category}-Website von WebForge: vollständiger Auftritt mit ` +
-    `Leistungen, Vertrauensaufbau und Anfragestrecke. Beispielinhalte, kein echtes Unternehmen.`;
+  const { title, description } = site.seo;
 
   return {
     title,
@@ -40,17 +33,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export function generateStaticParams() {
-  return [{ slug: "handwerk" }, { slug: "gastro" }, { slug: "blumen" }];
+  return siteConfigs.map((site) => ({ slug: site.slug }));
 }
 
 export default async function DemoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const site = getSiteConfig(slug);
+  if (!site) notFound();
+
   const content =
-    slug === "handwerk" ? (
+    site.industry === "handwerk" ? (
       <DemoHandwerk />
-    ) : slug === "gastro" ? (
+    ) : site.industry === "gastro" ? (
       <DemoGastro />
-    ) : slug === "blumen" ? (
+    ) : site.industry === "retail" ? (
       <DemoBlumen />
     ) : null;
 

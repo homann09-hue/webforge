@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   description:
     "Wie WebForge personenbezogene Daten verarbeitet: Kontaktformular, Kundenportal, Zahlungen und eingesetzte Dienstleister.",
   alternates: { canonical: "/datenschutz" },
-  // Without this the page inherits the root openGraph block whole and
-  // advertises the homepage URL and title while the canonical says otherwise.
   openGraph: {
     title: "Datenschutzerklärung — WebForge",
     url: "/datenschutz",
@@ -84,8 +82,8 @@ export default function Datenschutz() {
       </p>
       <p>
         Die Daten werden gelöscht, sobald sie für die Bearbeitung nicht mehr erforderlich sind und keine gesetzlichen
-        Aufbewahrungspflichten entgegenstehen. Für Angebote und Rechnungen gelten die handels- und steuerrechtlichen
-        Aufbewahrungsfristen von sechs bzw. zehn Jahren (§ 257 HGB, § 147 AO).
+        Aufbewahrungspflichten entgegenstehen. Für Angebote und Rechnungen gelten die jeweils anwendbaren handels- und
+        steuerrechtlichen Aufbewahrungsfristen.
       </p>
 
       <h2>4. Kundenportal</h2>
@@ -101,36 +99,39 @@ export default function Datenschutz() {
 
       <h2>5. Zahlungsabwicklung</h2>
       <p>
-        Für die Abwicklung von Zahlungen setzen wir Stripe ein (Stripe Payments Europe Ltd., 1 Grand Canal Street Lower,
-        Grand Canal Dock, Dublin, Irland). Wenn Sie einen Zahlungsvorgang starten, werden die dafür erforderlichen Daten
-        an Stripe übermittelt und dort eigenverantwortlich verarbeitet. Vollständige Zahlungsdaten wie Kartennummern
-        erhalten wir nicht.
+        Für die Abwicklung von Zahlungen können wir Stripe einsetzen (Stripe Payments Europe Ltd., 1 Grand Canal Street
+        Lower, Grand Canal Dock, Dublin, Irland). Wenn Sie einen Zahlungsvorgang starten, werden die dafür
+        erforderlichen Daten an Stripe übermittelt und dort im Rahmen der Zahlungsabwicklung verarbeitet. Vollständige
+        Zahlungsdaten wie Kartennummern erhalten wir nicht.
       </p>
       <p>
         Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. Weitere Informationen finden Sie in der Datenschutzerklärung von
         Stripe unter stripe.com/de/privacy.
       </p>
 
-      <h2>6. Eingesetzte Dienstleister (Auftragsverarbeitung)</h2>
-      <p>Zur Bereitstellung dieser Website und der zugehörigen Systeme setzen wir folgende Dienstleister ein:</p>
+      <h2>6. Eingesetzte technische Dienstleister</h2>
+      <p>
+        Zur Bereitstellung dieser Website und der zugehörigen Systeme setzen wir insbesondere folgende Anbieter ein:
+      </p>
       <ul>
         <li>
-          <strong>Vercel Inc.</strong> (340 S Lemon Ave #4133, Walnut, CA 91789, USA) — Hosting und Auslieferung der
-          Website.
+          <strong>Vercel Inc.</strong> (USA) — Hosting, Auslieferung der Website, serverseitige Funktionen und
+          Dateispeicherung über Vercel Blob.
         </li>
         <li>
-          <strong>Supabase Inc.</strong> (970 Toa Payoh North #07-04, Singapur) — Datenbank, Dateispeicher und
-          serverseitige Funktionen für Anfragen, Projekte und Kundenportal.
+          <strong>Neon Inc.</strong> (USA) — PostgreSQL-Datenbank für Anfragen, Projekte, Kundenportal, Angebote und
+          Rechnungsdaten.
         </li>
         <li>
-          <strong>Stripe Payments Europe Ltd.</strong> (Dublin, Irland) — Zahlungsabwicklung, siehe Abschnitt 5.
+          <strong>Stripe Payments Europe Ltd.</strong> (Dublin, Irland) — optionale Zahlungsabwicklung, siehe Abschnitt
+          5.
         </li>
       </ul>
       <p>
-        Mit diesen Dienstleistern bestehen Verträge zur Auftragsverarbeitung nach Art. 28 DSGVO. Soweit dabei
-        personenbezogene Daten in Drittländer außerhalb der EU bzw. des EWR übermittelt werden, erfolgt dies auf
-        Grundlage der Standardvertragsklauseln der EU-Kommission nach Art. 46 Abs. 2 lit. c DSGVO sowie ergänzender
-        Schutzmaßnahmen.
+        Soweit ein Dienstleister personenbezogene Daten in unserem Auftrag verarbeitet, wird er auf Grundlage der nach
+        Art. 28 DSGVO erforderlichen Vereinbarungen eingesetzt. Soweit personenbezogene Daten in Staaten außerhalb der
+        EU bzw. des EWR übermittelt werden, werden die jeweils erforderlichen Garantien für Drittlandübermittlungen
+        eingesetzt, insbesondere die Standardvertragsklauseln der EU-Kommission, soweit diese erforderlich sind.
       </p>
 
       <h2>7. Cookies und Reichweitenmessung</h2>

@@ -1,0 +1,96 @@
+/* Accessibility color and interaction corrections verified by browser gates. */
+
+/* Main-page realistic showcase: small metadata on white cards. */
+[class*="showcase-lab_realisticInfo"] small,
+[class*="showcase-lab_realisticInfo"] span {
+  color: #5b636c !important;
+}
+
+/* Main-page light demo section: all small supporting copy must clear AA. */
+[class*="home-experience_demoSection"] [class*="home-experience_eyebrow"],
+[class*="home-experience_demoSection"] [class*="home-experience_sectionHead"] p {
+  color: #5e666e !important;
+}
+[class*="home-experience_demoSection"] [class*="home-experience_demoMeta"],
+[class*="home-experience_demoSection"] [class*="home-experience_visualUi"] small {
+  color: #555d65 !important;
+}
+[class*="home-experience_contact"] [class*="home-experience_eyebrow"] {
+  color: #26310f !important;
+}
+
+/* WCAG 2.5.8: links and controls used by the public showcase keep a minimum
+   24px hit target without changing their visual design. */
+[data-home] a,
+[class*="demo-experience_"] a {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+[data-home] input {
+  min-width: 24px;
+  min-height: 24px;
+}
+
+/* Handwerk: darker muted copy on the warm light surface, lighter copy in dark sections. */
+[class*="demo-experience_craft"] {
+  --muted: #595f56 !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] {
+  --muted: #bfc7bc !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_card"] {
+  background: #1a1f1a !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_card"] small,
+[class*="demo-experience_craft"] [class*="darkSection"] [class*="demo-experience_cardNumber"] {
+  color: #cbd2c7 !important;
+}
+
+/* Gastro: white CTAs need a darker orange. Inactive kitchen cards are light,
+   so they need dark text even when the whole block sits inside a dark section. */
+[class*="demo-experience_gastro"] {
+  --accent: #d93618 !important;
+}
+[class*="demo-experience_gastro"] [class*="darkSection"] {
+  --muted: #c2afa6 !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"] {
+  color: #211611 !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"] small {
+  opacity: 1 !important;
+  color: #5f514a !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"][data-active="true"] {
+  color: #ffffff !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_kitchenStep"][data-active="true"] small {
+  opacity: 1 !important;
+  color: #ffffff !important;
+}
+[class*="demo-experience_gastro"] [class*="demo-experience_contact"] [class*="demo-experience_kicker"],
+[class*="demo-experience_gastro"] [class*="demo-experience_contactGrid"] > div > p {
+  color: #ffffff !important;
+}
+
+/* Floristik: secondary text on dark sections must stay readable. */
+[class*="demo-experience_flower"] [class*="darkSection"] {
+  --muted: #c4b2bb !important;
+}
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] {
+  color: #281c24 !important;
+}
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] [class*="demo-experience_kicker"] {
+  color: #281c24 !important;
+}
+[class*="demo-experience_flower"] [class*="demo-experience_toolCopy"] p {
+  color: #67535f !important;
+}
+[class*="demo-experience_swatch"]:focus,
+[class*="demo-experience_swatch"]:focus-visible {
+  outline: 3px solid #111111 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px #ffffff !important;
+}

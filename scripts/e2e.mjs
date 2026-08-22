@@ -1,15 +1,12 @@
 /**
- * Orchestrates the admin end-to-end run: mock backend, production build,
- * server, test, cleanup.
+ * Orchestrates the admin end-to-end run: isolated backend mock, production
+ * build, server, browser test, cleanup.
  *
  *   npm run test:e2e
  *
- * It builds its own copy of the app because NEXT_PUBLIC_* values are inlined
- * at build time — pointing the app at the mock cannot be done by setting an
- * environment variable on an existing build. That costs about 15 seconds.
- *
- * Not part of `npm run verify`: it needs a browser, and the browser tooling is
- * an optional install.
+ * The application now talks directly to Neon in production. During E2E we
+ * enable WEBFORGE_E2E_MODE and route the provider-neutral backend transport to
+ * a localhost-only mock. No production database or credentials are touched.
  */
 import { spawn } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -22,15 +19,6 @@ const APP_URL = `http://localhost:${APP_PORT}`;
 
 const children = [];
 
-/**
- * `detached: true` puts each child in its own process group.
- *
- * Without it, `npx next start` is a shell wrapper around the real server:
- * killing the child killed the wrapper and orphaned `next-server`, which kept
- * holding the port. The next run then found the port busy and refused to
- * start — or worse, on a differently configured machine, silently measured the
- * stale build still answering there.
- */
 function spawnChild(command, args, options = {}) {
   const child = spawn(command, args, { stdio: "pipe", detached: true, ...options });
   children.push(child);
@@ -40,7 +28,6 @@ function spawnChild(command, args, options = {}) {
 async function shutdown() {
   for (const child of children) {
     try {
-      // Negative pid = the whole process group, wrapper and server together.
       process.kill(-child.pid, "SIGKILL");
     } catch {
       try {
@@ -57,7 +44,6 @@ process.on("SIGINT", () => {
   process.exit(130);
 });
 
-/** Polls until the URL answers, so we never race a half-started server. */
 async function waitFor(url, label, attempts = 40) {
   for (let i = 0; i < attempts; i += 1) {
     try {
@@ -71,16 +57,11 @@ async function waitFor(url, label, attempts = 40) {
   throw new Error(`${label} kam unter ${url} nicht hoch`);
 }
 
-/**
- * A port that is already busy is the failure mode that wasted the most time
- * while writing these tests: `next start` exits with EADDRINUSE, the old
- * process keeps answering, and the suite silently measures a stale build.
- */
 async function assertPortFree(url, label) {
   try {
     await fetch(url, { signal: AbortSignal.timeout(1500) });
   } catch {
-    return; // nothing listening, which is what we want
+    return;
   }
   throw new Error(`Port fuer ${label} (${url}) ist belegt. Bitte den alten Prozess beenden.`);
 }
@@ -91,6 +72,12 @@ async function run(command, args, options = {}) {
     child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`${command} endete mit Code ${code}`))));
   });
 }
+
+const e2eEnv = {
+  ...process.env,
+  WEBFORGE_E2E_MODE: "1",
+  WEBFORGE_E2E_BACKEND_URL: MOCK_URL,
+};
 
 try {
   await assertPortFree(MOCK_URL, "Mock-Backend");
@@ -103,29 +90,24 @@ try {
   mock.stderr.on("data", (d) => process.stderr.write(`[mock] ${d}`));
   await waitFor(`${MOCK_URL}/__test__/state`, "Mock-Backend");
 
-  console.log("2/4  App gegen das Mock-Backend bauen");
+  console.log("2/4  App im isolierten Backend-Testmodus bauen");
   await rm(".next", { recursive: true, force: true });
-  await run("npx", ["next", "build"], {
-    env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: MOCK_URL },
-    stdio: "ignore",
-  });
+  await run("npx", ["next", "build"], { env: e2eEnv, stdio: "ignore" });
 
   console.log("3/4  App starten");
-  const app = spawnChild("npx", ["next", "start", "-p", String(APP_PORT)], {
-    env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: MOCK_URL },
-  });
+  const app = spawnChild("npx", ["next", "start", "-p", String(APP_PORT)], { env: e2eEnv });
   let appLog = "";
   app.stdout.on("data", (d) => (appLog += d));
   app.stderr.on("data", (d) => (appLog += d));
   await waitFor(`${APP_URL}/admin`, "App").catch((error) => {
-    console.error(appLog.slice(-800));
+    console.error(appLog.slice(-1200));
     throw error;
   });
   if (appLog.includes("EADDRINUSE")) throw new Error("next start konnte den Port nicht belegen");
 
   console.log("4/4  Admin-Flow ausfuehren\n");
   await run(process.execPath, ["tests/e2e/admin-flow.mjs"], {
-    env: { ...process.env, E2E_BASE_URL: APP_URL, MOCK_BASE_URL: MOCK_URL },
+    env: { ...e2eEnv, E2E_BASE_URL: APP_URL, MOCK_BASE_URL: MOCK_URL },
   });
 
   await shutdown();

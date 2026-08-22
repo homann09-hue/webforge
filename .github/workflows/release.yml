@@ -1,17 +1,15 @@
-name: CI
+name: Market Release Gate
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  release-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,31 +17,20 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: package-lock.json
+
       - run: npm ci
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
-      - run: npm run verify
-      - name: Market readiness gate
-        run: npm run market:readiness
-
-  browser:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci
       - run: npm i --no-save playwright @axe-core/playwright
       - run: npx playwright install --with-deps chromium
+
+      - name: Static release checks
+        run: npm run release:check
 
       - name: End-to-end admin and order flow
         run: npm run test:e2e
 
-      - name: Header and accessibility checks
+      - name: CSP and accessibility against production build
         run: |
           set -euo pipefail
           npm run build
@@ -57,12 +44,25 @@ jobs:
             sleep 1
           done
           if ! curl -sf -o /dev/null http://127.0.0.1:3000/; then
-            echo "Server kam nicht hoch:"; cat /tmp/next.log; exit 1
+            echo "Server kam nicht hoch:"
+            cat /tmp/next.log
+            exit 1
           fi
 
           npm run test:csp
           npm run test:a11y
 
-      - name: Serverprotokoll bei Fehlschlag
+      - name: Server log on failure
         if: failure()
-        run: tail -50 /tmp/next.log || true
+        run: tail -80 /tmp/next.log || true
+
+      - name: Release summary
+        if: success()
+        run: |
+          echo "## WebForge Market Release Gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Production dependency audit" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Verify" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Market readiness" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ CSP" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ Accessibility" >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ End-to-end admin and order flow" >> "$GITHUB_STEP_SUMMARY"

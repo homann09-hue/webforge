@@ -78,7 +78,12 @@ const packages = [
     price: "399 €",
     text: "Für kleine Unternehmen, die schnell mit einer professionellen Website starten möchten.",
     checkout: "https://buy.stripe.com/aFa9AT6HI9EO470cMCbV600",
-    features: ["Eine moderne Seite", "Für Handy & Computer", "Kontaktformular", "Grundlegende Suchmaschinen-Optimierung"],
+    features: [
+      "Eine moderne Seite",
+      "Für Handy & Computer",
+      "Kontaktformular",
+      "Grundlegende Suchmaschinen-Optimierung",
+    ],
   },
   {
     name: "Business",
@@ -93,7 +98,12 @@ const packages = [
     price: "ab 1.249 €",
     text: "Für Unternehmen, die mehr als eine normale Website brauchen – zum Beispiel Bestellungen, Kundenbereiche oder Rechner.",
     checkout: "https://buy.stripe.com/dRm00jfee3gqfPIcMCbV602",
-    features: ["Bestellsysteme oder Kundenbereiche", "Rechner & Konfiguratoren", "Automatische Abläufe", "Individuelle Funktionen"],
+    features: [
+      "Bestellsysteme oder Kundenbereiche",
+      "Rechner & Konfiguratoren",
+      "Automatische Abläufe",
+      "Individuelle Funktionen",
+    ],
   },
 ];
 
@@ -211,7 +221,16 @@ export default function Home() {
       <div className={styles.marquee} aria-hidden="true">
         <div className={styles.marqueeTrack}>
           {[...Array(2)]
-            .flatMap(() => ["WEBSITES", "BESTELLUNGEN", "KUNDENBEREICHE", "FORMULARE", "RECHNER", "MOBILE", "SEO", "WEBSITES"])
+            .flatMap(() => [
+              "WEBSITES",
+              "BESTELLUNGEN",
+              "KUNDENBEREICHE",
+              "FORMULARE",
+              "RECHNER",
+              "MOBILE",
+              "SEO",
+              "WEBSITES",
+            ])
             .map((item, index) => (
               <span key={`${item}-${index}`}>
                 {item}
@@ -371,10 +390,26 @@ export default function Home() {
         </div>
         <div className={styles.process}>
           {[
-            ["01", "Wir klären, was Sie brauchen", "Wir besprechen Ihr Unternehmen, Ihre Kunden und was die Website für Sie erreichen soll."],
-            ["02", "Sie sehen einen ersten Entwurf", "Wir legen Aufbau, Stil und die wichtigsten Bereiche fest, bevor alles fertig gebaut wird."],
-            ["03", "Wir bauen die Website", "Die Website wird für Handy und Computer umgesetzt und die gewünschten Funktionen werden eingebaut."],
-            ["04", "Die Website geht online", "Wir testen alles, veröffentlichen die Seite und können sie auf Wunsch später weiter ausbauen."],
+            [
+              "01",
+              "Wir klären, was Sie brauchen",
+              "Wir besprechen Ihr Unternehmen, Ihre Kunden und was die Website für Sie erreichen soll.",
+            ],
+            [
+              "02",
+              "Sie sehen einen ersten Entwurf",
+              "Wir legen Aufbau, Stil und die wichtigsten Bereiche fest, bevor alles fertig gebaut wird.",
+            ],
+            [
+              "03",
+              "Wir bauen die Website",
+              "Die Website wird für Handy und Computer umgesetzt und die gewünschten Funktionen werden eingebaut.",
+            ],
+            [
+              "04",
+              "Die Website geht online",
+              "Wir testen alles, veröffentlichen die Seite und können sie auf Wunsch später weiter ausbauen.",
+            ],
           ].map(([n, title, text]) => (
             <article key={n}>
               <b>{n}</b>

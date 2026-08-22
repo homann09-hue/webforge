@@ -52,8 +52,6 @@ function issuerBlock(): string {
     field(company.street),
     `${field(company.postalCode)} ${field(company.city)}`,
     field(company.email),
-    // Not escaped here: the whole array goes through escapeHtml below, and
-    // escaping twice renders "&" as "&amp;".
     company.vatId ? `USt-IdNr.: ${company.vatId}` : "",
     company.smallBusiness ? "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet." : "",
   ].filter(Boolean);
@@ -91,6 +89,12 @@ export function offerPrintHtml(offer: Offer): string {
     .join("");
 
   const validUntil = germanDate(offer.valid_until);
+  const taxRows = company.smallBusiness
+    ? ""
+    : [
+        `<div><span>Netto</span><span>${escapeHtml(formatMoney(offer.net_cents))}</span></div>`,
+        `<div><span>MwSt. (${escapeHtml(offer.tax_percent)}%)</span><span>${escapeHtml(formatMoney(offer.tax_cents))}</span></div>`,
+      ].join("");
 
   const body = [
     `<header><div><h1>WebForge</h1><small>Professionelle Websites für Unternehmen</small></div>`,
@@ -102,8 +106,7 @@ export function offerPrintHtml(offer: Offer): string {
     `<div class="totals">`,
     `<div><span>Zwischensumme</span><span>${escapeHtml(formatMoney(offer.subtotal_cents))}</span></div>`,
     `<div><span>Rabatt (${escapeHtml(offer.discount_percent)}%)</span><span>− ${escapeHtml(formatMoney(offer.discount_cents))}</span></div>`,
-    `<div><span>Netto</span><span>${escapeHtml(formatMoney(offer.net_cents))}</span></div>`,
-    `<div><span>MwSt. (${escapeHtml(offer.tax_percent)}%)</span><span>${escapeHtml(formatMoney(offer.tax_cents))}</span></div>`,
+    taxRows,
     `<div class="total"><span>Gesamt</span><span>${escapeHtml(formatMoney(offer.gross_cents))}</span></div>`,
     `</div>`,
     validUntil ? `<p>Gültig bis: ${escapeHtml(validUntil)}</p>` : "",
@@ -126,6 +129,12 @@ export function invoicePrintHtml(invoice: Invoice): string {
     .join("");
 
   const dueDate = germanDate(invoice.due_date);
+  const taxRows = company.smallBusiness
+    ? ""
+    : [
+        `<div><span>Netto</span><span>${escapeHtml(formatMoney(invoice.net_cents))}</span></div>`,
+        `<div><span>MwSt. (${escapeHtml(invoice.tax_percent)}%)</span><span>${escapeHtml(formatMoney(invoice.tax_cents))}</span></div>`,
+      ].join("");
 
   const body = [
     `<header><div><h1>WebForge</h1><small>Professionelle Websites für Unternehmen</small></div>`,
@@ -138,8 +147,7 @@ export function invoicePrintHtml(invoice: Invoice): string {
     `<table><thead><tr><th>Pos.</th><th>Leistung</th><th>Menge</th><th class="num">Einzel</th><th class="num">Gesamt</th></tr></thead>`,
     `<tbody>${rows}</tbody></table>`,
     `<div class="totals">`,
-    `<div><span>Netto</span><span>${escapeHtml(formatMoney(invoice.net_cents))}</span></div>`,
-    `<div><span>MwSt. (${escapeHtml(invoice.tax_percent)}%)</span><span>${escapeHtml(formatMoney(invoice.tax_cents))}</span></div>`,
+    taxRows,
     `<div class="total"><span>Gesamt</span><span>${escapeHtml(formatMoney(invoice.gross_cents))}</span></div>`,
     invoice.paid_cents > 0
       ? `<div><span>Bereits gezahlt</span><span>− ${escapeHtml(formatMoney(invoice.paid_cents))}</span></div>` +
